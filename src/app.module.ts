@@ -1,19 +1,26 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { envs } from './config/environments';
-import { CategoriesModule } from './modules/categories/categories.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+//? ---------------------------------------------------------------------------------------------- */
 import { SubcategoriesModule } from './modules/subcategories/subcategories.module';
+import { MultimediaModule } from './modules/multimedia/multimedia.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { DiscountsModule } from './modules/discounts/discounts.module';
 import { BrandsModule } from './modules/catalogs/brands/brands.module';
-import { ProductsModule } from './modules/products/products.module';
 import { ColorsModule } from './modules/catalogs/colors/colors.module';
-import { SizesModule } from './modules/catalogs/sizes/sizes.module';
-import { VariantsModule } from './modules/variants/variants.module';
-import { MultimediaModule } from './modules/multimedia/multimedia.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { ShipmentsModule } from './modules/shipments/shipments.module';
+import { ProductsModule } from './modules/products/products.module';
+import { SizesModule } from './modules/catalogs/sizes/sizes.module';
+import { VariantsModule } from './modules/variants/variants.module';
+import { OutfitsModule } from './modules/outfits/outfits.module';
 import { OrdersModule } from './modules/orders/orders.module';
-import { AddressesModule } from './modules/addresses/addresses.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './auth/auth.module';
+//? ---------------------------------------------------------------------------------------------- */
+import { envs } from './config/environments/environments';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -25,7 +32,11 @@ import { AddressesModule } from './modules/addresses/addresses.module';
       username: envs.DB_USERNAME,
       password: envs.DB_PASSWORD,
       autoLoadEntities: true,
-      synchronize: true, //! dev mode only, never in production
+      synchronize: true, //! dev mode
+    }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'), // Path to the static files
     }),
 
     CategoriesModule,
@@ -36,11 +47,14 @@ import { AddressesModule } from './modules/addresses/addresses.module';
     ColorsModule,
     SizesModule,
     VariantsModule,
-    MultimediaModule,
-    CustomersModule,
-    ShipmentsModule,
     OrdersModule,
+    ShipmentsModule,
     AddressesModule,
+    CustomersModule,
+    MultimediaModule,
+    OutfitsModule,
+    AuthModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],

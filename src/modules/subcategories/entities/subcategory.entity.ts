@@ -1,5 +1,6 @@
 import { Category } from 'src/modules/categories/entities/category.entity';
 import { Product } from 'src/modules/products/entities/product.entity';
+//? ---------------------------------------------------------------------------------------------- */
 import {
   Column,
   CreateDateColumn,

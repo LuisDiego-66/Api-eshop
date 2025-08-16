@@ -1,34 +1,110 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
+//? ---------------------------------------------------------------------------------------------- */
 import { ShipmentsService } from './shipments.service';
-import { CreateShipmentDto } from './dto/create-shipment.dto';
-import { UpdateShipmentDto } from './dto/update-shipment.dto';
+import { PaginationDto } from 'src/common/dtos/pagination';
+import {
+  CreateNationalShipmentDto,
+  CreateInternationalShipmentDto,
+  UpdateNationalShipmentDto,
+  UpdateInternationalShipmentDto,
+} from './dto';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Shipments')
 @Controller('shipments')
 export class ShipmentsController {
   constructor(private readonly shipmentsService: ShipmentsService) {}
 
-  @Post()
-  create(@Body() createShipmentDto: CreateShipmentDto) {
-    return this.shipmentsService.create(createShipmentDto);
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Create                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  // National
+  @Post('national')
+  createNational(@Body() createNationalDto: CreateNationalShipmentDto) {
+    return this.shipmentsService.createNational(createNationalDto);
   }
+
+  // International
+  @Post('international')
+  createInternational(
+    @Body() createInternationalDto: CreateInternationalShipmentDto,
+  ) {
+    return this.shipmentsService.createInternational(createInternationalDto);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindAll                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  findAll() {
-    return this.shipmentsService.findAll();
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  findAll(@Query() pagination: PaginationDto) {
+    return this.shipmentsService.findAll(pagination);
   }
+
+  @Get('national')
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  findAllNational(@Query() pagination: PaginationDto) {
+    return this.shipmentsService.findAllNational(pagination);
+  }
+
+  @Get('international')
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  findAllInterNational(@Query() pagination: PaginationDto) {
+    return this.shipmentsService.findAllInterNational(pagination);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindOne                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.shipmentsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.shipmentsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateShipmentDto: UpdateShipmentDto) {
-    return this.shipmentsService.update(+id, updateShipmentDto);
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Update                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  // National
+  @Patch('national:id')
+  updateNational(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateShipmentDto: UpdateNationalShipmentDto,
+  ) {
+    return this.shipmentsService.updateNational(id, updateShipmentDto);
   }
+
+  // International
+  @Patch('international:id')
+  updateInternational(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateShipmentDto: UpdateInternationalShipmentDto,
+  ) {
+    return this.shipmentsService.updateInternational(id, updateShipmentDto);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Delete                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.shipmentsService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.shipmentsService.remove(id);
   }
 }

@@ -1,4 +1,6 @@
 import { Variant } from 'src/modules/variants/entities/variant.entity';
+import { Order } from './order.entity';
+//? ---------------------------------------------------------------------------------------------- */
 import {
   Column,
   CreateDateColumn,
@@ -7,12 +9,11 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Order } from './order.entity';
 
 @Entity('items')
 export class Item {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column('integer')
   quantity: number;
@@ -20,11 +21,11 @@ export class Item {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   unit_price: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  subtotal: string; // 	quantity * unit_price
+  @Column({ type: 'int' })
+  discountValue: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  totalPrice: string;
+  totalPrice: string; // 	quantity * unit_price - discountValue
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -41,7 +42,7 @@ export class Item {
   variant: Variant;
 
   // Relacion con la tabla de order ( muchos items pueden pertenecer a una order)
-  @ManyToOne(() => Order, (order) => order.item)
+  @ManyToOne(() => Order, (order) => order.items)
   order: Order;
 
   //* ---------------------------------------------------------------------------------------------- */

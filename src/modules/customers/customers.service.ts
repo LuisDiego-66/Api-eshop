@@ -1,26 +1,104 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Customer } from './entities/customer.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { UpdateCustomerDto } from './dto';
 
 @Injectable()
 export class CustomersService {
-  create(createCustomerDto: CreateCustomerDto) {
-    return 'This action adds a new customer';
+  constructor(
+    @InjectRepository(Customer)
+    private readonly customerRepository: Repository<Customer>,
+  ) {}
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindAll                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findAll(pagination: PaginationDto) {
+    const { limit = 10, offset = 0 } = pagination;
+
+    const customers = await this.customerRepository.find({
+      take: limit,
+      skip: offset,
+    });
+
+    return customers;
   }
 
-  findAll() {
-    return `This action returns all customers`;
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindOne                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOne(id: number) {
+    const customer = await this.customerRepository.findOne({
+      where: { id },
+    });
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+    return customer;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} customer`;
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                 FindOneByEmail                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOneByEmail(email: string) {
+    const customer = await this.customerRepository.findOne({
+      where: { email },
+    });
+    return customer;
   }
 
-  update(id: number, updateCustomerDto: UpdateCustomerDto) {
-    return `This action updates a #${id} customer`;
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Update                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async update(id: number, updateCustomerDto: UpdateCustomerDto) {
+    const customer = await this.findOne(id);
+    try {
+      Object.assign(customer, updateCustomerDto);
+      return await this.customerRepository.save(customer);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} customer`;
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Delete                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async remove(id: number) {
+    const customer = await this.findOne(id);
+    try {
+      await this.customerRepository.softRemove(customer);
+      return {
+        message: 'Customer deleted successfully',
+        deleted: customer,
+      };
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
+  }
+
+  //* ---------------------------------------------------------------------------------------------- */
+  //*                                        DBExceptions                                            */
+  //* ---------------------------------------------------------------------------------------------- */
+
+  private handleDBExceptions(error: any) {
+    if (error.code === '23505') throw new ConflictException(error.detail); //! email
+
+    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
+
+    throw new InternalServerErrorException(error.message);
   }
 }

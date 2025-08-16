@@ -4,12 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateSizeDto } from './dto/create-size.dto';
-import { UpdateSizeDto } from './dto/update-size.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
 import { Size } from './entities/size.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateSizeDto, UpdateSizeDto } from './dto';
 
 @Injectable()
 export class SizesService {
@@ -98,8 +99,6 @@ export class SizesService {
   private handleDBExceptions(error: any) {
     if (error.code === '23505') throw new ConflictException(error.detail); //! Duplicate key error (unique)
 
-    throw new InternalServerErrorException(
-      'Unexpected Error, check server Logs:' + error.message,
-    );
+    throw new InternalServerErrorException(error.message);
   }
 }

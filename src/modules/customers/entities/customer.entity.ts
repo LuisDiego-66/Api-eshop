@@ -1,5 +1,7 @@
+import { AuthProviders } from 'src/auth/enums/providers.enum';
 import { Address } from 'src/modules/addresses/entities/address.entity';
 import { Order } from 'src/modules/orders/entities/order.entity';
+//? ---------------------------------------------------------------------------------------------- */s
 import {
   Column,
   CreateDateColumn,
@@ -7,30 +9,40 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('customers')
 export class Customer {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column('text')
   name: string;
 
-  @Column('text', { unique: true })
+  @Column('text', { unique: true }) //! Unique
   email: string;
 
-  @Column('text')
-  phone: string;
+  @Column('text', { nullable: true }) //! null
+  phone?: string;
 
-  @Column('boolean', { nullable: true })
+  @Column({ type: 'enum', enum: AuthProviders })
+  provider: AuthProviders;
+
+  @Column('text')
+  idProvider: string;
+
+  @Column('boolean', { default: true }) //! default true
   enabled: boolean;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
 
+  @UpdateDateColumn({ select: false })
+  updatedAt: Date;
+
   @DeleteDateColumn({ nullable: true, select: false })
-  deletedAt: Date;
+  deletedAt?: Date;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */

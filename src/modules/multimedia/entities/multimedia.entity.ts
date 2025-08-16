@@ -14,7 +14,7 @@ export class Multimedia {
   id: string;
 
   @Column('text')
-  link: string;
+  secureUrl: string;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -27,6 +27,6 @@ export class Multimedia {
   //* ---------------------------------------------------------------------------------------------- */
 
   // Relacion con la tabla de productVariants ( muchos multimedia pueden pertenecer a un productVariant)
-  @ManyToOne(() => Variant, (variant) => variant.multimedia)
-  variant: Variant;
+  @ManyToOne(() => Variant, (variant) => variant.multimedia, { nullable: true }) //! NULL
+  variant?: Variant;
 }

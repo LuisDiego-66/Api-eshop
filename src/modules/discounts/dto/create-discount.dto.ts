@@ -1,21 +1,32 @@
-import { IsEnum, IsOptional, IsString, IsBoolean } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsNumber,
+  Min,
+  Max,
+  IsInt,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DiscountMethod } from '../enums/discount-method.enum';
 
 export class CreateDiscountDto {
   @ApiProperty({ example: 'Descuento de invierno' })
   @IsString()
   description: string;
 
-  @ApiProperty({
-    enum: DiscountMethod,
-    example: DiscountMethod.FIXED,
-  })
-  @IsEnum(DiscountMethod)
-  discountMethod: DiscountMethod;
-
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({
+    example: 10,
+    minimum: 0,
+    maximum: 100,
+  })
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @IsInt()
+  value: number;
 }

@@ -4,12 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
-import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Subcategory } from './entities/subcategory.entity';
 import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Subcategory } from './entities/subcategory.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateSubcategoryDto, UpdateSubcategoryDto } from './dto';
 
 @Injectable()
 export class SubcategoriesService {
@@ -44,7 +45,7 @@ export class SubcategoriesService {
     const subCategories = await this.subcategoryRepository.find({
       take: limit,
       skip: offset,
-      relations: ['products'],
+      relations: { products: true },
     });
 
     return subCategories;
@@ -57,7 +58,7 @@ export class SubcategoriesService {
   async findOne(id: number) {
     const subCategory = await this.subcategoryRepository.findOne({
       where: { id },
-      relations: ['products'],
+      relations: { products: true },
     });
     if (!subCategory) {
       throw new NotFoundException('Subcategory not found');
@@ -103,8 +104,6 @@ export class SubcategoriesService {
   private handleDBExceptions(error: any) {
     if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
 
-    throw new InternalServerErrorException(
-      'Unexpected Error, check server Logs:' + error.message,
-    );
+    throw new InternalServerErrorException(error.message);
   }
 }

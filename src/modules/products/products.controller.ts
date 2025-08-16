@@ -9,11 +9,11 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
+//? ---------------------------------------------------------------------------------------------- */
 import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateProductDto, UpdateProductDto } from './dto';
+import { ProductsService } from './products.service';
 
 @ApiTags('Products')
 @Controller('products')

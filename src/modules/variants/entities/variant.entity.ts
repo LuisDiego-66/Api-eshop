@@ -1,19 +1,24 @@
-import { Color } from 'src/modules/catalogs/colors/entities/color.entity';
 import { Multimedia } from 'src/modules/multimedia/entities/multimedia.entity';
+import { Color } from 'src/modules/catalogs/colors/entities/color.entity';
 import { Product } from 'src/modules/products/entities/product.entity';
 import { Size } from 'src/modules/catalogs/sizes/entities/size.entity';
+import { Outfit } from 'src/modules/outfits/entities/outfit.entity';
+import { Item } from 'src/modules/orders/entities/Item.entity';
+//? ---------------------------------------------------------------------------------------------- */
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { Item } from 'src/modules/orders/entities/Item.entity';
 
 @Unique(['product', 'color', 'size'])
 @Entity('variants')
@@ -30,8 +35,11 @@ export class Variant {
   @Column('text', { nullable: true }) //! NULL
   code: string;
 
-  @Column('integer', { default: 0 })
+  @Column('integer', { default: 0 }) //! default 0
   stock: number;
+
+  @Column({ type: 'boolean', default: false }) //! default false
+  available: boolean;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -59,10 +67,31 @@ export class Variant {
   size: Size;
 
   // Relacion con la tabla de multimedia ( un variant puede tener muchos multimedia )
-  @OneToMany(() => Multimedia, (multimedia) => multimedia.variant)
+  @OneToMany(() => Multimedia, (multimedia) => multimedia.variant, {
+    cascade: true, //! creacion en cascada
+    eager: true,
+  })
   multimedia: Multimedia[];
 
   // Relacion con la tabla de Item ( un variant puede estar en muchos items )
   @OneToMany(() => Item, (item) => item.variant)
   items: Item[];
+
+  // Relacion con la tabla de Outfit ( un variant puede estar en muchos outfits )
+  @ManyToMany(() => Outfit, (outfit) => outfit.variants)
+  outfits: Outfit[];
+
+  //* ---------------------------------------------------------------------------------------------- */
+  //*                                        Functions                                               */
+  //* ---------------------------------------------------------------------------------------------- */
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  availableFunction() {
+    if (this.stock === 0) {
+      this.available = false;
+    } else {
+      this.available = true;
+    }
+  }
 }

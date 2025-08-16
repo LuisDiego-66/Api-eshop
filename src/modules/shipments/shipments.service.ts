@@ -1,26 +1,164 @@
-import { Injectable } from '@nestjs/common';
-import { CreateShipmentDto } from './dto/create-shipment.dto';
-import { UpdateShipmentDto } from './dto/update-shipment.dto';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Shipment } from './entities/shipment.entity';
+import { NationalShipment } from './entities/national-shipment.entity';
+import { InternationalShipment } from './entities/international-shipment.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import {
+  CreateNationalShipmentDto,
+  CreateInternationalShipmentDto,
+  UpdateNationalShipmentDto,
+  UpdateInternationalShipmentDto,
+} from './dto';
+import { ShipmentMethod } from './enums/shipment-method.enum';
 
 @Injectable()
 export class ShipmentsService {
-  create(createShipmentDto: CreateShipmentDto) {
-    return 'This action adds a new shipment';
+  constructor(
+    @InjectRepository(Shipment)
+    private readonly shipmentRepository: Repository<Shipment>,
+
+    @InjectRepository(NationalShipment)
+    private readonly nationalRepository: Repository<NationalShipment>,
+
+    @InjectRepository(InternationalShipment)
+    private readonly internationalRepository: Repository<InternationalShipment>,
+  ) {}
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Create                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  // National
+  async createNational(createShipmentDto: CreateNationalShipmentDto) {
+    const newShipment = this.nationalRepository.create({
+      ...createShipmentDto,
+      method: ShipmentMethod.NATIONAL, //! se asigna el método de envío ( nacional )
+    });
+    return await this.nationalRepository.save(newShipment);
   }
 
-  findAll() {
-    return `This action returns all shipments`;
+  // International
+  async createInternational(createShipmentDto: CreateInternationalShipmentDto) {
+    const newShipment = this.internationalRepository.create({
+      ...createShipmentDto,
+      method: ShipmentMethod.INTERNATIONAL, //! se asigna el método de envío ( internacional )
+    });
+    return await this.internationalRepository.save(newShipment);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} shipment`;
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindAll                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  // All
+  async findAll(pagination: PaginationDto) {
+    const { limit = 10, offset = 0 } = pagination;
+    const shipments = await this.shipmentRepository.find({
+      take: limit,
+      skip: offset,
+    });
+    return shipments;
   }
 
-  update(id: number, updateShipmentDto: UpdateShipmentDto) {
-    return `This action updates a #${id} shipment`;
+  // National
+  async findAllNational(pagination: PaginationDto) {
+    const { limit = 10, offset = 0 } = pagination;
+    const shipments = await this.nationalRepository.find({
+      take: limit,
+      skip: offset,
+    });
+    return shipments;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} shipment`;
+  // International
+  async findAllInterNational(pagination: PaginationDto) {
+    const { limit = 10, offset = 0 } = pagination;
+    const shipments = await this.internationalRepository.find({
+      take: limit,
+      skip: offset,
+    });
+    return shipments;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindOne                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOne(id: number) {
+    const shipment = await this.shipmentRepository.findOne({
+      where: { id },
+    });
+    if (!shipment) {
+      throw new NotFoundException('Shipment not found');
+    }
+    return shipment;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Update                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  // National
+  async updateNational(
+    id: number,
+    updateShipmentDto: UpdateNationalShipmentDto,
+  ) {
+    const shipment = await this.findOne(id);
+    try {
+      Object.assign(shipment, updateShipmentDto);
+      return await this.nationalRepository.save(shipment);
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
+  }
+
+  // International
+  async updateInternational(
+    id: number,
+    updateShipmentDto: UpdateInternationalShipmentDto,
+  ) {
+    const shipment = await this.findOne(id);
+    try {
+      Object.assign(shipment, updateShipmentDto);
+      return await this.internationalRepository.save(shipment);
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Delete                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async remove(id: number) {
+    const shipment = await this.findOne(id);
+    try {
+      await this.shipmentRepository.softRemove(shipment);
+      return {
+        message: 'Shipment deleted successfully',
+        deleted: shipment,
+      };
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
+  }
+
+  //* ---------------------------------------------------------------------------------------------- */
+  //*                                        DBExceptions                                            */
+  //* ---------------------------------------------------------------------------------------------- */
+
+  private handleDBExceptions(error: any) {
+    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
+
+    throw new InternalServerErrorException(error.message);
   }
 }

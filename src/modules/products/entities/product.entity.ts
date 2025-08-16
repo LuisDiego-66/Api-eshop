@@ -1,7 +1,8 @@
+import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
 import { Brand } from 'src/modules/catalogs/brands/entities/brand.entity';
 import { Discount } from 'src/modules/discounts/entities/discount.entity';
 import { Variant } from 'src/modules/variants/entities/variant.entity';
-import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
+//? ---------------------------------------------------------------------------------------------- */
 import {
   Column,
   CreateDateColumn,
@@ -52,12 +53,12 @@ export class Product {
   variants: Variant[];
 
   // Relacion con la tabla de brands ( muchos products pueden pertenecer a una brand)
-  @ManyToOne(() => Brand, (brand) => brand.products, { nullable: true }) //! nulable
+  @ManyToOne(() => Brand, (brand) => brand.products, { nullable: true }) //! NULL
   brand?: Brand;
 
   // Relacion con la tabla de discounts ( muchos products pueden tener un discounts )
   @ManyToOne(() => Discount, (discount) => discount.products, {
-    nullable: true, //! nulable
+    nullable: true, //! NULL
   })
-  discounts?: Discount;
+  discount?: Discount;
 }

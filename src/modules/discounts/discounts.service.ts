@@ -3,16 +3,18 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Discount } from './entities/discount.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
 import {
   CreateSeasonalDiscountDto,
   CreatePermanentDiscountDto,
   UpdateSeasonalDiscountDto,
   UpdatePermanentDiscountDto,
 } from './dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Discount } from './entities/discount.entity';
-import { Repository } from 'typeorm';
-import { PaginationDto } from 'src/common/dtos/pagination';
 
 @Injectable()
 export class DiscountsService {
@@ -98,8 +100,6 @@ export class DiscountsService {
   //* ---------------------------------------------------------------------------------------------- */
 
   private handleDBExceptions(error: any) {
-    throw new InternalServerErrorException(
-      'Unexpected Error, check server Logs: ' + error.message,
-    );
+    throw new InternalServerErrorException(error.message);
   }
 }

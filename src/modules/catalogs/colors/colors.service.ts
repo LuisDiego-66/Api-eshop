@@ -3,12 +3,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateColorDto } from './dto/create-color.dto';
-import { UpdateColorDto } from './dto/update-color.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Color } from './entities/color.entity';
 import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Color } from './entities/color.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateColorDto, UpdateColorDto } from './dto';
 
 @Injectable()
 export class ColorsService {
@@ -95,8 +96,6 @@ export class ColorsService {
   //* ---------------------------------------------------------------------------------------------- */
 
   private handleDBExceptions(error: any) {
-    throw new InternalServerErrorException(
-      'Unexpected Error, check server Logs:' + error.message,
-    );
+    throw new InternalServerErrorException(error.message);
   }
 }

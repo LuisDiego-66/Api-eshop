@@ -9,15 +9,16 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { DiscountsService } from './discounts.service';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
 import {
   CreateSeasonalDiscountDto,
   CreatePermanentDiscountDto,
   UpdateSeasonalDiscountDto,
   UpdatePermanentDiscountDto,
 } from './dto';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { DiscountsService } from './discounts.service';
 
 @ApiTags('Discounts')
 @Controller('discounts')

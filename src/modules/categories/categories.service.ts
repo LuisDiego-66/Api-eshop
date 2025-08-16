@@ -3,12 +3,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Category } from './entities/category.entity';
 import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Category } from './entities/category.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 @Injectable()
 export class CategoriesService {
@@ -40,7 +41,7 @@ export class CategoriesService {
     const categories = await this.categoryRepository.find({
       take: limit,
       skip: offset,
-      relations: ['subcategories'],
+      relations: { subcategories: true },
     });
 
     return categories;
@@ -53,7 +54,7 @@ export class CategoriesService {
   async findOne(id: number) {
     const category = await this.categoryRepository.findOne({
       where: { id },
-      relations: ['subcategories'],
+      relations: { subcategories: true },
     });
     if (!category) {
       throw new NotFoundException('Category not found');
@@ -97,8 +98,6 @@ export class CategoriesService {
   //* ---------------------------------------------------------------------------------------------- */
 
   private handleDBExceptions(error: any) {
-    throw new InternalServerErrorException(
-      'Unexpected Error, check server Logs:' + error.message,
-    );
+    throw new InternalServerErrorException(error.message);
   }
 }

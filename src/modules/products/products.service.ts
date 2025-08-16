@@ -4,12 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Product } from './entities/product.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateProductDto, UpdateProductDto } from './dto';
 
 @Injectable()
 export class ProductsService {
@@ -28,7 +29,7 @@ export class ProductsService {
         ...createProductDto,
         subcategory: { id: createProductDto.subcategory }, //! Is a number, not an object
         brand: { id: createProductDto.brand },
-        discounts: { id: createProductDto.discount },
+        discount: { id: createProductDto.discount },
       });
       return await this.productRepository.save(newProduct);
     } catch (error) {
@@ -46,7 +47,7 @@ export class ProductsService {
     const products = await this.productRepository.find({
       take: limit,
       skip: offset,
-      relations: ['brand', 'discounts', 'variants'],
+      relations: { brand: true, discount: true, variants: true },
     });
 
     return products;
@@ -59,7 +60,7 @@ export class ProductsService {
   async findOne(id: number) {
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['variants'],
+      relations: { variants: true },
     });
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -105,8 +106,6 @@ export class ProductsService {
   private handleDBExceptions(error: any) {
     if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
 
-    throw new InternalServerErrorException(
-      'Unexpected Error, check server Logs:' + error.message,
-    );
+    throw new InternalServerErrorException(error.message);
   }
 }

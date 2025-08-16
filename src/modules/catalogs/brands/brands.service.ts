@@ -4,12 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateBrandDto } from './dto/create-brand.dto';
-import { UpdateBrandDto } from './dto/update-brand.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brand } from './entities/brand.entity';
 import { Repository } from 'typeorm';
+//? ---------------------------------------------------------------------------------------------- */
+import { Brand } from './entities/brand.entity';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateBrandDto, UpdateBrandDto } from './dto';
 
 @Injectable()
 export class BrandsService {
@@ -41,7 +42,7 @@ export class BrandsService {
     const brands = await this.brandRepository.find({
       take: limit,
       skip: offset,
-      relations: ['products'],
+      relations: { products: true },
     });
 
     return brands;
@@ -54,7 +55,7 @@ export class BrandsService {
   async findOne(id: number) {
     const brand = await this.brandRepository.findOne({
       where: { id },
-      relations: ['products'],
+      relations: { products: true },
     });
     if (!brand) {
       throw new NotFoundException('Brand not found');
@@ -100,8 +101,6 @@ export class BrandsService {
   private handleDBExceptions(error: any) {
     if (error.code == '23505') throw new ConflictException(error.detail); // unique violation
 
-    throw new InternalServerErrorException(
-      'Unexpected Error, check server Logs:' + error.message,
-    );
+    throw new InternalServerErrorException(error.message);
   }
 }

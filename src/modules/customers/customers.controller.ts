@@ -1,34 +1,66 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { UpdateCustomerDto } from './dto';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
+//? ---------------------------------------------------------------------------------------------- */
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums/roles.enum';
 
+@ApiBearerAuth('access-token')
+@ApiTags('Customers')
 @Controller('customers')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
-  @Post()
-  create(@Body() createCustomerDto: CreateCustomerDto) {
-    return this.customersService.create(createCustomerDto);
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindAll                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Auth(Roles.ADMIN)
+  //@Auth()
+  @Get()
+  findAll(@Query() pagination: PaginationDto) {
+    return this.customersService.findAll(pagination);
   }
 
-  @Get()
-  findAll() {
-    return this.customersService.findAll();
-  }
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        FindOne                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.customersService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.customersService.findOne(id);
   }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Update                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCustomerDto: UpdateCustomerDto) {
-    return this.customersService.update(+id, updateCustomerDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCustomerDto: UpdateCustomerDto,
+  ) {
+    return this.customersService.update(id, updateCustomerDto);
   }
 
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Delete                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.customersService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.customersService.remove(id);
   }
 }

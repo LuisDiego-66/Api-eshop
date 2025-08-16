@@ -9,11 +9,11 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ColorsService } from './colors.service';
-import { CreateColorDto } from './dto/create-color.dto';
-import { UpdateColorDto } from './dto/update-color.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateColorDto, UpdateColorDto } from './dto';
+import { ColorsService } from './colors.service';
 
 @ApiTags('Colors')
 @Controller('colors')

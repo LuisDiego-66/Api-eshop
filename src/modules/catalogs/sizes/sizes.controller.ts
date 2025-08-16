@@ -9,11 +9,11 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { SizesService } from './sizes.service';
-import { CreateSizeDto } from './dto/create-size.dto';
-import { UpdateSizeDto } from './dto/update-size.dto';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
+//? ---------------------------------------------------------------------------------------------- */
 import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateSizeDto, UpdateSizeDto } from './dto';
+import { SizesService } from './sizes.service';
 
 @ApiTags('Sizes')
 @Controller('sizes')

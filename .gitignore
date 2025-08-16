@@ -7,6 +7,10 @@
 *.txt
 structure.json
 
+/static/uploads/*
+!/static/uploads/.gitkeep
+
+
 # Logs
 logs
 *.log

@@ -9,11 +9,11 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { SubcategoriesService } from './subcategories.service';
-import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
-import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
+//? ---------------------------------------------------------------------------------------------- */
+import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateSubcategoryDto, UpdateSubcategoryDto } from './dto';
+import { SubcategoriesService } from './subcategories.service';
 
 @ApiTags('Subcategories')
 @Controller('subcategories')

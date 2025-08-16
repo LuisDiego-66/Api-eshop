@@ -1,34 +1,84 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
+  Res,
+  Delete,
+  Body,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { Response } from 'express';
+import { diskStorage } from 'multer';
+//? ---------------------------------------------------------------------------------------------- */
+//? ---------------------------------------------------------------------------------------------- */
+import { DeleteMultimediaDto } from './dto';
+import { fileFilter } from './helpers/fileFilter.helper';
+import { fileNamer } from './helpers/fileNamer.helper';
 import { MultimediaService } from './multimedia.service';
-import { CreateMultimediaDto } from './dto/create-multimedia.dto';
-import { UpdateMultimediaDto } from './dto/update-multimedia.dto';
 
 @Controller('multimedia')
 export class MultimediaController {
   constructor(private readonly multimediaService: MultimediaService) {}
 
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                        Upload                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
   @Post()
-  create(@Body() createMultimediaDto: CreateMultimediaDto) {
-    return this.multimediaService.create(createMultimediaDto);
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
+  @UseInterceptors(
+    FilesInterceptor('files', 5, {
+      fileFilter: fileFilter,
+      storage: diskStorage({
+        destination: './static/uploads',
+        filename: fileNamer,
+      }),
+    }),
+  )
+  upload(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException(
+        'Make sure that at least one file was uploaded',
+      );
+    }
+    return this.multimediaService.getSecureUrl(files);
   }
 
-  @Get()
-  findAll() {
-    return this.multimediaService.findAll();
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                      GetFiles                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Get('/upload/:file')
+  getFile(@Res() res: Response, @Param('file') file: string) {
+    const path = this.multimediaService.getFile(file);
+    res.sendFile(path);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.multimediaService.findOne(+id);
-  }
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                  deletedFiles                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMultimediaDto: UpdateMultimediaDto) {
-    return this.multimediaService.update(+id, updateMultimediaDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.multimediaService.remove(+id);
+  @Delete()
+  deleteFiles(@Body() deleteDto: DeleteMultimediaDto) {
+    return this.multimediaService.deletedFiles(deleteDto);
   }
 }

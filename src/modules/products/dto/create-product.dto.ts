@@ -35,7 +35,7 @@ export class CreateProductDto {
   })
   @IsBoolean()
   @IsOptional()
-  enabled: boolean;
+  enabled?: boolean;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
