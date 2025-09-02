@@ -1,8 +1,3 @@
-import { Customer } from 'src/modules/customers/entities/customer.entity';
-import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
-import { Address } from 'src/modules/addresses/entities/address.entity';
-import { Item } from './Item.entity';
-//? ---------------------------------------------------------------------------------------------- */
 import {
   BeforeInsert,
   BeforeUpdate,
@@ -15,9 +10,15 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { OrderType } from '../enums/order-type.enum';
 import { OrderStatus } from '../enums/order-status.enum';
+
+import { StockReservation } from 'src/modules/stock-reservations/entities/stock-reservation.entity';
+import { Customer } from 'src/modules/customers/entities/customer.entity';
+import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
+import { Address } from 'src/modules/addresses/entities/address.entity';
+import { Item } from './item.entity';
 
 @Entity('orders')
 export class Order {
@@ -27,7 +28,7 @@ export class Order {
   @Column({ type: 'enum', enum: OrderType })
   type: OrderType;
 
-  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.IN_PROGRESS }) //! default: 'inprogress'
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING }) //! default: 'inprogress'
   status: OrderStatus;
 
   @Column('boolean', { default: true })
@@ -44,6 +45,9 @@ export class Order {
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;
+
+  @Column({ type: 'timestamptz' })
+  expiresAt: Date;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
@@ -65,6 +69,10 @@ export class Order {
   @ManyToOne(() => Address, (address) => address.orders, { nullable: true }) //! NULL
   address?: Address | null;
 
+  // Relacion con la tabla de StockReservation ( una order puede tener muchas reservas de stock )
+  @OneToMany(() => StockReservation, (reservation) => reservation.order)
+  stock_reservations: StockReservation[];
+
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
   //* ---------------------------------------------------------------------------------------------- */
@@ -77,5 +85,14 @@ export class Order {
       this.address = null;
       this.customer = null;
     }
+  }
+
+  @BeforeInsert()
+  setReservationDates() {
+    const minutes = 10;
+    const now = new Date();
+    const end = new Date(now);
+    end.setMinutes(end.getMinutes() + minutes);
+    this.expiresAt = end;
   }
 }

@@ -1,27 +1,23 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { envs } from 'src/config/environments/environments';
 import * as path from 'path';
 import { existsSync } from 'fs';
 import { promises as fs } from 'fs';
-import { DeleteMultimediaDto } from './dto';
 
 @Injectable()
-export class MultimediaService {
+export class FilesService {
   private uploadPath = path.resolve('./static/uploads/');
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Upload                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  getSecureUrl(files: Express.Multer.File[]) {
+  getSecureUrl(files: Express.Multer.File[]): string[] {
     const hostApi = envs.HOST;
-    const secureUrls = files.map((file) => ({
-      //originalName: file.originalname,
-      secureUrl: `${hostApi}/api/multimedia/upload/${file.filename}`,
-    }));
-
-    return secureUrls;
+    return files.map(
+      (file) => `${hostApi}/api/multimedia/upload/${file.filename}`,
+    );
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -39,10 +35,10 @@ export class MultimediaService {
   //?                                 deletedFiles                                                   */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async deletedFiles(multimediaFiles: DeleteMultimediaDto) {
-    if (!multimediaFiles || multimediaFiles.secureUrl.length === 0) return;
+  async deletedFiles(multimediaFiles: string[] | undefined) {
+    if (!multimediaFiles || multimediaFiles.length === 0) return;
 
-    for (const multimediaFile of multimediaFiles.secureUrl) {
+    for (const multimediaFile of multimediaFiles) {
       const fileName = multimediaFile.split('/').pop();
       if (!fileName) continue;
 

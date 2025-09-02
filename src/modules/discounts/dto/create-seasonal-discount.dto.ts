@@ -1,6 +1,7 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { CreateDiscountDto } from './create-discount.dto';
 import { IsDateString, IsEnum, ValidateIf } from 'class-validator';
+
+import { CreateDiscountDto } from './create-discount.dto';
 import { DiscountType } from '../enums/discount-type.enum';
 
 export class CreateSeasonalDiscountDto extends CreateDiscountDto {

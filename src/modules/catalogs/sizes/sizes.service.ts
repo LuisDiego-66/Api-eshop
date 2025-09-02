@@ -1,16 +1,13 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Size } from './entities/size.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateSizeDto, UpdateSizeDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Size } from './entities/size.entity';
 
 @Injectable()
 export class SizesService {
@@ -28,7 +25,7 @@ export class SizesService {
       const newSize = this.sizeRepository.create(createSizeDto);
       return await this.sizeRepository.save(newSize);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -71,7 +68,7 @@ export class SizesService {
       Object.assign(size, updateSizeDto);
       return await this.sizeRepository.save(size);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -88,17 +85,7 @@ export class SizesService {
         deleted: size,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    if (error.code === '23505') throw new ConflictException(error.detail); //! Duplicate key error (unique)
-
-    throw new InternalServerErrorException(error.message);
   }
 }

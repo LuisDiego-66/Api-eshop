@@ -1,17 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { IsInt, IsNumber, Min } from 'class-validator';
 
 export class CreateItemDto {
-  @ApiProperty({
-    example: 3,
-  })
-  @IsNumber()
-  quantity: number;
-
   @ApiProperty({
     description: 'Variant Id',
     example: 1,
   })
+  @IsInt()
   @IsNumber()
-  variant: number;
+  variantId: number;
+
+  @ApiProperty({
+    example: 3,
+  })
+  @IsInt()
+  @IsNumber()
+  @Min(1)
+  quantity: number;
 }

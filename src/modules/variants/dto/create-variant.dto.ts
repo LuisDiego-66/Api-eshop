@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
-import { CreateMultimediaDto } from 'src/modules/multimedia/dto/create-multimedia.dto';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateVariantDto {
   @ApiProperty({
@@ -17,11 +15,16 @@ export class CreateVariantDto {
   @IsString()
   description: string;
 
-  @ApiPropertyOptional({
-    example: 4,
+  @ApiProperty({
+    example: [
+      'http://localhost:3000/api/files/product/imagen1.jpeg',
+      'http://localhost:3000/api/files/product/imagen1.jpeg',
+    ],
   })
-  @IsNumber()
-  stock?: number; //! opcional
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  multimedia: string[];
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
@@ -47,10 +50,4 @@ export class CreateVariantDto {
   })
   @IsNumber()
   size: number;
-
-  @ApiProperty({ type: CreateMultimediaDto, isArray: true })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateMultimediaDto)
-  multimedia: CreateMultimediaDto[];
 }

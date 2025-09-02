@@ -1,5 +1,6 @@
-import { Roles } from 'src/auth/enums/roles.enum';
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -7,6 +8,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+
+import { Roles } from 'src/auth/enums/roles.enum';
 
 @Entity('users')
 export class User {
@@ -15,6 +19,14 @@ export class User {
 
   @Column('text')
   name: string;
+
+  @Column('text', { unique: true }) //! Unique
+  email: string;
+
+  @Column('text', {
+    select: false,
+  })
+  password: string;
 
   @Column({ type: 'enum', enum: Roles, default: Roles.ADMIN })
   rol: Roles;
@@ -27,4 +39,14 @@ export class User {
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;
+
+  //* ---------------------------------------------------------------------------------------------- */
+  //*                                        Functions                                               */
+  //* ---------------------------------------------------------------------------------------------- */
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  hashingPassword() {
+    this.password = bcrypt.hashSync(this.password, 10);
+  }
 }

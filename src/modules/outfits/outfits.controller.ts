@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateOutfitDto, UpdateOutfitDto } from './dto';
+
 import { OutfitsService } from './outfits.service';
 
 @ApiTags('Outfits')
@@ -35,7 +37,7 @@ export class OutfitsController {
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
-  findAll(pagination: PaginationDto) {
+  findAll(@Query() pagination: PaginationDto) {
     return this.outfitsService.findAll(pagination);
   }
 

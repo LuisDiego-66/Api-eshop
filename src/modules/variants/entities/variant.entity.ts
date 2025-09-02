@@ -1,13 +1,4 @@
-import { Multimedia } from 'src/modules/multimedia/entities/multimedia.entity';
-import { Color } from 'src/modules/catalogs/colors/entities/color.entity';
-import { Product } from 'src/modules/products/entities/product.entity';
-import { Size } from 'src/modules/catalogs/sizes/entities/size.entity';
-import { Outfit } from 'src/modules/outfits/entities/outfit.entity';
-import { Item } from 'src/modules/orders/entities/Item.entity';
-//? ---------------------------------------------------------------------------------------------- */
 import {
-  BeforeInsert,
-  BeforeUpdate,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -19,6 +10,14 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { StockReservation } from '../../stock-reservations/entities/stock-reservation.entity';
+import { Color } from 'src/modules/catalogs/colors/entities/color.entity';
+import { Product } from 'src/modules/products/entities/product.entity';
+import { Size } from 'src/modules/catalogs/sizes/entities/size.entity';
+import { Outfit } from 'src/modules/outfits/entities/outfit.entity';
+import { Item } from 'src/modules/orders/entities';
+import { Income } from './income.entity';
 
 @Unique(['product', 'color', 'size'])
 @Entity('variants')
@@ -35,11 +34,11 @@ export class Variant {
   @Column('text', { nullable: true }) //! NULL
   code: string;
 
-  @Column('integer', { default: 0 }) //! default 0
-  stock: number;
-
   @Column({ type: 'boolean', default: false }) //! default false
   available: boolean;
+
+  @Column('text', { array: true, nullable: true }) //! NULL
+  multimedia?: string[];
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -66,13 +65,6 @@ export class Variant {
   @ManyToOne(() => Size, (size) => size.variants)
   size: Size;
 
-  // Relacion con la tabla de multimedia ( un variant puede tener muchos multimedia )
-  @OneToMany(() => Multimedia, (multimedia) => multimedia.variant, {
-    cascade: true, //! creacion en cascada
-    eager: true,
-  })
-  multimedia: Multimedia[];
-
   // Relacion con la tabla de Item ( un variant puede estar en muchos items )
   @OneToMany(() => Item, (item) => item.variant)
   items: Item[];
@@ -81,17 +73,15 @@ export class Variant {
   @ManyToMany(() => Outfit, (outfit) => outfit.variants)
   outfits: Outfit[];
 
+  // Relacion con la tabla de StockReservation ( un variant puede tener muchas reservas de stock )
+  @OneToMany(() => StockReservation, (reservation) => reservation.variant)
+  stock_reservations: StockReservation[];
+
+  // Relacion con la tabla de StockReservation ( un variant puede tener muchas reservas de stock )
+  @OneToMany(() => Income, (incomes) => incomes.variant)
+  incomes: Income[];
+
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
   //* ---------------------------------------------------------------------------------------------- */
-
-  @BeforeUpdate()
-  @BeforeInsert()
-  availableFunction() {
-    if (this.stock === 0) {
-      this.available = false;
-    } else {
-      this.available = true;
-    }
-  }
 }

@@ -8,15 +8,17 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { UpdateCustomerDto } from './dto';
+
 import { CustomersService } from './customers.service';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { Auth } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums/roles.enum';
 
+@Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
 @ApiTags('Customers')
 @Controller('customers')
@@ -27,9 +29,10 @@ export class CustomersController {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Auth(Roles.ADMIN)
   //@Auth()
   @Get()
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
     return this.customersService.findAll(pagination);
   }

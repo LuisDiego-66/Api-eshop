@@ -1,13 +1,7 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Discount } from './entities/discount.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import {
   CreateSeasonalDiscountDto,
@@ -15,6 +9,10 @@ import {
   UpdateSeasonalDiscountDto,
   UpdatePermanentDiscountDto,
 } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Discount } from './entities/discount.entity';
 
 @Injectable()
 export class DiscountsService {
@@ -34,7 +32,7 @@ export class DiscountsService {
       const newDiscount = this.discountRepository.create(createDiscountDto);
       return await this.discountRepository.save(newDiscount);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -74,7 +72,7 @@ export class DiscountsService {
       Object.assign(discount, updateDiscountDto);
       return await this.discountRepository.save(discount);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -91,15 +89,7 @@ export class DiscountsService {
         deleted: discount,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    throw new InternalServerErrorException(error.message);
   }
 }

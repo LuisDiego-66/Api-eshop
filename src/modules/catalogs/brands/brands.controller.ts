@@ -10,9 +10,10 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateBrandDto, UpdateBrandDto } from './dto';
+
 import { BrandsService } from './brands.service';
 
 @ApiTags('Brands')

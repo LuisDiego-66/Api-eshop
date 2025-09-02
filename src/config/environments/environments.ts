@@ -18,6 +18,9 @@ interface IEnvironmentVariables {
   GOOGLE_ID_OAUTH: string;
   GOOGLE_SECRET_KEY: string;
   GOOGLE_CALLBACK: string;
+  //SendGrid
+  SENDGRID_API_KEY: string;
+  SENDGRID_SENDER: string;
 }
 
 const environmentsSchema = joi
@@ -51,4 +54,7 @@ export const envs = {
   GOOGLE_ID_OAUTH: envVariables.GOOGLE_ID_OAUTH,
   GOOGLE_SECRET_KEY: envVariables.GOOGLE_SECRET_KEY,
   GOOGLE_CALLBACK: envVariables.GOOGLE_CALLBACK,
+  //SendGrid
+  SENDGRID_API_KEY: envVariables.SENDGRID_API_KEY,
+  SENDGRID_SENDER: envVariables.SENDGRID_SENDER,
 };

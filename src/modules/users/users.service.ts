@@ -1,15 +1,13 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { User } from './entities/user.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateUserDto, UpdateUserDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -26,7 +24,7 @@ export class UsersService {
       const newUser = this.userRepository.create(createUserDto);
       return await this.userRepository.save(newUser);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -60,6 +58,18 @@ export class UsersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                                 FindOnebyEmail                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOneByEmail(email: string) {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: { password: true },
+    });
+    return user;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
@@ -86,15 +96,7 @@ export class UsersService {
         deleted: user,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    throw new InternalServerErrorException(error.message);
   }
 }

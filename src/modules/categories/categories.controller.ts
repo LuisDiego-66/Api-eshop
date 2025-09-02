@@ -10,13 +10,14 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
+
 import { CategoriesService } from './categories.service';
 
-@ApiTags('Categories')
 // @ApiBearerAuth('access-token') // para la autenticacion
+@ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}

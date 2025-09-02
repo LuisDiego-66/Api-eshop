@@ -1,16 +1,13 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Brand } from './entities/brand.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateBrandDto, UpdateBrandDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Brand } from './entities/brand.entity';
 
 @Injectable()
 export class BrandsService {
@@ -28,7 +25,7 @@ export class BrandsService {
       const newBrand = this.brandRepository.create(createBrandDto);
       return await this.brandRepository.save(newBrand);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -73,7 +70,7 @@ export class BrandsService {
       Object.assign(brand, updateBrandDto);
       return await this.brandRepository.save(brand);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -90,17 +87,7 @@ export class BrandsService {
         deleted: brand,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    if (error.code == '23505') throw new ConflictException(error.detail); // unique violation
-
-    throw new InternalServerErrorException(error.message);
   }
 }

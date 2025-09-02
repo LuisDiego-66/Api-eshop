@@ -1,4 +1,3 @@
-import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
 import {
   Column,
   CreateDateColumn,
@@ -8,7 +7,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { GenderType } from '../enums/gender-type.enum';
+
+import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
 
 @Entity('categories')
 export class Category {
@@ -42,7 +44,7 @@ export class Category {
 
   // Relacion con la tabla de subcategories ( una category puede tener muchas subcategories )
   @OneToMany(() => Subcategory, (subcategory) => subcategory.category, {
-    cascade: true, //! para la eliminacion en cascada de subcategories
+    //cascade: true, //! para la eliminacion en cascada de subcategories
   })
   subcategories: Subcategory[];
 }

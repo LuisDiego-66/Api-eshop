@@ -1,16 +1,13 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Subcategory } from './entities/subcategory.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateSubcategoryDto, UpdateSubcategoryDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Subcategory } from './entities/subcategory.entity';
 
 @Injectable()
 export class SubcategoriesService {
@@ -31,7 +28,7 @@ export class SubcategoriesService {
       });
       return await this.subcategoryRepository.save(newSubCategory);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -76,7 +73,7 @@ export class SubcategoriesService {
       Object.assign(subCategory, updateSubcategoryDto);
       return await this.subcategoryRepository.save(subCategory);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -93,17 +90,7 @@ export class SubcategoriesService {
         deleted: subCategory,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
-
-    throw new InternalServerErrorException(error.message);
   }
 }

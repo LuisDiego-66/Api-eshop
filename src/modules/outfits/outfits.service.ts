@@ -1,17 +1,14 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Outfit } from './entities/outfit.entity';
-import { Variant } from '../variants/entities/variant.entity';
-//? ---------------------------------------------------------------------------------------------- */
+import { DataSource, Repository } from 'typeorm';
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateOutfitDto, UpdateOutfitDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Outfit } from './entities/outfit.entity';
+import { Variant } from '../variants/entities/variant.entity';
 
 @Injectable()
 export class OutfitsService {
@@ -21,6 +18,8 @@ export class OutfitsService {
 
     @InjectRepository(Variant)
     private readonly variantRepository: Repository<Variant>,
+
+    private readonly dataSourse: DataSource,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -43,49 +42,97 @@ export class OutfitsService {
       });
       return await this.outfitRepository.save(outfit);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
+  async findAll(pagination: PaginationDto) {
+    const { limit = 10, offset = 0 } = pagination;
 
-  findAll(pagination: PaginationDto) {
-    return `This action returns all outfits`;
+    const outfits = await this.outfitRepository.find({
+      take: limit,
+      skip: offset,
+      relations: { variants: true },
+    });
+
+    return outfits;
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  findOne(id: number) {
-    return `This action returns a #${id} outfit`;
+  async findOne(id: number) {
+    const outfit = await this.outfitRepository.findOne({
+      where: { id },
+      relations: { variants: true },
+    });
+
+    if (!outfit) {
+      throw new NotFoundException('Outfit not found: ' + id);
+    }
+
+    return outfit;
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  update(id: number, updateOutfitDto: UpdateOutfitDto) {
-    return `This action updates a #${id} outfit`;
+  async update(id: number, updateOutfitDto: UpdateOutfitDto) {
+    const { variantIds } = updateOutfitDto;
+    const outfitEntity = await this.findOne(id);
+
+    const queryRunner = this.dataSourse.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (variantIds) {
+        outfitEntity.variants = [];
+      }
+
+      Object.assign(outfitEntity, updateOutfitDto);
+      const outfit = await queryRunner.manager.save(outfitEntity);
+
+      await queryRunner.commitTransaction();
+
+      return outfit;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  remove(id: number) {
-    return `This action removes a #${id} outfit`;
-  }
+  async remove(id: number) {
+    const outfitEntity = await this.findOne(id);
 
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
+    const queryRunner = this.dataSourse.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  private handleDBExceptions(error: any) {
-    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
+    try {
+      await queryRunner.manager.softRemove(outfitEntity);
+      await queryRunner.commitTransaction();
 
-    throw new InternalServerErrorException(error.message);
+      return {
+        message: 'Outfit deleted successfully',
+        deleted: outfitEntity,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

@@ -1,7 +1,3 @@
-import { AuthProviders } from 'src/auth/enums/providers.enum';
-import { Address } from 'src/modules/addresses/entities/address.entity';
-import { Order } from 'src/modules/orders/entities/order.entity';
-//? ---------------------------------------------------------------------------------------------- */s
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +7,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { AuthProviders } from 'src/auth/enums/providers.enum';
+
+import { Address } from 'src/modules/addresses/entities/address.entity';
+import { Order } from 'src/modules/orders/entities/order.entity';
 
 @Entity('customers')
 export class Customer {

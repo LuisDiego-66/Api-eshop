@@ -1,25 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderType } from '../enums/order-type.enum';
-import {
-  IsArray,
-  IsEnum,
-  IsNumber,
-  ValidateIf,
-  ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { CreateItemDto } from './create-item.dto';
+import { IsEnum, IsNumber, IsString, ValidateIf } from 'class-validator';
 
 export abstract class CreateOrderDto {
   @ApiProperty({ enum: OrderType })
   @IsEnum(OrderType)
   type: OrderType;
 
-  @ApiProperty({ type: CreateItemDto, isArray: true })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateItemDto)
-  items: CreateItemDto[];
+  @ApiProperty({
+    description: 'Token items',
+    example:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXJ0IjpbeyJ2YXJpYW50SWQiOjIsInF1YW50aXR5IjozfV0sImlhdCI6MTc1NjEzNDkzNywiZXhwIjoxNzU2MjIxMzM3fQ',
+  })
+  @IsString()
+  items: string;
 
   @ApiPropertyOptional({
     description: 'Customer Id',

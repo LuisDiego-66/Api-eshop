@@ -1,26 +1,33 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
-//? ---------------------------------------------------------------------------------------------- */
-import { SubcategoriesModule } from './modules/subcategories/subcategories.module';
-import { MultimediaModule } from './modules/multimedia/multimedia.module';
+
+import { join } from 'path';
+import { envs } from './config/environments/environments';
+
+import { AuthModule } from './auth/auth.module';
+import { MailModule } from './mail/mail.module';
+import { CartModule } from './cart/cart.module';
+
+import { UsersModule } from './modules/users/users.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { SubcategoriesModule } from './modules/subcategories/subcategories.module';
 import { DiscountsModule } from './modules/discounts/discounts.module';
+
+import { ProductsModule } from './modules/products/products.module';
 import { BrandsModule } from './modules/catalogs/brands/brands.module';
 import { ColorsModule } from './modules/catalogs/colors/colors.module';
-import { AddressesModule } from './modules/addresses/addresses.module';
-import { CustomersModule } from './modules/customers/customers.module';
-import { ShipmentsModule } from './modules/shipments/shipments.module';
-import { ProductsModule } from './modules/products/products.module';
 import { SizesModule } from './modules/catalogs/sizes/sizes.module';
+
 import { VariantsModule } from './modules/variants/variants.module';
 import { OutfitsModule } from './modules/outfits/outfits.module';
 import { OrdersModule } from './modules/orders/orders.module';
-import { UsersModule } from './modules/users/users.module';
-import { AuthModule } from './auth/auth.module';
-//? ---------------------------------------------------------------------------------------------- */
-import { envs } from './config/environments/environments';
-import { join } from 'path';
+
+import { CustomersModule } from './modules/customers/customers.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
+import { ShipmentsModule } from './modules/shipments/shipments.module';
+
+import { StockReservationsModule } from './modules/stock-reservations/stock-reservations.module';
 
 @Module({
   imports: [
@@ -39,6 +46,9 @@ import { join } from 'path';
       rootPath: join(__dirname, '..', 'public'), // Path to the static files
     }),
 
+    AuthModule,
+    UsersModule,
+    CustomersModule,
     CategoriesModule,
     SubcategoriesModule,
     DiscountsModule,
@@ -47,14 +57,13 @@ import { join } from 'path';
     ColorsModule,
     SizesModule,
     VariantsModule,
+    OutfitsModule,
     OrdersModule,
     ShipmentsModule,
     AddressesModule,
-    CustomersModule,
-    MultimediaModule,
-    OutfitsModule,
-    AuthModule,
-    UsersModule,
+    MailModule,
+    CartModule,
+    StockReservationsModule,
   ],
   controllers: [],
   providers: [],

@@ -10,9 +10,10 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateColorDto, UpdateColorDto } from './dto';
+
 import { ColorsService } from './colors.service';
 
 @ApiTags('Colors')

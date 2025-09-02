@@ -1,4 +1,3 @@
-import { Variant } from 'src/modules/variants/entities/variant.entity';
 import {
   Column,
   Entity,
@@ -6,6 +5,8 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Variant } from 'src/modules/variants/entities/variant.entity';
 
 @Entity('outfits')
 export class Outfit {

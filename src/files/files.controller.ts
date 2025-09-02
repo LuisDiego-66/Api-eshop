@@ -11,19 +11,19 @@ import {
   Body,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { diskStorage } from 'multer';
-//? ---------------------------------------------------------------------------------------------- */
-//? ---------------------------------------------------------------------------------------------- */
-import { DeleteMultimediaDto } from './dto';
+
 import { fileFilter } from './helpers/fileFilter.helper';
 import { fileNamer } from './helpers/fileNamer.helper';
-import { MultimediaService } from './multimedia.service';
 
+import { FilesService } from './files.service';
+
+@ApiTags('Files')
 @Controller('multimedia')
-export class MultimediaController {
-  constructor(private readonly multimediaService: MultimediaService) {}
+export class FilesController {
+  constructor(private readonly filesService: FilesService) {}
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Upload                                                  */
@@ -46,7 +46,7 @@ export class MultimediaController {
     },
   })
   @UseInterceptors(
-    FilesInterceptor('files', 5, {
+    FilesInterceptor('files', 3, {
       fileFilter: fileFilter,
       storage: diskStorage({
         destination: './static/uploads',
@@ -60,7 +60,7 @@ export class MultimediaController {
         'Make sure that at least one file was uploaded',
       );
     }
-    return this.multimediaService.getSecureUrl(files);
+    return this.filesService.getSecureUrl(files);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -69,7 +69,7 @@ export class MultimediaController {
 
   @Get('/upload/:file')
   getFile(@Res() res: Response, @Param('file') file: string) {
-    const path = this.multimediaService.getFile(file);
+    const path = this.filesService.getFile(file);
     res.sendFile(path);
   }
 
@@ -78,7 +78,7 @@ export class MultimediaController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Delete()
-  deleteFiles(@Body() deleteDto: DeleteMultimediaDto) {
-    return this.multimediaService.deletedFiles(deleteDto);
+  deleteFiles(@Body() deleteDto: string[]) {
+    return this.filesService.deletedFiles(deleteDto);
   }
 }

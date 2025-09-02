@@ -1,16 +1,7 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Shipment } from './entities/shipment.entity';
-import { NationalShipment } from './entities/national-shipment.entity';
-import { InternationalShipment } from './entities/international-shipment.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import {
   CreateNationalShipmentDto,
@@ -18,7 +9,14 @@ import {
   UpdateNationalShipmentDto,
   UpdateInternationalShipmentDto,
 } from './dto';
+
 import { ShipmentMethod } from './enums/shipment-method.enum';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Shipment } from './entities/shipment.entity';
+import { NationalShipment } from './entities/national-shipment.entity';
+import { InternationalShipment } from './entities/international-shipment.entity';
 
 @Injectable()
 export class ShipmentsService {
@@ -117,7 +115,7 @@ export class ShipmentsService {
       Object.assign(shipment, updateShipmentDto);
       return await this.nationalRepository.save(shipment);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -131,7 +129,7 @@ export class ShipmentsService {
       Object.assign(shipment, updateShipmentDto);
       return await this.internationalRepository.save(shipment);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -148,17 +146,7 @@ export class ShipmentsService {
         deleted: shipment,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
-
-    throw new InternalServerErrorException(error.message);
   }
 }

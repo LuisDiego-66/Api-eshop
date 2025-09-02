@@ -1,4 +1,3 @@
-import { Variant } from 'src/modules/variants/entities/variant.entity';
 import {
   Column,
   CreateDateColumn,
@@ -8,6 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Variant } from 'src/modules/variants/entities/variant.entity';
 
 @Entity('colors')
 export class Color {

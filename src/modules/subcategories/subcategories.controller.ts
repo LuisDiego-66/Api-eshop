@@ -10,9 +10,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateSubcategoryDto, UpdateSubcategoryDto } from './dto';
+
 import { SubcategoriesService } from './subcategories.service';
 
 @ApiTags('Subcategories')

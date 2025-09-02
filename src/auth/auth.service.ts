@@ -1,20 +1,30 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Customer } from 'src/modules/customers/entities/customer.entity';
-//? ---------------------------------------------------------------------------------------------- */
+import * as bcrypt from 'bcrypt';
+
+import { CreateCustomerDto } from 'src/modules/customers/dto';
 import { LoginUserDto } from './dto';
+
 import { IJwtPayload, IGooglePayload } from './interfaces';
 import { LoginType } from 'src/common/enums/login-type.enum';
-import { CreateCustomerDto } from 'src/modules/customers/dto';
+
+import { UsersService } from 'src/modules/users/users.service';
+
+import { Customer } from 'src/modules/customers/entities/customer.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Customer)
     private customerRepository: Repository<Customer>,
+    private readonly userService: UsersService,
+
     private jwtService: JwtService,
   ) {}
 
@@ -67,7 +77,30 @@ export class AuthService {
   //?                                    LoginUser                                                   */
   //? ---------------------------------------------------------------------------------------------- */
 
-  login(loginUserDto: LoginUserDto) {}
+  async login(loginUserDto: LoginUserDto) {
+    const { email, password } = loginUserDto;
+
+    const user = await this.userService.findOneByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const { password: _, ...entityWithoutPassword } = user;
+
+    return {
+      token: this.generateJwt({
+        id: entityWithoutPassword.id,
+        email: entityWithoutPassword.email,
+        type: LoginType.user,
+      }),
+    };
+  }
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */

@@ -1,6 +1,3 @@
-import { Customer } from 'src/modules/customers/entities/customer.entity';
-import { Order } from 'src/modules/orders/entities/order.entity';
-//? ---------------------------------------------------------------------------------------------- */
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +8,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Customer } from 'src/modules/customers/entities/customer.entity';
+import { Order } from 'src/modules/orders/entities/order.entity';
 
 @Entity('addresses')
 export class Address {

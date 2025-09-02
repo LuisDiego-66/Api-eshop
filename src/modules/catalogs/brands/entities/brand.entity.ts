@@ -1,4 +1,3 @@
-import { Product } from 'src/modules/products/entities/product.entity';
 import {
   Column,
   CreateDateColumn,
@@ -8,6 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Product } from 'src/modules/products/entities/product.entity';
 
 @Entity('brands')
 export class Brand {

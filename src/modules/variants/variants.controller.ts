@@ -10,9 +10,10 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateVariantDto, UpdateVariantDto } from './dto';
+
 import { VariantsService } from './variants.service';
 
 @ApiTags('Variants')
@@ -67,5 +68,14 @@ export class VariantsController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.variantsService.remove(id);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                       getStock                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Get('stock/:id')
+  getStock(@Param('id', ParseIntPipe) id: number) {
+    return this.variantsService.getAvailableStock(id);
   }
 }

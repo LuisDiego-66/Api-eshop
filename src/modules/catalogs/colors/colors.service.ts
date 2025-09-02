@@ -1,15 +1,13 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Color } from './entities/color.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateColorDto, UpdateColorDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Color } from './entities/color.entity';
 
 @Injectable()
 export class ColorsService {
@@ -27,7 +25,7 @@ export class ColorsService {
       const newColor = this.colorRepository.create(createColorDto);
       return await this.colorRepository.save(newColor);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -70,7 +68,7 @@ export class ColorsService {
       Object.assign(color, updateColorDto);
       return await this.colorRepository.save(color);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -87,15 +85,7 @@ export class ColorsService {
         deleted: color,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    throw new InternalServerErrorException(error.message);
   }
 }

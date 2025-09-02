@@ -1,15 +1,13 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Category } from './entities/category.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Category } from './entities/category.entity';
 
 @Injectable()
 export class CategoriesService {
@@ -27,7 +25,7 @@ export class CategoriesService {
       const newCategory = this.categoryRepository.create(createCategoryDto);
       return await this.categoryRepository.save(newCategory);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -72,7 +70,7 @@ export class CategoriesService {
       Object.assign(category, updateCategoryDto);
       return await this.categoryRepository.save(category);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -89,15 +87,7 @@ export class CategoriesService {
         deleted: category,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    throw new InternalServerErrorException(error.message);
   }
 }

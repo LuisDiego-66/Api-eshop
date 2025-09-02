@@ -1,16 +1,13 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Customer } from './entities/customer.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { UpdateCustomerDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Customer } from './entities/customer.entity';
 
 @Injectable()
 export class CustomersService {
@@ -53,9 +50,7 @@ export class CustomersService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findOneByEmail(email: string) {
-    const customer = await this.customerRepository.findOne({
-      where: { email },
-    });
+    const customer = await this.customerRepository.findOneBy({ email });
     return customer;
   }
 
@@ -86,19 +81,7 @@ export class CustomersService {
         deleted: customer,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    if (error.code === '23505') throw new ConflictException(error.detail); //! email
-
-    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
-
-    throw new InternalServerErrorException(error.message);
   }
 }

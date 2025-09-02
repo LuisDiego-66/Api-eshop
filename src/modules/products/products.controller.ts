@@ -10,9 +10,10 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateProductDto, UpdateProductDto } from './dto';
+
 import { ProductsService } from './products.service';
 
 @ApiTags('Products')

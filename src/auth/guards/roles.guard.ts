@@ -1,14 +1,16 @@
 import {
+  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { META_ROLES } from '../decorators/roles.decorator';
-import { User } from 'src/modules/users/entities/user.entity';
+
 import { Roles } from '../enums/roles.enum';
+import { META_ROLES } from '../decorators/roles.decorator';
+
+import { User } from 'src/modules/users/entities/user.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -23,13 +25,13 @@ export class RolesGuard implements CanActivate {
     if (!requiredRoles || requiredRoles.length === 0) return true;
 
     const req = context.switchToHttp().getRequest();
-    const user: User | undefined = req.user; //! admin o customer
+    const user: User | any = req.user; //! admin o customer
 
     // No está autenticado
     if (!user) throw new UnauthorizedException('User is not authenticated');
 
-    // Admin pasa siempre
-    if (user.rol === Roles.ADMIN) return true;
+    // Existe rol? Admin pasa siempre
+    if (user.rol && user.rol === Roles.ADMIN) return true;
 
     // Existe rol? ¿Tiene alguno de los roles requeridos?
     if (user.rol && requiredRoles.includes(user.rol)) {

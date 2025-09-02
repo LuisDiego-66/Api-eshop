@@ -1,4 +1,3 @@
-import { Order } from 'src/modules/orders/entities/order.entity';
 import {
   BaseEntity,
   Column,
@@ -10,7 +9,10 @@ import {
   TableInheritance,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { ShipmentMethod } from '../enums/shipment-method.enum';
+
+import { Order } from 'src/modules/orders/entities/order.entity';
 
 @Entity('shipments')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })

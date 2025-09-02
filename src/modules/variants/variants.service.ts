@@ -1,26 +1,24 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Variant } from './entities/variant.entity';
-import { Multimedia } from '../multimedia/entities/multimedia.entity';
-//? ---------------------------------------------------------------------------------------------- */
+import { DataSource, QueryRunner, Repository } from 'typeorm';
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateVariantDto, UpdateVariantDto } from './dto';
-import { MultimediaService } from '../multimedia/multimedia.service';
+
+import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
+
+import { FilesService } from '../../files/files.service';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Variant } from './entities/variant.entity';
 
 @Injectable()
 export class VariantsService {
   constructor(
     @InjectRepository(Variant)
     private readonly variantRepository: Repository<Variant>,
-    private readonly multimediaService: MultimediaService,
-
+    private readonly filesService: FilesService,
     private readonly dataSourse: DataSource,
   ) {}
 
@@ -34,14 +32,14 @@ export class VariantsService {
 
       const newVariant = this.variantRepository.create({
         ...data,
-        product: { id: createVariantDto.product }, //! Is a number, not an object
+        product: { id: createVariantDto.product },
         color: { id: createVariantDto.color },
         size: { id: createVariantDto.size },
         multimedia,
       });
       return await this.variantRepository.save(newVariant);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -55,7 +53,7 @@ export class VariantsService {
     const variants = await this.variantRepository.find({
       take: limit,
       skip: offset,
-      relations: { product: true, color: true, size: true, multimedia: true },
+      relations: { product: true, color: true, size: true },
     });
 
     return variants;
@@ -68,11 +66,13 @@ export class VariantsService {
   async findOne(id: number) {
     const variant = await this.variantRepository.findOne({
       where: { id },
-      relations: { product: true, color: true, size: true, multimedia: true },
+      relations: { product: { discount: true }, color: true, size: true },
     });
+
     if (!variant) {
-      throw new NotFoundException('Variant not found');
+      throw new NotFoundException('Variant not found: ' + id);
     }
+
     return variant;
   }
 
@@ -84,20 +84,15 @@ export class VariantsService {
     const { multimedia } = updateVariantDto;
     const variantEntity = await this.findOne(id);
 
-    //const oldMultimedia = [...variantEntity.multimedia];
-
     const queryRunner = this.dataSourse.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       if (multimedia) {
-        await queryRunner.manager.delete(Multimedia, {
-          variant: { id: id },
-        });
-
         //! se borran físicamente los archivos
-        //await this.multimediaService.deletedFiles(oldMultimedia);
+        await this.filesService.deletedFiles(variantEntity.multimedia);
+        variantEntity.multimedia = [];
       }
 
       Object.assign(variantEntity, updateVariantDto);
@@ -108,7 +103,7 @@ export class VariantsService {
       return variant;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     } finally {
       await queryRunner.release();
     }
@@ -119,45 +114,113 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async remove(id: number) {
-    const variant = await this.findOne(id);
-    const { multimedia } = variant;
+    const variantEntity = await this.findOne(id);
+    const { multimedia } = variantEntity;
 
     const queryRunner = this.dataSourse.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      //! se borran físicamente los archivos
       if (multimedia) {
-        await queryRunner.manager.delete(Multimedia, {
-          variant: { id: id },
-        });
-
-        //! se borran físicamente los archivos
-        //await this.multimediaService.deletedFiles(multimedia);
+        await this.filesService.deletedFiles(multimedia);
+        variantEntity.multimedia = [];
+        await queryRunner.manager.save(variantEntity);
       }
 
-      await queryRunner.manager.softRemove(variant);
+      await queryRunner.manager.softRemove(variantEntity);
       await queryRunner.commitTransaction();
 
       return {
         message: 'Variant deleted successfully',
-        deleted: variant, //! devuelve sin multimedias
+        deleted: variantEntity, //! devuelve sin multimedias
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     } finally {
       await queryRunner.release();
     }
   }
 
   //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
+  //*                                        Functions                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  private handleDBExceptions(error: any) {
-    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
+  async getAvailableStock(variantId: number): Promise<number> {
+    await this.findOne(variantId);
+    const result = await this.variantRepository.query(
+      `
+        SELECT 
+          COALESCE((
+            SELECT SUM(i.quantity) 
+            FROM incomes i 
+            WHERE i."variantId" = v.id
+          ), 0)
+          -
+          COALESCE((
+            SELECT SUM(sr.quantity) 
+            FROM stock_reservations sr 
+            WHERE sr."variantId" = v.id
+              AND sr.status = $2
+          ), 0)
+          -
+          COALESCE((
+            SELECT SUM(sr.quantity) 
+            FROM stock_reservations sr 
+            WHERE sr."variantId" = v.id
+              AND sr.status = $3
+              AND sr."expiresAt" > NOW()
+          ), 0)
+          AS available_stock
+        FROM variants v
+        WHERE v.id = $1
+      `,
+      [variantId, ReservationStatus.PAID, ReservationStatus.PENDING],
+    );
+    return Number(result[0]?.available_stock ?? 0);
+  }
 
-    throw new InternalServerErrorException(error.message);
+  async getAvailableStockWithLock(
+    queryRunner: QueryRunner,
+    variantId: number,
+  ): Promise<number> {
+    //! Bloquear las reservas existentes para esta variante
+    await queryRunner.manager.query(
+      `
+      SELECT 1
+      FROM stock_reservations sr
+      WHERE sr."variantId" = $1
+        AND sr.status IN ($2, $3)
+        AND (sr.status != $3 OR sr."expiresAt" > NOW())
+      FOR UPDATE
+      `,
+      [variantId, ReservationStatus.PAID, ReservationStatus.PENDING],
+    );
+
+    //! Calcular stock disponible (sin FOR UPDATE en agregaciones)
+    const result = await queryRunner.manager.query(
+      `
+      SELECT
+          COALESCE((SELECT SUM(i.quantity) 
+            FROM incomes i 
+            WHERE i."variantId" = $1), 0)
+        - 
+        COALESCE((SELECT SUM(sr.quantity) 
+            FROM stock_reservations sr 
+            WHERE sr."variantId" = $1 
+              AND sr.status = $2), 0)
+        - 
+        COALESCE((SELECT SUM(sr.quantity) 
+            FROM stock_reservations sr 
+            WHERE sr."variantId" = $1 
+              AND sr.status = $3 
+              AND sr."expiresAt" > NOW()), 0)
+              AS available_stock
+      `,
+      [variantId, ReservationStatus.PAID, ReservationStatus.PENDING],
+    );
+    return Number(result[0]?.available_stock ?? 0);
   }
 }

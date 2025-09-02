@@ -1,5 +1,3 @@
-import { Product } from 'src/modules/products/entities/product.entity';
-//? ---------------------------------------------------------------------------------------------- */
 import {
   BeforeInsert,
   BeforeUpdate,
@@ -11,7 +9,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { DiscountType } from '../enums/discount-type.enum';
+
+import { Product } from 'src/modules/products/entities/product.entity';
 
 @Entity('discounts')
 export class Discount {

@@ -1,4 +1,5 @@
 import { ChildEntity, Column } from 'typeorm';
+
 import { Shipment } from './shipment.entity';
 
 @ChildEntity('national')

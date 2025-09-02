@@ -1,6 +1,3 @@
-import { Variant } from 'src/modules/variants/entities/variant.entity';
-import { Order } from './order.entity';
-//? ---------------------------------------------------------------------------------------------- */
 import {
   Column,
   CreateDateColumn,
@@ -9,6 +6,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Variant } from 'src/modules/variants/entities/variant.entity';
+import { Order } from './order.entity';
 
 @Entity('items')
 export class Item {
@@ -31,7 +31,7 @@ export class Item {
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
-  deletedAt: Date;
+  deletedAt?: Date;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */

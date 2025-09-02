@@ -1,6 +1,3 @@
-import { Category } from 'src/modules/categories/entities/category.entity';
-import { Product } from 'src/modules/products/entities/product.entity';
-//? ---------------------------------------------------------------------------------------------- */
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +8,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Category } from 'src/modules/categories/entities/category.entity';
+import { Product } from 'src/modules/products/entities/product.entity';
 
 @Entity('subcategories')
 export class Subcategory {

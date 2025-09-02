@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+
 import { AuthProviders } from 'src/auth/enums/providers.enum';
 
 export class CreateCustomerDto {
@@ -32,6 +33,5 @@ export class CreateCustomerDto {
     example: 78926281,
   })
   @IsOptional()
-  @IsNumber()
   phone?: string;
 }

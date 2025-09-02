@@ -1,20 +1,26 @@
 import {
-  BadRequestException,
-  ConflictException,
   Injectable,
-  InternalServerErrorException,
+  BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Discount } from '../discounts/entities/discount.entity';
-import { Variant } from '../variants/entities/variant.entity';
-import { Order, Item } from './entities';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { OrderStatus, OrderType } from './enums';
+
+import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
+import { OrderStatus } from './enums';
+
+import { StockReservationsService } from '../stock-reservations/stock-reservations.service';
+import { VariantsService } from '../variants/variants.service';
+import { PricingService } from './pricing.service';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
+import { Variant } from '../variants/entities/variant.entity';
+import { Item, Order } from './entities';
 
 @Injectable()
 export class OrdersService {
@@ -22,130 +28,178 @@ export class OrdersService {
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     private readonly dataSource: DataSource,
+    private readonly pricingService: PricingService,
+    private readonly variantsService: VariantsService,
+    private readonly stockReservationsService: StockReservationsService,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Create                                                  */
+  //?                                  Create Order                                                  */
   //? ---------------------------------------------------------------------------------------------- */
+  async createOrder(createOrderDto: CreateOrderDto) {
+    const { items: token, type, customer, shipment, address } = createOrderDto;
 
-  async create(createOrderDto: CreateOrderDto) {
+    //! Reprice
+    const rePricing = await this.pricingService.rePrice(token);
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
     try {
-      const itemsArray: Item[] = [];
-      let totalPriceOrder = 0;
+      //! Creacion de la orden
+      const newOrder = queryRunner.manager.create(Order, {
+        type,
+        customer: customer ? { id: customer } : null,
+        shipment: shipment ? { id: shipment } : null,
+        address: address ? { id: address } : null,
+        totalPrice: rePricing.total,
+      });
+      await queryRunner.manager.save(newOrder);
 
-      for (const item of createOrderDto.items) {
-        //! se obtiene  la variante con un bloqueo pesimista
-        const variantEntity = await queryRunner.manager
-          .createQueryBuilder(Variant, 'variant')
-          .innerJoin('variant.product', 'product')
-          .leftJoin('product.discount', 'discount')
-          .addSelect([
-            'variant.id',
-            'variant.name',
-            'product.price',
-            'discount',
-          ])
-          .where('variant.id = :id', { id: item.variant })
-          .setLock('pessimistic_write', undefined, ['variant']) //! bloqueo pesimista de escritura
-          .getOne();
+      for (const item of rePricing.items) {
+        //! Bloqueo pesimista sobre la creacion e insercion de reservas sobre la variante
+        const available = await this.variantsService.getAvailableStockWithLock(
+          queryRunner,
+          item.variantId,
+        );
 
-        //! se valida si la variante existe
-        if (!variantEntity) {
-          throw new NotFoundException(`Variant ${item.variant} not found`);
-        }
-
-        //! se valida si hay stock suficiente en la variante
-        if (
-          variantEntity.stock < item.quantity ||
-          variantEntity.available == false
-        ) {
+        if (available < item.quantity) {
           throw new BadRequestException(
-            `Insufficient stock in variant ${variantEntity.id}`,
+            `Insufficient stock for variant ${item.variantId}`,
           );
         }
 
-        //! calcular el subtotal del pedido con el descuento aplicado
-        const totalPriceItem = this.calculateSubtotalItem(
-          {
-            quantity: item.quantity,
-            unit_price: variantEntity.product.price,
-            discountValue: variantEntity.product.discount?.value || 0,
-          } as Item,
-          variantEntity.product.discount as Discount,
-        );
-
-        //! crear el item y asignar los valores necesarios
-        const newItem = queryRunner.manager.create(Item, {
-          quantity: item.quantity,
-          unit_price: variantEntity.product.price,
-          discountValue: variantEntity.product.discount?.value || 0,
-          totalPrice: totalPriceItem,
-          variant: variantEntity,
+        //! Bloqueo pesimista sobre la variante
+        const variant = await queryRunner.manager.findOne(Variant, {
+          where: { id: item.variantId },
+          lock: { mode: 'pessimistic_write' },
         });
 
-        //! agregamos el item al array de items
-        itemsArray.push(newItem);
+        if (!variant)
+          throw new NotFoundException(`Variant ${item.variantId} not found`);
 
-        //! Reducir stock
-        variantEntity.stock -= item.quantity;
-        await queryRunner.manager.save(variantEntity);
+        //! Creacion del item de orden
+        const orderItem = queryRunner.manager.create(Item, {
+          order: { id: newOrder.id },
+          variant: { id: variant.id },
+          quantity: item.quantity,
+          unit_price: item.unit_price.toString(),
+          discountValue: item.discountValue,
+          totalPrice: item.totalPrice,
+        });
+        await queryRunner.manager.save(orderItem);
 
-        //! sumar el total del precio del item al total de la orden
-        totalPriceOrder += Number(totalPriceItem);
+        //! Creacion de la reserva de stock
+        await this.stockReservationsService.createReservation(
+          queryRunner.manager,
+          variant.id,
+          newOrder.id,
+          item.quantity,
+        );
       }
 
-      //! Crear y guardar la orden
-
-      const newOrder = queryRunner.manager.create(Order, {
-        ...createOrderDto,
-
-        //! si es orden en tienda se pone como finalizada
-        status:
-          createOrderDto.type === OrderType.IN_STORE
-            ? OrderStatus.FINISHED
-            : OrderStatus.IN_PROGRESS,
-
-        totalPrice: totalPriceOrder.toFixed(2), //! se asigna el total de la orden
-        items: itemsArray,
-        customer: createOrderDto.customer
-          ? { id: createOrderDto.customer }
-          : undefined,
-        shipment: createOrderDto.shipment
-          ? { id: createOrderDto.shipment }
-          : undefined,
-        address: createOrderDto.address
-          ? { id: createOrderDto.address }
-          : undefined,
-      });
-
-      await queryRunner.manager.save(newOrder);
       await queryRunner.commitTransaction();
-
-      return newOrder;
+      return await this.findOne(newOrder.id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     } finally {
       await queryRunner.release();
     }
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                                   ConfirmOrder                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
 
-  calculateSubtotalItem(item: Item, discount: Discount) {
-    const subtotal = item.quantity * Number(item.unit_price);
-    let totalPrice = '';
+  async confirmOrder(orderId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (item.discountValue != 0) {
-      const discount = (subtotal * item.discountValue) / 100;
-      totalPrice = (subtotal - discount).toFixed(2);
-    } else {
-      totalPrice = subtotal.toFixed(2);
+    try {
+      const order = await queryRunner.manager
+        .createQueryBuilder(Order, 'order')
+        .setLock('pessimistic_write') //! solo bloquea "order"
+        .where('order.id = :id', { id: orderId })
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+        .andWhere('order.expiresAt > NOW()')
+        .getOne();
+
+      if (!order) {
+        throw new NotFoundException(
+          `Order ${orderId} not found or not pending`,
+        );
+      }
+
+      order.status = OrderStatus.PAID;
+      await queryRunner.manager.save(order);
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(StockReservation)
+        .set({ status: ReservationStatus.PAID })
+        .where('orderId = :orderId', { orderId })
+        .andWhere('status = :status', { status: ReservationStatus.PENDING })
+        .andWhere('expiresAt > NOW()') //! condición de no expirada
+        .execute();
+
+      await queryRunner.commitTransaction();
+      return order;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
     }
-    return totalPrice;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                   CancelOrder                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async cancelOrder(orderId: number) {
+    //! revisar
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const order = await queryRunner.manager
+        .createQueryBuilder(Order, 'order')
+        .setLock('pessimistic_write') //! solo bloquea "order"
+        .where('order.id = :id', { id: orderId })
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+        .andWhere('order.expiresAt > NOW()')
+        .getOne();
+
+      if (!order) {
+        throw new NotFoundException(
+          `Order ${orderId} not found or not pending`,
+        );
+      }
+
+      order.status = OrderStatus.CANCELLED;
+      await queryRunner.manager.save(order);
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(StockReservation)
+        .set({ status: ReservationStatus.CANCELLED })
+        .where('orderId = :orderId', { orderId })
+        .andWhere('status = :status', { status: ReservationStatus.PENDING })
+        .andWhere('expiresAt > NOW()') //! condición de no expirada
+        .execute();
+
+      await queryRunner.commitTransaction();
+      return order;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -187,15 +241,5 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
     return order;
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
-
-    throw new InternalServerErrorException(error.message);
   }
 }

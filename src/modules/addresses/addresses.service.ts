@@ -1,16 +1,13 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-//? ---------------------------------------------------------------------------------------------- */
-import { Address } from './entities/address.entity';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateAddressDto, UpdateAddressDto } from './dto';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { Address } from './entities/address.entity';
 
 @Injectable()
 export class AddressesService {
@@ -28,7 +25,7 @@ export class AddressesService {
       const newAddress = this.addressRepository.create(createAddressDto);
       return await this.addressRepository.save(newAddress);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -71,7 +68,7 @@ export class AddressesService {
       Object.assign(address, updateAddreseDto);
       return await this.addressRepository.save(address);
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
   }
 
@@ -88,17 +85,7 @@ export class AddressesService {
         deleted: address,
       };
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error);
     }
-  }
-
-  //* ---------------------------------------------------------------------------------------------- */
-  //*                                        DBExceptions                                            */
-  //* ---------------------------------------------------------------------------------------------- */
-
-  private handleDBExceptions(error: any) {
-    if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
-
-    throw new InternalServerErrorException(error.message);
   }
 }

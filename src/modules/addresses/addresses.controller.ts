@@ -9,10 +9,11 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
-import { CreateAddressDto, UpdateAddressDto } from './dto';
-import { AddressesService } from './addresses.service';
+
 import { PaginationDto } from 'src/common/dtos/pagination';
+import { CreateAddressDto, UpdateAddressDto } from './dto';
+
+import { AddressesService } from './addresses.service';
 
 @ApiTags('Addresses')
 @Controller('addresses')

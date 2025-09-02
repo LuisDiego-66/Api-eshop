@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import {
   CreateSeasonalDiscountDto,
@@ -18,6 +18,7 @@ import {
   UpdateSeasonalDiscountDto,
   UpdatePermanentDiscountDto,
 } from './dto';
+
 import { DiscountsService } from './discounts.service';
 
 @ApiTags('Discounts')

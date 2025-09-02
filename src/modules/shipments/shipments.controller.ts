@@ -9,8 +9,8 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-//? ---------------------------------------------------------------------------------------------- */
-import { ShipmentsService } from './shipments.service';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+
 import { PaginationDto } from 'src/common/dtos/pagination';
 import {
   CreateNationalShipmentDto,
@@ -18,7 +18,8 @@ import {
   UpdateNationalShipmentDto,
   UpdateInternationalShipmentDto,
 } from './dto';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+
+import { ShipmentsService } from './shipments.service';
 
 @ApiTags('Shipments')
 @Controller('shipments')

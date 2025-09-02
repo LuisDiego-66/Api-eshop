@@ -1,8 +1,3 @@
-import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
-import { Brand } from 'src/modules/catalogs/brands/entities/brand.entity';
-import { Discount } from 'src/modules/discounts/entities/discount.entity';
-import { Variant } from 'src/modules/variants/entities/variant.entity';
-//? ---------------------------------------------------------------------------------------------- */
 import {
   Column,
   CreateDateColumn,
@@ -13,6 +8,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
+import { Brand } from 'src/modules/catalogs/brands/entities/brand.entity';
+import { Discount } from 'src/modules/discounts/entities/discount.entity';
+import { Variant } from 'src/modules/variants/entities/variant.entity';
 
 @Entity('products')
 export class Product {
