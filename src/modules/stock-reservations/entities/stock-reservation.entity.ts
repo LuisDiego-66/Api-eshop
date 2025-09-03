@@ -9,7 +9,7 @@ import {
 import { ReservationStatus } from '../enum/reservation-status.enum';
 
 import { Variant } from '../../variants/entities/variant.entity';
-import { Order } from 'src/modules/orders/entities';
+import { Order } from 'src/modules/orders/entities/order.entity';
 
 @Entity('stock_reservations')
 export class StockReservation {

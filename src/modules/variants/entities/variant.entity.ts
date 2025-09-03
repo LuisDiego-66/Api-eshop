@@ -16,7 +16,7 @@ import { Color } from 'src/modules/catalogs/colors/entities/color.entity';
 import { Product } from 'src/modules/products/entities/product.entity';
 import { Size } from 'src/modules/catalogs/sizes/entities/size.entity';
 import { Outfit } from 'src/modules/outfits/entities/outfit.entity';
-import { Item } from 'src/modules/orders/entities';
+import { Item } from 'src/modules/orders/entities/item.entity';
 import { Income } from './income.entity';
 
 @Unique(['product', 'color', 'size'])

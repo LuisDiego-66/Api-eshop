@@ -20,7 +20,8 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
 import { Variant } from '../variants/entities/variant.entity';
-import { Item, Order } from './entities';
+import { Order } from './entities/order.entity';
+import { Item } from './entities/item.entity';
 
 @Injectable()
 export class OrdersService {
