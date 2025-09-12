@@ -2,6 +2,8 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -9,10 +11,11 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { CreateCustomerDto } from 'src/modules/customers/dto';
-import { LoginUserDto } from './dto';
+import { CreateSubscriberDto, LoginUserDto } from './dto';
 
 import { IJwtPayload, IGooglePayload } from './interfaces';
 import { LoginType } from 'src/common/enums/login-type.enum';
+import { CustomerType } from 'src/modules/customers/enums/customer-type.enum';
 
 import { UsersService } from 'src/modules/users/users.service';
 
@@ -24,7 +27,6 @@ export class AuthService {
     @InjectRepository(Customer)
     private customerRepository: Repository<Customer>,
     private readonly userService: UsersService,
-
     private jwtService: JwtService,
   ) {}
 
@@ -40,7 +42,9 @@ export class AuthService {
     const customerEntity = await this.findCustomerByEmail(GooglePayload.email);
 
     if (!customerEntity) {
-      return await this.register(GooglePayload);
+      return await this.registerCustomer(GooglePayload);
+    } else if (customerEntity.type === CustomerType.SUBSCRIBED) {
+      return await this.registerCustomerSubscribe(GooglePayload);
     }
 
     return {
@@ -53,10 +57,31 @@ export class AuthService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                      CreateCustomerSubscribe                                                   */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async createCustomerSubscribe(createSubscriberDto: CreateSubscriberDto) {
+    const customer = await this.findCustomerByEmail(createSubscriberDto.email);
+
+    if (customer) {
+      throw new ConflictException(
+        'The email is already registered or subscribed',
+      );
+    }
+
+    const newSubscriber = this.customerRepository.create({
+      ...createSubscriberDto,
+      type: CustomerType.SUBSCRIBED,
+    });
+
+    return await this.customerRepository.save(newSubscriber);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
   //?                                RegisterCustomer                                                */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async register(createCustomerDto: CreateCustomerDto) {
+  async registerCustomer(createCustomerDto: CreateCustomerDto) {
     try {
       const newCustomer = this.customerRepository.create(createCustomerDto);
       const customer = await this.customerRepository.save(newCustomer);
@@ -71,6 +96,36 @@ export class AuthService {
     } catch (error) {
       console.log(error);
     }
+  }
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                       RegisterCustomerSubscribe                                                */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async registerCustomerSubscribe(createCustomerDto: CreateCustomerDto) {
+    try {
+      const customerEntity = await this.findCustomerByEmail(
+        createCustomerDto.email,
+      );
+
+      if (!customerEntity) {
+        throw new NotFoundException('Subscriber not found');
+      }
+
+      Object.assign(customerEntity, {
+        ...createCustomerDto,
+        type: CustomerType.REGISTERED,
+      });
+
+      const customer = await this.customerRepository.save(customerEntity);
+
+      return {
+        token: this.generateJwt({
+          id: customer.id,
+          email: customer.email,
+          type: LoginType.customer,
+        }),
+      };
+    } catch (error) {}
   }
 
   //? ---------------------------------------------------------------------------------------------- */

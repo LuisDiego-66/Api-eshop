@@ -12,13 +12,14 @@ import { AuthProviders } from 'src/auth/enums/providers.enum';
 
 import { Address } from 'src/modules/addresses/entities/address.entity';
 import { Order } from 'src/modules/orders/entities/order.entity';
+import { CustomerType } from '../enums/customer-type.enum';
 
 @Entity('customers')
 export class Customer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text')
+  @Column('text', { nullable: true }) //! null
   name: string;
 
   @Column('text', { unique: true }) //! Unique
@@ -27,10 +28,17 @@ export class Customer {
   @Column('text', { nullable: true }) //! null
   phone?: string;
 
-  @Column({ type: 'enum', enum: AuthProviders })
+  @Column({
+    type: 'enum',
+    enum: CustomerType,
+    default: CustomerType.REGISTERED,
+  })
+  type: CustomerType;
+
+  @Column({ type: 'enum', enum: AuthProviders, nullable: true }) //! null
   provider: AuthProviders;
 
-  @Column('text')
+  @Column('text', { nullable: true }) //! null
   idProvider: string;
 
   @Column('boolean', { default: true }) //! default true

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 //? ---------------------------------------------------------------------------------------------- */
 import { GoogleOauthGuard } from './guards';
-import { LoginUserDto } from './dto';
+import { CreateSubscriberDto, LoginUserDto } from './dto';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -17,6 +17,15 @@ export class AuthController {
   @Post('login')
   login(@Body() loginUserDto: LoginUserDto) {
     return this.authService.login(loginUserDto);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                    Subscribe                                                   */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Post('subscribe')
+  subscribe(@Body() createSubscriberDto: CreateSubscriberDto) {
+    return this.authService.createCustomerSubscribe(createSubscriberDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
