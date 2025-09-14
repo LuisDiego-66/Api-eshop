@@ -37,6 +37,9 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalPrice: string;
 
+  @Column('text', { nullable: true })
+  qrId?: string;
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
 

@@ -20,7 +20,7 @@ export class Customer {
   id: number;
 
   @Column('text', { nullable: true }) //! null
-  name: string;
+  name?: string;
 
   @Column('text', { unique: true }) //! Unique
   email: string;
@@ -36,10 +36,10 @@ export class Customer {
   type: CustomerType;
 
   @Column({ type: 'enum', enum: AuthProviders, nullable: true }) //! null
-  provider: AuthProviders;
+  provider?: AuthProviders;
 
   @Column('text', { nullable: true }) //! null
-  idProvider: string;
+  idProvider?: string;
 
   @Column('boolean', { default: true }) //! default true
   enabled: boolean;

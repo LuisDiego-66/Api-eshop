@@ -28,6 +28,7 @@ import { AddressesModule } from './modules/addresses/addresses.module';
 import { ShipmentsModule } from './modules/shipments/shipments.module';
 
 import { StockReservationsModule } from './modules/stock-reservations/stock-reservations.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { StockReservationsModule } from './modules/stock-reservations/stock-rese
     MailModule,
     CartModule,
     StockReservationsModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],

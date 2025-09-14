@@ -125,7 +125,9 @@ export class AuthService {
           type: LoginType.customer,
         }),
       };
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   //? ---------------------------------------------------------------------------------------------- */

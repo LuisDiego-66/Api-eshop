@@ -21,6 +21,10 @@ interface IEnvironmentVariables {
   //SendGrid
   SENDGRID_API_KEY: string;
   SENDGRID_SENDER: string;
+  //BNB
+  ACCOUNT_ID: string;
+  AUTHORIZATION_ID: string;
+  URL_BASE_BNB: string;
 }
 
 const environmentsSchema = joi
@@ -57,4 +61,8 @@ export const envs = {
   //SendGrid
   SENDGRID_API_KEY: envVariables.SENDGRID_API_KEY,
   SENDGRID_SENDER: envVariables.SENDGRID_SENDER,
+  //BNB
+  ACCOUNT_ID: envVariables.ACCOUNT_ID,
+  AUTHORIZATION_ID: envVariables.AUTHORIZATION_ID,
+  URL_BASE_BNB: envVariables.URL_BASE_BNB,
 };
