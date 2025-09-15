@@ -9,10 +9,4 @@ export class CreateSizeDto {
   @MaxLength(5)
   @IsString()
   name: string; // Ej: 'S', 'M', 'L', 'XL'
-
-  @ApiProperty({
-    example: 'description of the size',
-  })
-  @IsString()
-  description: string;
 }

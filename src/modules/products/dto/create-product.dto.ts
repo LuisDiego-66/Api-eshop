@@ -23,7 +23,7 @@ export class CreateProductDto {
   description: string;
 
   @ApiProperty({
-    example: '99.99',
+    example: '10.00',
   })
   @IsString()
   @IsNotEmpty()

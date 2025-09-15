@@ -1,4 +1,6 @@
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -15,11 +17,8 @@ export class Size {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true, length: 5 })
   name: string; // Ej: 'S', 'M', 'L', 'XL'
-
-  @Column('text')
-  description: string;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -37,4 +36,14 @@ export class Size {
   // Relacion con la tabla de variants ( un size puede estar en muchos variants )
   @OneToMany(() => Variant, (variant) => variant.size)
   variants: Variant[];
+
+  //* ---------------------------------------------------------------------------------------------- */
+  //*                                        Functions                                               */
+  //* ---------------------------------------------------------------------------------------------- */
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  normalizeName() {
+    this.name = this.name.toUpperCase().trim();
+  }
 }

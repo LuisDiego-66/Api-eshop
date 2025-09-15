@@ -31,10 +31,7 @@ export class Variant {
   @Column('text')
   description: string;
 
-  @Column('text', { nullable: true }) //! NULL
-  code: string;
-
-  @Column({ type: 'boolean', default: false }) //! default false
+  @Column({ type: 'boolean', default: true })
   available: boolean;
 
   @Column('text', { array: true, nullable: true }) //! NULL

@@ -12,7 +12,7 @@ import {
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/dtos/pagination';
-import { CreateVariantDto, UpdateVariantDto } from './dto';
+import { CreateVariantDto, CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { VariantsService } from './variants.service';
 
@@ -26,8 +26,8 @@ export class VariantsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Post()
-  create(@Body() createVariantDto: CreateVariantDto) {
-    return this.variantsService.create(createVariantDto);
+  create(@Body() createVariantsDto: CreateVariantsDto) {
+    return this.variantsService.create(createVariantsDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

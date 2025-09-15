@@ -21,9 +21,20 @@ export class SizesService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async create(createSizeDto: CreateSizeDto) {
+    let { name } = createSizeDto;
+    name = name.toUpperCase().trim();
+
     try {
-      const newSize = this.sizeRepository.create(createSizeDto);
-      return await this.sizeRepository.save(newSize);
+      const sizeExists = await this.sizeRepository.findOne({
+        where: { name },
+      });
+
+      if (!sizeExists) {
+        const newSize = this.sizeRepository.create(createSizeDto);
+        return await this.sizeRepository.save(newSize);
+      }
+
+      return sizeExists;
     } catch (error) {
       handleDBExceptions(error);
     }

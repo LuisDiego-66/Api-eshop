@@ -13,7 +13,7 @@ export class SendMailDto {
     example: 'luisdiegoborja8@gmail.com',
   })
   @IsEmail()
-  to: string;
+  to: string[];
 
   @ApiProperty({
     example: 'name of the receiver',

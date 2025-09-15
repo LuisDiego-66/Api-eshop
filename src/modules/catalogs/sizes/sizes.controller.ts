@@ -25,10 +25,10 @@ export class SizesController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Post()
+  /*   @Post()
   create(@Body() createSizeDto: CreateSizeDto) {
     return this.sizesService.create(createSizeDto);
-  }
+  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
@@ -54,20 +54,20 @@ export class SizesController {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Patch(':id')
+  /*   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSizeDto: UpdateSizeDto,
   ) {
     return this.sizesService.update(id, updateSizeDto);
   }
-
+ */
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Delete(':id')
+  /*   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.sizesService.remove(id);
-  }
+  } */
 }

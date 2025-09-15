@@ -1,7 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
 
-export class CreateVariantDto {
+class CreateVariantSizeDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(5)
+  size: string;
+
+  @IsInt()
+  @IsPositive()
+  quantity: number;
+}
+
+export class CreateVariantsDto {
   @ApiProperty({
     example: 'Name of the variant',
   })
@@ -23,6 +45,18 @@ export class CreateVariantDto {
   @IsOptional()
   multimedia: string[];
 
+  @ApiProperty({
+    type: [CreateVariantSizeDto],
+    example: [
+      { size: 's', quantity: 10 },
+      { size: 'm', quantity: 5 },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateVariantSizeDto)
+  sizes: CreateVariantSizeDto[];
+
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
@@ -40,11 +74,4 @@ export class CreateVariantDto {
   })
   @IsNumber()
   color: number;
-
-  @ApiProperty({
-    description: 'Size Id',
-    example: 1,
-  })
-  @IsNumber()
-  size: number;
 }

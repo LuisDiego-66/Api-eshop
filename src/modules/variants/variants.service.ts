@@ -3,43 +3,77 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination';
-import { CreateVariantDto, UpdateVariantDto } from './dto';
+import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
+import { SizesService } from '../catalogs/sizes/sizes.service';
 import { FilesService } from '../../files/files.service';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Variant } from './entities/variant.entity';
+import { Income } from './entities/income.entity';
 
 @Injectable()
 export class VariantsService {
   constructor(
     @InjectRepository(Variant)
     private readonly variantRepository: Repository<Variant>,
-    private readonly filesService: FilesService,
-    private readonly dataSourse: DataSource,
+
+    @InjectRepository(Income)
+    private readonly incomeRepository: Repository<Income>,
+
+    private sizeService: SizesService,
+
+    private filesService: FilesService,
+    private dataSource: DataSource,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async create(createVariantDto: CreateVariantDto) {
-    try {
-      const { multimedia, ...data } = createVariantDto;
+  async create(createVariantsDto: CreateVariantsDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-      const newVariant = this.variantRepository.create({
-        ...data,
-        product: { id: createVariantDto.product },
-        color: { id: createVariantDto.color },
-        size: { id: createVariantDto.size },
-        multimedia,
-      });
-      return await this.variantRepository.save(newVariant);
+    try {
+      const { multimedia, sizes, ...data } = createVariantsDto;
+
+      //! se recoren los tamaños para crear la variante por cada uno
+      const variants = await Promise.all(
+        sizes.map(async (size) => {
+          const sizeEntity = await this.sizeService.create({ name: size.size });
+
+          const newVariant = queryRunner.manager.create(Variant, {
+            ...data,
+            product: { id: createVariantsDto.product },
+            color: { id: createVariantsDto.color },
+            size: { id: sizeEntity?.id },
+            multimedia,
+          });
+
+          const variantEntity = await queryRunner.manager.save(newVariant);
+
+          const newIncome = queryRunner.manager.create(Income, {
+            quantity: size.quantity,
+            variant: { id: variantEntity.id },
+          });
+          await queryRunner.manager.save(newIncome);
+
+          return variantEntity;
+        }),
+      );
+
+      await queryRunner.commitTransaction();
+      return variants;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -84,7 +118,7 @@ export class VariantsService {
     const { multimedia } = updateVariantDto;
     const variantEntity = await this.findOne(id);
 
-    const queryRunner = this.dataSourse.createQueryRunner();
+    const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -117,7 +151,7 @@ export class VariantsService {
     const variantEntity = await this.findOne(id);
     const { multimedia } = variantEntity;
 
-    const queryRunner = this.dataSourse.createQueryRunner();
+    const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
