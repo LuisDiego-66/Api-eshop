@@ -10,9 +10,9 @@ import {
 } from 'typeorm';
 
 import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
-import { Brand } from 'src/modules/catalogs/brands/entities/brand.entity';
 import { Discount } from 'src/modules/discounts/entities/discount.entity';
-import { Variant } from 'src/modules/variants/entities/variant.entity';
+import { Brand } from 'src/modules/brands/entities/brand.entity';
+import { ProductColor } from '../../variants/entities/product-color.entity';
 
 @Entity('products')
 export class Product {
@@ -44,19 +44,15 @@ export class Product {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de subcategories ( muchos products pueden pertenecer a una subcategory)
   @ManyToOne(() => Subcategory, (subcategory) => subcategory.products)
   subcategory: Subcategory;
 
-  // Relacion con la tabla de products_varians ( un product puede tener muchos products_varians )
-  @OneToMany(() => Variant, (variant) => variant.product)
-  variants: Variant[];
+  @OneToMany(() => ProductColor, (productColors) => productColors.product)
+  productColors: ProductColor[];
 
-  // Relacion con la tabla de brands ( muchos products pueden pertenecer a una brand)
   @ManyToOne(() => Brand, (brand) => brand.products, { nullable: true }) //! NULL
   brand?: Brand;
 
-  // Relacion con la tabla de discounts ( muchos products pueden tener un discounts )
   @ManyToOne(() => Discount, (discount) => discount.products, {
     nullable: true, //! NULL
   })

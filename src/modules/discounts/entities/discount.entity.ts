@@ -53,7 +53,6 @@ export class Discount {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de products ( un discounts pueden pertenecer a muchos products)
   @OneToMany(() => Product, (product) => product.discount)
   products: Product[];
 

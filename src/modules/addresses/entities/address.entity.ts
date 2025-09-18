@@ -39,11 +39,9 @@ export class Address {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de customer ( muchas address pertenecen a un customer )
   @ManyToOne(() => Customer, (customer) => customer.address)
   customer: Customer;
 
-  // Relacion con la tabla de order ( una address puede pertenecer a muchas orders )
   @OneToMany(() => Order, (order) => order.address)
   orders: Order[];
 }

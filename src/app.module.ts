@@ -15,9 +15,9 @@ import { SubcategoriesModule } from './modules/subcategories/subcategories.modul
 import { DiscountsModule } from './modules/discounts/discounts.module';
 
 import { ProductsModule } from './modules/products/products.module';
-import { BrandsModule } from './modules/catalogs/brands/brands.module';
-import { ColorsModule } from './modules/catalogs/colors/colors.module';
-import { SizesModule } from './modules/catalogs/sizes/sizes.module';
+import { BrandsModule } from './modules/brands/brands.module';
+import { ColorsModule } from './modules/colors/colors.module';
+import { SizesModule } from './modules/sizes/sizes.module';
 
 import { VariantsModule } from './modules/variants/variants.module';
 import { OutfitsModule } from './modules/outfits/outfits.module';
@@ -54,8 +54,8 @@ import { PaymentsModule } from './payments/payments.module';
     SubcategoriesModule,
     DiscountsModule,
     BrandsModule,
-    ProductsModule,
     ColorsModule,
+    ProductsModule,
     SizesModule,
     VariantsModule,
     OutfitsModule,

@@ -36,13 +36,11 @@ export class Subcategory {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de categories ( muchas subcategories pueden pertenecer a una category)
   @ManyToOne(() => Category, (category) => category.subcategories, {
     nullable: false,
   })
   category: Category;
 
-  // Relacion con la tabla de products ( una subcategory puede tener muchos products )
   @OneToMany(() => Product, (product) => product.subcategory)
   products: Product[];
 }

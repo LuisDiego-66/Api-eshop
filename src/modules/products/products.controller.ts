@@ -26,8 +26,8 @@ export class ProductsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto);
+  createProduct(@Body() createProductDto: CreateProductDto) {
+    return this.productsService.createProduct(createProductDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -47,7 +47,7 @@ export class ProductsController {
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.findOne(id);
+    return this.productsService.findOneProductVariants(id);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

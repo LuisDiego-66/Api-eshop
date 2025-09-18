@@ -12,7 +12,7 @@ import {
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/dtos/pagination';
-import { CreateVariantDto, CreateVariantsDto, UpdateVariantDto } from './dto';
+import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { VariantsService } from './variants.service';
 
@@ -47,7 +47,7 @@ export class VariantsController {
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.variantsService.findOne(id);
+    return this.variantsService.findOneProductColor(id);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

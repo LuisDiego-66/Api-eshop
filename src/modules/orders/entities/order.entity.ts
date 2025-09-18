@@ -56,23 +56,18 @@ export class Order {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de orderItem ( una order puede tener muchos items )
   @OneToMany(() => Item, (item) => item.order, { cascade: true })
   items: Item[];
 
-  // Relacion con la tabla de product ( muchos items pueden pertenecer a un product)
   @ManyToOne(() => Customer, (customer) => customer.order, { nullable: true }) //! NULL
   customer?: Customer | null;
 
-  // Relacion con la tabla shipment ( una order puede tener un shipment )
   @ManyToOne(() => Shipment, (shipment) => shipment.orders, { nullable: true }) //! NULL
   shipment?: Shipment | null;
 
-  // Relacion con la tabla address ( muchas orders pueden tener una address )
   @ManyToOne(() => Address, (address) => address.orders, { nullable: true }) //! NULL
   address?: Address | null;
 
-  // Relacion con la tabla de StockReservation ( una order puede tener muchas reservas de stock )
   @OneToMany(() => StockReservation, (reservation) => reservation.order)
   stock_reservations: StockReservation[];
 

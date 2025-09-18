@@ -33,13 +33,11 @@ export class StockReservation {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de variant ( muchas reservas pueden pertenecer a un variant )
   @ManyToOne(() => Variant, (variant) => variant.stock_reservations, {
     /* onDelete: 'CASCADE', */
   })
   variant: Variant;
 
-  // Relacion con la tabla de variant ( muchas reservas pueden pertenecer a una order )
   @ManyToOne(() => Order, (order) => order.stock_reservations, {
     /* onDelete: 'CASCADE', */
   })

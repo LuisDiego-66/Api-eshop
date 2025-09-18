@@ -22,6 +22,7 @@ import { StockReservation } from '../stock-reservations/entities/stock-reservati
 import { Variant } from '../variants/entities/variant.entity';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
+import { Transaction } from '../variants/entities/transaction.entity';
 
 @Injectable()
 export class OrdersService {
@@ -146,6 +147,13 @@ export class OrdersService {
         .andWhere('expiresAt > NOW()') //! condición de no expirada
         .execute();
 
+      /*//! creacion de el ingreso negativo en las transacciones
+        const newtransaction = queryRunner.manager.create(Transaction, {
+          quantity: item.quantity * -1,
+          variant: { id: variant.id },
+        });
+        await queryRunner.manager.save(newtransaction); */
+
       await queryRunner.commitTransaction();
       return order;
     } catch (error) {
@@ -214,7 +222,7 @@ export class OrdersService {
       take: limit,
       skip: offset,
       relations: {
-        items: { variant: { product: true } },
+        items: { variant: true },
         customer: true,
         shipment: true,
         address: true,
@@ -232,7 +240,7 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: {
-        items: { variant: { product: true } },
+        items: { variant: true },
         customer: true,
         shipment: true,
         address: true,

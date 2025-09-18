@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { SizesModule } from '../catalogs/sizes/sizes.module';
+import { SizesModule } from '../sizes/sizes.module';
 import { FilesModule } from '../../files/files.module';
+import { ProductsModule } from '../products/products.module';
 
 import { VariantsController } from './variants.controller';
 import { VariantsService } from './variants.service';
+
+import { ProductColor } from './entities/product-color.entity';
+import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
-import { Income } from './entities/income.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Variant, Income]),
+    TypeOrmModule.forFeature([Variant, Transaction, ProductColor]),
     FilesModule,
     SizesModule,
   ],

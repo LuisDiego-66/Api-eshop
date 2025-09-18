@@ -7,13 +7,13 @@ import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
-import { SizesService } from '../catalogs/sizes/sizes.service';
+import { SizesService } from '../sizes/sizes.service';
 import { FilesService } from '../../files/files.service';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Variant } from './entities/variant.entity';
-import { Income } from './entities/income.entity';
+import { ProductColor } from './entities/product-color.entity';
 
 @Injectable()
 export class VariantsService {
@@ -21,11 +21,10 @@ export class VariantsService {
     @InjectRepository(Variant)
     private readonly variantRepository: Repository<Variant>,
 
-    @InjectRepository(Income)
-    private readonly incomeRepository: Repository<Income>,
+    @InjectRepository(ProductColor)
+    private readonly productColorRepository: Repository<ProductColor>,
 
     private sizeService: SizesService,
-
     private filesService: FilesService,
     private dataSource: DataSource,
   ) {}
@@ -40,35 +39,31 @@ export class VariantsService {
     await queryRunner.startTransaction();
 
     try {
-      const { multimedia, sizes, ...data } = createVariantsDto;
+      const { variants, multimedia, productId, colorId } = createVariantsDto;
 
-      //! se recoren los tamaños para crear la variante por cada uno
-      const variants = await Promise.all(
-        sizes.map(async (size) => {
-          const sizeEntity = await this.sizeService.create({ name: size.size });
+      const productColor = await queryRunner.manager.create(ProductColor, {
+        product: { id: productId },
+        color: { id: colorId },
+        multimedia,
 
-          const newVariant = queryRunner.manager.create(Variant, {
-            ...data,
-            product: { id: createVariantsDto.product },
-            color: { id: createVariantsDto.color },
-            size: { id: sizeEntity?.id },
-            multimedia,
-          });
+        variants: await Promise.all(
+          variants.map(async (size) => {
+            const sizeEntity = await this.sizeService.create({
+              name: size.size,
+            });
 
-          const variantEntity = await queryRunner.manager.save(newVariant);
+            return {
+              size: { id: sizeEntity?.id },
+              transactions: [{ quantity: size.quantity }],
+            };
+          }),
+        ),
+      });
 
-          const newIncome = queryRunner.manager.create(Income, {
-            quantity: size.quantity,
-            variant: { id: variantEntity.id },
-          });
-          await queryRunner.manager.save(newIncome);
-
-          return variantEntity;
-        }),
-      );
+      await queryRunner.manager.save(productColor);
 
       await queryRunner.commitTransaction();
-      return variants;
+      return productColor;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleDBExceptions(error);
@@ -84,12 +79,11 @@ export class VariantsService {
   async findAll(pagination: PaginationDto) {
     const { limit = 10, offset = 0 } = pagination;
 
-    const variants = await this.variantRepository.find({
+    const variants = await this.productColorRepository.find({
       take: limit,
       skip: offset,
-      relations: { product: true, color: true, size: true },
+      relations: { variants: { size: true } },
     });
-
     return variants;
   }
 
@@ -97,17 +91,27 @@ export class VariantsService {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findOne(id: number) {
+  async findOneVariant(id: number) {
     const variant = await this.variantRepository.findOne({
       where: { id },
-      relations: { product: { discount: true }, color: true, size: true },
+      relations: { productColor: { product: { discount: true } }, size: true },
     });
-
     if (!variant) {
       throw new NotFoundException('Variant not found: ' + id);
     }
-
     return variant;
+  }
+
+  async findOneProductColor(id: number) {
+    const productColor = await this.productColorRepository.findOne({
+      where: { id },
+      relations: { variants: true, product: true },
+    });
+
+    if (!productColor) {
+      throw new NotFoundException('Product-Color not found: ' + id);
+    }
+    return productColor;
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -115,8 +119,9 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async update(id: number, updateVariantDto: UpdateVariantDto) {
+    const variantProductColorEntity = await this.findOneProductColor(id);
+
     const { multimedia } = updateVariantDto;
-    const variantEntity = await this.findOne(id);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -125,12 +130,14 @@ export class VariantsService {
     try {
       if (multimedia) {
         //! se borran físicamente los archivos
-        await this.filesService.deletedFiles(variantEntity.multimedia);
-        variantEntity.multimedia = [];
+        await this.filesService.deletedFiles(
+          variantProductColorEntity.multimedia,
+        );
+        variantProductColorEntity.multimedia = [];
       }
 
-      Object.assign(variantEntity, updateVariantDto);
-      const variant = await queryRunner.manager.save(variantEntity);
+      Object.assign(variantProductColorEntity, updateVariantDto);
+      const variant = await queryRunner.manager.save(variantProductColorEntity);
 
       await queryRunner.commitTransaction();
 
@@ -148,8 +155,7 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async remove(id: number) {
-    const variantEntity = await this.findOne(id);
-    const { multimedia } = variantEntity;
+    const productColorEntity = await this.findOneProductColor(id);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -157,18 +163,18 @@ export class VariantsService {
 
     try {
       //! se borran físicamente los archivos
-      if (multimedia) {
-        await this.filesService.deletedFiles(multimedia);
-        variantEntity.multimedia = [];
-        await queryRunner.manager.save(variantEntity);
+      if (productColorEntity.multimedia) {
+        await this.filesService.deletedFiles(productColorEntity.multimedia);
+        productColorEntity.multimedia = [];
+        await queryRunner.manager.save(productColorEntity);
       }
 
-      await queryRunner.manager.softRemove(variantEntity);
+      await queryRunner.manager.softRemove(productColorEntity);
       await queryRunner.commitTransaction();
 
       return {
         message: 'Variant deleted successfully',
-        deleted: variantEntity, //! devuelve sin multimedias
+        deleted: productColorEntity, //! devuelve sin multimedias
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -183,14 +189,14 @@ export class VariantsService {
   //* ---------------------------------------------------------------------------------------------- */
 
   async getAvailableStock(variantId: number): Promise<number> {
-    await this.findOne(variantId);
+    await this.findOneVariant(variantId);
     const result = await this.variantRepository.query(
       `
         SELECT 
           COALESCE((
-            SELECT SUM(i.quantity) 
-            FROM incomes i 
-            WHERE i."variantId" = v.id
+            SELECT SUM(t.quantity) 
+            FROM transactions t 
+            WHERE t."variantId" = v.id
           ), 0)
           -
           COALESCE((
@@ -237,9 +243,9 @@ export class VariantsService {
     const result = await queryRunner.manager.query(
       `
       SELECT
-          COALESCE((SELECT SUM(i.quantity) 
-            FROM incomes i 
-            WHERE i."variantId" = $1), 0)
+          COALESCE((SELECT SUM(t.quantity) 
+            FROM transactions t 
+            WHERE t."variantId" = $1), 0)
         - 
         COALESCE((SELECT SUM(sr.quantity) 
             FROM stock_reservations sr 

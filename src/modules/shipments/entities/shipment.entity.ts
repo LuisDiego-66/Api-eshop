@@ -39,7 +39,6 @@ export abstract class Shipment extends BaseEntity {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de order ( una shipment puede pertenecer a muchos orders )
   @OneToMany(() => Order, (order) => order.shipment /* { cascade: true } */)
   orders: Order[];
 }

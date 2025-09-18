@@ -8,21 +8,18 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Variant } from 'src/modules/variants/entities/variant.entity';
+import { Product } from 'src/modules/products/entities/product.entity';
 
-@Entity('colors')
-export class Color {
+@Entity('brands')
+export class Brand {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text')
+  @Column({ unique: true })
   name: string;
 
-  @Column('text')
-  code: string;
-
-  @Column('boolean', { default: true })
-  enabled: boolean;
+  @Column('text', { nullable: true })
+  description?: string;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -31,13 +28,12 @@ export class Color {
   updatedAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
-  deletedAt?: Date;
+  deletedAt: Date;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de variants ( un color puede estar en muchos variants )
-  @OneToMany(() => Variant, (variant) => variant.color)
-  variants: Variant[];
+  @OneToMany(() => Product, (product) => product.brand)
+  products: Product[];
 }

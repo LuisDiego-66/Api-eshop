@@ -17,10 +17,10 @@ export class ProductsService {
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Create                                                  */
+  //?                                Create Product                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async create(createProductDto: CreateProductDto) {
+  async createProduct(createProductDto: CreateProductDto) {
     try {
       const newProduct = this.productRepository.create({
         ...createProductDto,
@@ -44,10 +44,25 @@ export class ProductsService {
     const products = await this.productRepository.find({
       take: limit,
       skip: offset,
-      relations: { brand: true, discount: true, variants: true },
     });
 
     return products;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                       FindOne Product Variants                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOneProductVariants(id: number) {
+    const product = await this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.productColors', 'pc')
+      .leftJoinAndSelect('pc.color', 'color')
+      .leftJoinAndSelect('pc.variants', 'variant')
+      .leftJoinAndSelect('variant.size', 'size')
+      .where('product.id = :id', { id: id })
+      .getOne();
+    return product;
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -57,7 +72,7 @@ export class ProductsService {
   async findOne(id: number) {
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: { variants: true },
+      relations: { productColors: { variants: true, color: true } },
     });
     if (!product) {
       throw new NotFoundException('Product not found');

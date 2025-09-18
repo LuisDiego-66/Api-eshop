@@ -23,7 +23,7 @@ export class CartService {
 
     //! se valida las variantes
     for (const item of dto.items) {
-      await this.variantsService.findOne(item.variantId);
+      await this.variantsService.findOneVariant(item.variantId);
     }
 
     //! si existe token

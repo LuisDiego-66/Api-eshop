@@ -57,11 +57,9 @@ export class Customer {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de multimedia ( un product puede tener muchos multimedia )
   @OneToMany(() => Order, (order) => order.customer)
   order: Order[];
 
-  // Relacion con la tabla de address ( un customer puede tener muchas addresses )
   @OneToMany(() => Address, (address) => address.customer)
   address: Address[];
 }

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -12,7 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-class CreateVariantSizeDto {
+class CreateVariantDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(5)
@@ -24,20 +24,7 @@ class CreateVariantSizeDto {
 }
 
 export class CreateVariantsDto {
-  @ApiProperty({
-    example: 'Name of the variant',
-  })
-  @IsString()
-  name: string;
-
-  @ApiProperty({
-    example: 'Description of the variant',
-    description: 'default: 0',
-  })
-  @IsString()
-  description: string;
-
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: ['http://localhost:3000/api/files/product/imagen1.jpeg'],
   })
   @IsArray()
@@ -46,7 +33,7 @@ export class CreateVariantsDto {
   multimedia: string[];
 
   @ApiProperty({
-    type: [CreateVariantSizeDto],
+    type: [CreateVariantDto],
     example: [
       { size: 's', quantity: 10 },
       { size: 'm', quantity: 5 },
@@ -54,8 +41,8 @@ export class CreateVariantsDto {
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateVariantSizeDto)
-  sizes: CreateVariantSizeDto[];
+  @Type(() => CreateVariantDto)
+  variants: CreateVariantDto[];
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
@@ -66,12 +53,12 @@ export class CreateVariantsDto {
     example: 1,
   })
   @IsNumber()
-  product: number;
+  productId: number;
 
   @ApiProperty({
     description: 'Color Id',
     example: 1,
   })
   @IsNumber()
-  color: number;
+  colorId: number;
 }

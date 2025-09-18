@@ -42,7 +42,6 @@ export class Category {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de subcategories ( una category puede tener muchas subcategories )
   @OneToMany(() => Subcategory, (subcategory) => subcategory.category, {
     //cascade: true, //! para la eliminacion en cascada de subcategories
   })

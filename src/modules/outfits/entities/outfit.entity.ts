@@ -20,7 +20,6 @@ export class Outfit {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion muchos a muchos con la tabla de variants ( un outfit puede tener muchos variants y un variant puede pertenecer a muchos outfits )
   @ManyToMany(() => Variant, (variant) => variant.outfits, {
     cascade: true, // opcional, para guardar relaciones automáticamente
   })

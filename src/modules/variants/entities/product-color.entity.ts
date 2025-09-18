@@ -1,24 +1,27 @@
 import {
-  BeforeInsert,
-  BeforeUpdate,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Product } from 'src/modules/products/entities/product.entity';
 import { Variant } from 'src/modules/variants/entities/variant.entity';
+import { Color } from 'src/modules/colors/entities/color.entity';
 
-@Entity('sizes')
-export class Size {
+@Unique(['product', 'color'])
+@Entity('product_colors')
+export class ProductColor {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', unique: true, length: 5 })
-  name: string; // Ej: 'S', 'M', 'L', 'XL'
+  @Column('text', { array: true, default: [] })
+  multimedia?: string[];
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -33,17 +36,18 @@ export class Size {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de variants ( un size puede estar en muchos variants )
-  @OneToMany(() => Variant, (variant) => variant.size)
+  @ManyToOne(() => Color, (color) => color.productColors)
+  color: Color;
+
+  @ManyToOne(() => Product, (product) => product.productColors)
+  product: Product;
+
+  @OneToMany(() => Variant, (variant) => variant.productColor, {
+    cascade: true,
+  })
   variants: Variant[];
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
   //* ---------------------------------------------------------------------------------------------- */
-
-  @BeforeUpdate()
-  @BeforeInsert()
-  normalizeName() {
-    this.name = this.name.toUpperCase().trim();
-  }
 }

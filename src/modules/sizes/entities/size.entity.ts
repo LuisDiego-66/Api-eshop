@@ -1,33 +1,48 @@
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
-  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
-import { Variant } from './variant.entity';
+import { Variant } from 'src/modules/variants/entities/variant.entity';
 
-@Entity('incomes')
-export class Income {
+@Entity('sizes')
+export class Size {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('integer', { default: 0 }) //! default 0
-  quantity: number;
+  @Column({ type: 'varchar', unique: true, length: 5 })
+  name: string; // Ej: 'S', 'M', 'L', 'XL'
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
+
+  @UpdateDateColumn({ select: false })
+  updatedAt: Date;
+
+  @DeleteDateColumn({ nullable: true, select: false })
+  deletedAt?: Date;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  // Relacion con la tabla de color ( muchos variants pueden pertenecer a un color )
-  @ManyToOne(() => Variant, (variant) => variant.incomes)
-  variant: Variant;
+  @OneToMany(() => Variant, (variant) => variant.size)
+  variants: Variant[];
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
   //* ---------------------------------------------------------------------------------------------- */
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  normalizeName() {
+    this.name = this.name.toUpperCase().trim();
+  }
 }
