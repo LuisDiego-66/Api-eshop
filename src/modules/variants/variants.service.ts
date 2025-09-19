@@ -41,7 +41,7 @@ export class VariantsService {
     try {
       const { variants, multimedia, productId, colorId } = createVariantsDto;
 
-      const productColor = await queryRunner.manager.create(ProductColor, {
+      const productColor = queryRunner.manager.create(ProductColor, {
         product: { id: productId },
         color: { id: colorId },
         multimedia,
@@ -51,7 +51,6 @@ export class VariantsService {
             const sizeEntity = await this.sizeService.create({
               name: size.size,
             });
-
             return {
               size: { id: sizeEntity?.id },
               transactions: [{ quantity: size.quantity }],
@@ -73,10 +72,10 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        FindAll                                                 */
+  //?                         FindAll Product Colors                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll(pagination: PaginationDto) {
+  async findAllProductColors(pagination: PaginationDto) {
     const { limit = 10, offset = 0 } = pagination;
 
     const variants = await this.productColorRepository.find({
@@ -102,12 +101,13 @@ export class VariantsService {
     return variant;
   }
 
+  //? ---------------------------------------------------------------------------------------------- */
+
   async findOneProductColor(id: number) {
     const productColor = await this.productColorRepository.findOne({
       where: { id },
       relations: { variants: true, product: true },
     });
-
     if (!productColor) {
       throw new NotFoundException('Product-Color not found: ' + id);
     }
@@ -119,29 +119,49 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async update(id: number, updateVariantDto: UpdateVariantDto) {
-    const variantProductColorEntity = await this.findOneProductColor(id);
-
-    const { multimedia } = updateVariantDto;
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      const { multimedia, variants } = updateVariantDto;
+
+      //! se obtiene el entity con sus relaciones
+      const productColorEntity = await this.findOneProductColor(id);
+
       if (multimedia) {
-        //! se borran físicamente los archivos
-        await this.filesService.deletedFiles(
-          variantProductColorEntity.multimedia,
-        );
-        variantProductColorEntity.multimedia = [];
+        //! se borran físicamente los archivos si hay multimedia
+        await this.filesService.deletedFiles(productColorEntity.multimedia);
+        productColorEntity.multimedia = multimedia;
+        await queryRunner.manager.save(productColorEntity);
       }
 
-      Object.assign(variantProductColorEntity, updateVariantDto);
-      const variant = await queryRunner.manager.save(variantProductColorEntity);
+      //! se recorren los variants para crear nuevos
+      if (variants && variants.length > 0) {
+        for (const variant of variants) {
+          const sizeEntity = await this.sizeService.create({
+            name: variant.size,
+          });
 
+          //! se crean los variants
+          const variantEntity = queryRunner.manager.create(Variant, {
+            size: { id: sizeEntity?.id },
+            productColor: { id: productColorEntity.id },
+            transactions: [{ quantity: variant.quantity }],
+          });
+
+          await queryRunner.manager.save(variantEntity);
+        }
+      }
+
+      //! se retorna el entity actualizado
+      const productColor = await queryRunner.manager.findOne(ProductColor, {
+        where: { id },
+        relations: { variants: { size: true } },
+      });
       await queryRunner.commitTransaction();
 
-      return variant;
+      return productColor;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleDBExceptions(error);
@@ -149,17 +169,16 @@ export class VariantsService {
       await queryRunner.release();
     }
   }
-
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   async remove(id: number) {
-    const productColorEntity = await this.findOneProductColor(id);
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
+    const productColorEntity = await this.findOneProductColor(id);
 
     try {
       //! se borran físicamente los archivos
@@ -173,7 +192,7 @@ export class VariantsService {
       await queryRunner.commitTransaction();
 
       return {
-        message: 'Variant deleted successfully',
+        message: 'Product-Color deleted successfully',
         deleted: productColorEntity, //! devuelve sin multimedias
       };
     } catch (error) {
@@ -221,6 +240,8 @@ export class VariantsService {
     );
     return Number(result[0]?.available_stock ?? 0);
   }
+
+  //? ---------------------------------------------------------------------------------------------- */
 
   async getAvailableStockWithLock(
     queryRunner: QueryRunner,

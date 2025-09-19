@@ -38,7 +38,7 @@ export class VariantsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
-    return this.variantsService.findAll(pagination);
+    return this.variantsService.findAllProductColors(pagination);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

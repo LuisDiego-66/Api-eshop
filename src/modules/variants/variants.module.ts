@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { SizesModule } from '../sizes/sizes.module';
 import { FilesModule } from '../../files/files.module';
-import { ProductsModule } from '../products/products.module';
 
 import { VariantsController } from './variants.controller';
 import { VariantsService } from './variants.service';

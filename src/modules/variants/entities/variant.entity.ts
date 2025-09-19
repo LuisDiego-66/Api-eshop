@@ -1,5 +1,4 @@
 import {
-  Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -49,7 +48,9 @@ export class Variant {
   @OneToMany(() => StockReservation, (reservation) => reservation.variant)
   stock_reservations: StockReservation[];
 
-  @ManyToOne(() => ProductColor, (productColor) => productColor.variants)
+  @ManyToOne(() => ProductColor, (productColor) => productColor.variants, {
+    nullable: false,
+  })
   productColor: ProductColor;
 
   @OneToMany(() => Transaction, (transaction) => transaction.variant, {
