@@ -14,6 +14,7 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Variant } from './entities/variant.entity';
 import { ProductColor } from './entities/product-color.entity';
+import { ColorsService } from '../colors/colors.service';
 
 @Injectable()
 export class VariantsService {
@@ -25,6 +26,7 @@ export class VariantsService {
     private readonly productColorRepository: Repository<ProductColor>,
 
     private sizeService: SizesService,
+    private colorService: ColorsService,
     private filesService: FilesService,
     private dataSource: DataSource,
   ) {}
@@ -39,13 +41,21 @@ export class VariantsService {
     await queryRunner.startTransaction();
 
     try {
-      const { variants, multimedia, productId, colorId } = createVariantsDto;
+      const { variants, multimedia, productId, ...data } = createVariantsDto;
 
+      //! se crea el color (si no existe)
+      const color = await this.colorService.create({
+        code: data.colorCode,
+        name: data.colorName,
+      });
+
+      //! se crea el product-color
       const productColor = queryRunner.manager.create(ProductColor, {
         product: { id: productId },
-        color: { id: colorId },
+        color: { id: color?.id },
         multimedia,
 
+        //! se crean las variants
         variants: await Promise.all(
           variants.map(async (size) => {
             const sizeEntity = await this.sizeService.create({
@@ -192,7 +202,7 @@ export class VariantsService {
       await queryRunner.commitTransaction();
 
       return {
-        message: 'Product-Color deleted successfully',
+        message: 'Product-Color and Variants deleted successfully',
         deleted: productColorEntity, //! devuelve sin multimedias
       };
     } catch (error) {

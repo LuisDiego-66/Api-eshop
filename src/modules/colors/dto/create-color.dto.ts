@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
 
 export class CreateColorDto {
   @ApiProperty({
@@ -13,12 +13,4 @@ export class CreateColorDto {
   })
   @IsString()
   code: string;
-
-  @ApiPropertyOptional({
-    example: true,
-    default: true,
-  })
-  @IsBoolean()
-  @IsOptional()
-  enabled: boolean;
 }

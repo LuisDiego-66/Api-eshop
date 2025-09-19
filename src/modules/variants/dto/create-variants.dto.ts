@@ -44,6 +44,20 @@ export class CreateVariantsDto {
   @Type(() => CreateVariantDto)
   variants: CreateVariantDto[];
 
+  @ApiProperty({
+    description: 'Color Name',
+    example: 'red',
+  })
+  @IsString()
+  colorName: string;
+
+  @ApiProperty({
+    description: 'Color Hexadecimal',
+    example: '#FF5733',
+  })
+  @IsString()
+  colorCode: string;
+
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
@@ -54,11 +68,4 @@ export class CreateVariantsDto {
   })
   @IsNumber()
   productId: number;
-
-  @ApiProperty({
-    description: 'Color Id',
-    example: 1,
-  })
-  @IsNumber()
-  colorId: number;
 }

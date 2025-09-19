@@ -21,9 +21,19 @@ export class ColorsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async create(createColorDto: CreateColorDto) {
+    let { name, code } = createColorDto;
+
     try {
-      const newColor = this.colorRepository.create(createColorDto);
-      return await this.colorRepository.save(newColor);
+      const colorExists = await this.colorRepository.findOne({
+        where: { name, code },
+      });
+
+      if (!colorExists) {
+        const newSize = this.colorRepository.create(createColorDto);
+        return await this.colorRepository.save(newSize);
+      }
+
+      return colorExists;
     } catch (error) {
       handleDBExceptions(error);
     }

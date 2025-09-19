@@ -24,10 +24,10 @@ export class ColorsController {
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
-  @Post()
+  /*   @Post()
   create(@Body() createColorDto: CreateColorDto) {
     return this.colorsService.create(createColorDto);
-  }
+  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
@@ -51,20 +51,20 @@ export class ColorsController {
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
-  @Patch(':id')
+  /*   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateColorDto: UpdateColorDto,
   ) {
     return this.colorsService.update(id, updateColorDto);
-  }
+  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Delete(':id')
+  /*   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.colorsService.remove(id);
-  }
+  } */
 }

@@ -8,7 +8,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Variant } from 'src/modules/variants/entities/variant.entity';
 import { ProductColor } from 'src/modules/variants/entities/product-color.entity';
 
 @Entity('colors')
@@ -16,14 +15,11 @@ export class Color {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text')
+  @Column('text', { unique: true }) //! unique
   name: string;
 
-  @Column('text')
+  @Column('text', { unique: true }) //! unique
   code: string;
-
-  @Column('boolean', { default: true })
-  enabled: boolean;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
