@@ -9,14 +9,15 @@ async function bootstrap() {
 
   const logger = new Logger('E-Shop');
 
-  app.enableCors({
+  //! cors global enable
+  app.enableCors(/* {
     origin: [
       'http://localhost:3000', // React
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-  });
+  } */);
 
   app.setGlobalPrefix('api');
 
