@@ -33,12 +33,12 @@ export class CategoriesService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
+  async findAll(/* pagination: PaginationDto */) {
+    //const { limit = 10, offset = 0 } = pagination;
 
     const categories = await this.categoryRepository.find({
-      take: limit,
-      skip: offset,
+      //take: limit,
+      //skip: offset,
       relations: { subcategories: true },
     });
 

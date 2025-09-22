@@ -36,10 +36,10 @@ export class CategoriesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number })
-  findAll(@Query() pagination: PaginationDto) {
-    return this.categoriesService.findAll(pagination);
+  /*   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number }) */
+  findAll(/* @Query() pagination: PaginationDto */) {
+    return this.categoriesService.findAll(/* pagination */);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
