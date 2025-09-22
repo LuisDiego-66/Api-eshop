@@ -1,12 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-  IsString,
-} from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsString } from 'class-validator';
 
 import { GenderType } from '../enums/gender-type.enum';
 
@@ -23,20 +16,4 @@ export class CreateCategoryDto {
   })
   @IsEnum(GenderType)
   gender: GenderType;
-
-  @ApiProperty({
-    example: 1,
-    minimum: 1,
-  })
-  @IsNumber()
-  @IsPositive()
-  displayOrder: number;
-
-  @ApiPropertyOptional({
-    example: true,
-    default: true,
-  })
-  @IsBoolean()
-  @IsOptional()
-  enabled?: boolean;
 }

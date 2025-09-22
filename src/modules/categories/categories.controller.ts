@@ -6,12 +6,11 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 import { CategoriesService } from './categories.service';
@@ -36,10 +35,8 @@ export class CategoriesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  /*   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number }) */
-  findAll(/* @Query() pagination: PaginationDto */) {
-    return this.categoriesService.findAll(/* pagination */);
+  findAll() {
+    return this.categoriesService.findAll();
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -61,6 +58,17 @@ export class CategoriesController {
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
     return this.categoriesService.update(id, updateCategoryDto);
+  }
+
+  @Put(':id')
+  @ApiBody({
+    schema: { type: 'object', properties: { newOrder: { type: 'number' } } },
+  })
+  updateDisplayOrder(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('newOrder') newOrder: number,
+  ) {
+    return this.categoriesService.updateDisplayOrder(id, newOrder);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

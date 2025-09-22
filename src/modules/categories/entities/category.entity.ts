@@ -23,7 +23,7 @@ export class Category {
   @Column({ type: 'enum', enum: GenderType })
   gender: GenderType;
 
-  @Column('integer')
+  @Column('integer', { default: 0 })
   displayOrder: number;
 
   @Column('boolean', { default: true })
