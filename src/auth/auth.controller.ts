@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-//? ---------------------------------------------------------------------------------------------- */
+import { ApiTags } from '@nestjs/swagger';
+
 import { GoogleOauthGuard } from './guards';
+
 import { CreateSubscriberDto, LoginUserDto } from './dto';
 import { AuthService } from './auth.service';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Auth')
 @Controller('auth')

@@ -79,7 +79,7 @@ export class UsersService {
       Object.assign(user, updateUserDto);
       return await this.userRepository.save(user);
     } catch (error) {
-      console.log(error);
+      handleDBExceptions(error);
     }
   }
 

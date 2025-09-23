@@ -6,11 +6,24 @@ export const fileFilter = (
   if (!file) return callback(new Error('file is empty'), false); // si false no lo pasa al controlador
 
   const fileExtension = file.mimetype.split('/')[1]; // se consigue la extencion del archivo
-  const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+  const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
 
   if (validExtensions.includes(fileExtension)) {
     return callback(null, true);
   }
+
+  /*  const mime = file.mimetype;
+  const validMimeTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'application/pdf',
+  ];
+
+  if (validMimeTypes.includes(mime)) {
+    return callback(null, true);
+  } */
 
   callback(null, false);
 };

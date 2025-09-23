@@ -11,6 +11,7 @@ structure.json
 !/static/uploads/.gitkeep
 
 
+
 # Logs
 logs
 *.log

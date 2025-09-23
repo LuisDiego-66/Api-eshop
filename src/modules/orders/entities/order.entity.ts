@@ -7,6 +7,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -18,6 +19,7 @@ import { StockReservation } from 'src/modules/stock-reservations/entities/stock-
 import { Customer } from 'src/modules/customers/entities/customer.entity';
 import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
 import { Address } from 'src/modules/addresses/entities/address.entity';
+import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Item } from './item.entity';
 
 @Entity('orders')
@@ -28,7 +30,7 @@ export class Order {
   @Column({ type: 'enum', enum: OrderType })
   type: OrderType;
 
-  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING }) //! default: 'inprogress'
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING }) //! default
   status: OrderStatus;
 
   @Column('boolean', { default: true })
@@ -36,9 +38,6 @@ export class Order {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalPrice: string;
-
-  @Column('text', { nullable: true })
-  qrId?: string;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -70,6 +69,9 @@ export class Order {
 
   @OneToMany(() => StockReservation, (reservation) => reservation.order)
   stock_reservations: StockReservation[];
+
+  @OneToOne(() => Payment, (payment) => payment.order, { cascade: true })
+  payment: Payment;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
