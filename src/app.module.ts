@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { join } from 'path';
@@ -46,6 +47,8 @@ import { PaymentsModule } from './modules/payments/payments.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Path to the static files
     }),
+
+    ScheduleModule.forRoot(),
 
     AuthModule,
     UsersModule,

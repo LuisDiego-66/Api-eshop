@@ -6,9 +6,10 @@ import { OrdersService } from './orders.service';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
 
+import { StatusChangerCronJob } from './cronjobs/status-changer.cron';
+
 import { StockReservationsModule } from '../stock-reservations/stock-reservations.module';
 import { VariantsModule } from '../variants/variants.module';
-
 import { PricingService } from './pricing.service';
 
 @Module({
@@ -18,7 +19,7 @@ import { PricingService } from './pricing.service';
     StockReservationsModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, PricingService],
+  providers: [OrdersService, PricingService, StatusChangerCronJob],
   exports: [TypeOrmModule, OrdersService],
 })
 export class OrdersModule {}

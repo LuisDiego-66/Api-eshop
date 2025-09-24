@@ -9,12 +9,12 @@ import { ReservationStatus } from '../stock-reservations/enum/reservation-status
 
 import { SizesService } from '../sizes/sizes.service';
 import { FilesService } from '../../files/files.service';
+import { ColorsService } from '../colors/colors.service';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Variant } from './entities/variant.entity';
 import { ProductColor } from './entities/product-color.entity';
-import { ColorsService } from '../colors/colors.service';
 
 @Injectable()
 export class VariantsService {
@@ -233,20 +233,13 @@ export class VariantsService {
             FROM stock_reservations sr 
             WHERE sr."variantId" = v.id
               AND sr.status = $2
-          ), 0)
-          -
-          COALESCE((
-            SELECT SUM(sr.quantity) 
-            FROM stock_reservations sr 
-            WHERE sr."variantId" = v.id
-              AND sr.status = $3
               AND sr."expiresAt" > NOW()
           ), 0)
           AS available_stock
         FROM variants v
         WHERE v.id = $1
       `,
-      [variantId, ReservationStatus.PAID, ReservationStatus.PENDING],
+      [variantId, ReservationStatus.PENDING],
     );
     return Number(result[0]?.available_stock ?? 0);
   }
@@ -263,11 +256,11 @@ export class VariantsService {
       SELECT 1
       FROM stock_reservations sr
       WHERE sr."variantId" = $1
-        AND sr.status IN ($2, $3)
-        AND (sr.status != $3 OR sr."expiresAt" > NOW())
+        AND sr.status IN ($2)
+        AND (sr.status != $2 OR sr."expiresAt" > NOW())
       FOR UPDATE
       `,
-      [variantId, ReservationStatus.PAID, ReservationStatus.PENDING],
+      [variantId, ReservationStatus.PENDING],
     );
 
     //! Calcular stock disponible (sin FOR UPDATE en agregaciones)
@@ -281,16 +274,11 @@ export class VariantsService {
         COALESCE((SELECT SUM(sr.quantity) 
             FROM stock_reservations sr 
             WHERE sr."variantId" = $1 
-              AND sr.status = $2), 0)
-        - 
-        COALESCE((SELECT SUM(sr.quantity) 
-            FROM stock_reservations sr 
-            WHERE sr."variantId" = $1 
-              AND sr.status = $3 
+              AND sr.status = $2 
               AND sr."expiresAt" > NOW()), 0)
               AS available_stock
       `,
-      [variantId, ReservationStatus.PAID, ReservationStatus.PENDING],
+      [variantId, ReservationStatus.PENDING],
     );
     return Number(result[0]?.available_stock ?? 0);
   }

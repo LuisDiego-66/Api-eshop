@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-//import { StockReservationsService } from '../stock-reservations.service';
+import { OrdersService } from '../orders.service';
 
-/* @Injectable()
+@Injectable()
 export class StatusChangerCronJob {
-  constructor(private readonly stockService: StockReservationsService) {} */
+  constructor(private readonly orderService: OrdersService) {}
 
-//@Cron('*/1 * * * *') // cada minuto
-/*  async handleExpiration() {
-    await this.stockService.expireReservations();
+  //@Cron('*/1 * * * *') // cada minuto
+  async handleExpiration() {
+    await this.orderService.expireOrders();
   }
 }
- */

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThan, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -19,10 +19,10 @@ import { PricingService } from './pricing.service';
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
+import { Transaction } from '../variants/entities/transaction.entity';
 import { Variant } from '../variants/entities/variant.entity';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
-import { Transaction } from '../variants/entities/transaction.entity';
 
 @Injectable()
 export class OrdersService {
@@ -124,6 +124,8 @@ export class OrdersService {
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write') //! solo bloquea "order"
+        .innerJoinAndSelect('order.items', 'items') //! los items de la order
+        .innerJoinAndSelect('items.variant', 'variant') //! las variantes de los items
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status = :status', { status: OrderStatus.PENDING })
         .andWhere('order.expiresAt > NOW()')
@@ -135,9 +137,11 @@ export class OrdersService {
         );
       }
 
+      //! Actualizar el estado de la orden a PAID
       order.status = OrderStatus.PAID;
       await queryRunner.manager.save(order);
 
+      //! Actualizar las reservas a PAID
       await queryRunner.manager
         .createQueryBuilder()
         .update(StockReservation)
@@ -147,12 +151,14 @@ export class OrdersService {
         .andWhere('expiresAt > NOW()') //! condición de no expirada
         .execute();
 
-      /*//! creacion de el ingreso negativo en las transacciones
-        const newtransaction = queryRunner.manager.create(Transaction, {
+      //! Crear las transacciones negativas de stock
+      const transactions = order.items.map((item) =>
+        queryRunner.manager.create(Transaction, {
           quantity: item.quantity * -1,
-          variant: { id: variant.id },
-        });
-        await queryRunner.manager.save(newtransaction); */
+          variant: { id: item.variant.id },
+        }),
+      );
+      await queryRunner.manager.save(transactions);
 
       await queryRunner.commitTransaction();
       return order;
@@ -250,5 +256,16 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
     return order;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                       Expired                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async expireOrders() {
+    await this.orderRepository.update(
+      { status: OrderStatus.PENDING, expiresAt: LessThan(new Date()) },
+      { status: OrderStatus.EXPIRED },
+    );
   }
 }

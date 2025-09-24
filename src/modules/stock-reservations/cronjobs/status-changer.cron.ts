@@ -6,7 +6,7 @@ import { StockReservationsService } from '../stock-reservations.service';
 export class StatusChangerCronJob {
   constructor(private readonly stockService: StockReservationsService) {}
 
-  //@Cron('*/1 * * * *') // cada minuto
+  //@Cron('*/1 * * * *')
   async handleExpiration() {
     await this.stockService.expireReservations();
   }
