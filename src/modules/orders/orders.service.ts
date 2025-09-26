@@ -115,7 +115,7 @@ export class OrdersService {
   //?                                   ConfirmOrder                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async confirmOrder(orderId: number) {
+  async confirmOrder(orderId: number /* QrData */) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
