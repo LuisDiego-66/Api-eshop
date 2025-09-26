@@ -9,7 +9,7 @@ structure.json
 
 /static/uploads/*
 !/static/uploads/.gitkeep
-
+*.yml
 
 
 # Logs

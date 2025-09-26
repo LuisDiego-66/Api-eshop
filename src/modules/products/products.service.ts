@@ -44,6 +44,7 @@ export class ProductsService {
     const products = await this.productRepository.find({
       take: limit,
       skip: offset,
+      relations: { subcategory: true },
     });
 
     return products;
