@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateAddressDto, UpdateAddressDto } from './dto';
 
 import { AddressesService } from './addresses.service';
@@ -34,8 +34,8 @@ export class AddressesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number })
+  //@ApiQuery({ name: 'limit', required: false, type: Number })
+  //@ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(pagination: PaginationDto) {
     return this.addressesService.findAll(pagination);
   }

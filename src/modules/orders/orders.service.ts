@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, LessThan, Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
@@ -23,6 +23,7 @@ import { Transaction } from '../variants/entities/transaction.entity';
 import { Variant } from '../variants/entities/variant.entity';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
+import { paginate } from 'src/common/pagination/paginate';
 
 @Injectable()
 export class OrdersService {
@@ -222,7 +223,7 @@ export class OrdersService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
+    /* const { limit = 10, offset = 0 } = pagination;
 
     const orders = await this.orderRepository.find({
       take: limit,
@@ -235,7 +236,20 @@ export class OrdersService {
       },
     });
 
-    return orders;
+    return orders; */
+
+    return paginate(
+      this.orderRepository,
+      {
+        relations: {
+          items: { variant: true },
+          customer: true,
+          shipment: true,
+          address: true,
+        },
+      },
+      pagination,
+    );
   }
 
   //? ---------------------------------------------------------------------------------------------- */

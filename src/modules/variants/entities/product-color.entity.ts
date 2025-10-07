@@ -23,6 +23,9 @@ export class ProductColor {
   @Column('text', { array: true, default: [] })
   multimedia?: string[];
 
+  @Column('text', { array: true, default: [] })
+  pdfs?: string[];
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
 

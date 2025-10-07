@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateUserDto, UpdateUserDto } from './dto';
 
 import { UsersService } from './users.service';
@@ -35,8 +35,8 @@ export class UsersController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number })
+  //@ApiQuery({ name: 'limit', required: false, type: Number })
+  //@ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
     return this.usersService.findAll(pagination);
   }

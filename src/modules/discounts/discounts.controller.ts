@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
   CreateSeasonalDiscountDto,
   CreatePermanentDiscountDto,
@@ -51,8 +51,8 @@ export class DiscountsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number })
+  //@ApiQuery({ name: 'limit', required: false, type: Number })
+  //@ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
     return this.discountsService.findAll(pagination);
   }

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 import { OrdersService } from './orders.service';
@@ -46,7 +46,7 @@ export class OrdersController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
   @Get()
   findAll(@Query() pagination: PaginationDto) {
     return this.ordersService.findAll(pagination);

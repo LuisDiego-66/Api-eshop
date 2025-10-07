@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
@@ -86,14 +86,31 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAllProductColors(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
-
-    const variants = await this.productColorRepository.find({
-      take: limit,
-      skip: offset,
-      relations: { variants: { size: true } },
+    const productColors = await this.productColorRepository.find({
+      relations: { variants: { size: true }, color: true, product: true },
     });
-    return variants;
+
+    //! se mapea y se agrega el stock disponible
+    const result = await Promise.all(
+      productColors.map(async (productColor) => {
+        const variantsWithStock = await Promise.all(
+          productColor.variants.map(async (variant) => {
+            const availableStock = await this.getAvailableStock(variant.id);
+            return {
+              ...variant,
+              availableStock,
+            };
+          }),
+        );
+
+        return {
+          ...productColor,
+          variants: variantsWithStock,
+        };
+      }),
+    );
+
+    return result;
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -112,15 +129,18 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                           FindOneProductColor                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
 
   async findOneProductColor(id: number) {
     const productColor = await this.productColorRepository.findOne({
       where: { id },
-      relations: { variants: true, product: true },
+      relations: { variants: { size: true }, product: true, color: true },
     });
     if (!productColor) {
       throw new NotFoundException('Product-Color not found: ' + id);
     }
+
     return productColor;
   }
 

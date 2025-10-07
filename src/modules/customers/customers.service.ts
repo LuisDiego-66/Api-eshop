@@ -6,12 +6,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { UpdateCustomerDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Customer } from './entities/customer.entity';
+import { paginate } from 'src/common/pagination/paginate';
 
 @Injectable()
 export class CustomersService {
@@ -25,14 +26,21 @@ export class CustomersService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
-
+    /* const { limit = 10, offset = 0 } = pagination;
     const customers = await this.customerRepository.find({
       take: limit,
       skip: offset,
     });
+    return customers; */
 
-    return customers;
+    return paginate(
+      this.customerRepository,
+      {
+        /*  */
+      },
+      pagination,
+      ['name'],
+    );
   }
 
   //? ---------------------------------------------------------------------------------------------- */

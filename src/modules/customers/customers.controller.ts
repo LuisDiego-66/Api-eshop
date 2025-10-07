@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { UpdateCustomerDto } from './dto';
 
 import { CustomersService } from './customers.service';
@@ -32,7 +32,8 @@ export class CustomersController {
   //@Auth()
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   findAll(@Query() pagination: PaginationDto) {
     return this.customersService.findAll(pagination);
   }

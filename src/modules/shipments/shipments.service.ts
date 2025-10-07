@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
   CreateNationalShipmentDto,
   CreateInternationalShipmentDto,
@@ -59,30 +59,30 @@ export class ShipmentsService {
 
   // All
   async findAll(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
+    //const { limit = 10, offset = 0 } = pagination;
     const shipments = await this.shipmentRepository.find({
-      take: limit,
-      skip: offset,
+      //take: limit,
+      //skip: offset,
     });
     return shipments;
   }
 
   // National
   async findAllNational(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
+    //const { limit = 10, offset = 0 } = pagination;
     const shipments = await this.nationalRepository.find({
-      take: limit,
-      skip: offset,
+      //take: limit,
+      //skip: offset,
     });
     return shipments;
   }
 
   // International
   async findAllInterNational(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
+    //const { limit = 10, offset = 0 } = pagination;
     const shipments = await this.internationalRepository.find({
-      take: limit,
-      skip: offset,
+      //take: limit,
+      //skip: offset,
     });
     return shipments;
   }

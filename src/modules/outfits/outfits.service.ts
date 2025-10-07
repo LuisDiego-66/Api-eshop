@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateOutfitDto, UpdateOutfitDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
@@ -50,11 +50,11 @@ export class OutfitsService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
   async findAll(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
+    //const { limit = 10, offset = 0 } = pagination;
 
     const outfits = await this.outfitRepository.find({
-      take: limit,
-      skip: offset,
+      //take: limit,
+      //skip: offset,
       relations: { variants: true },
     });
 

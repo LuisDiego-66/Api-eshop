@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/dtos/pagination';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
   CreateSeasonalDiscountDto,
   CreatePermanentDiscountDto,
@@ -41,10 +41,10 @@ export class DiscountsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    const { limit = 10, offset = 0 } = pagination;
+    //const { limit = 10, offset = 0 } = pagination;
     const discounts = await this.discountRepository.find({
-      take: limit,
-      skip: offset,
+      //take: limit,
+      //skip: offset,
     });
     return discounts;
   }

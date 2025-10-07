@@ -32,6 +32,14 @@ export class CreateVariantsDto {
   @IsOptional()
   multimedia: string[];
 
+  @ApiPropertyOptional({
+    example: ['http://localhost:3000/api/files/product/document.pdf'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  pdfs: string[];
+
   @ApiProperty({
     type: [CreateVariantDto],
     example: [
