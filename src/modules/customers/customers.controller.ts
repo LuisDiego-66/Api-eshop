@@ -11,14 +11,16 @@ import {
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { UpdateCustomerDto } from './dto';
+import { UpdateCustomerDto, CustomerPaginationDto } from './dto';
 
 import { CustomersService } from './customers.service';
 
 import { Auth } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums/roles.enum';
 
-@Auth(Roles.ADMIN)
+import { CustomerType } from './enums/customer-type.enum';
+
+//@Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
 @ApiTags('Customers')
 @Controller('customers')
@@ -34,8 +36,13 @@ export class CustomersController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  findAll(@Query() pagination: PaginationDto) {
-    return this.customersService.findAll(pagination);
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: CustomerType,
+  })
+  findAll(@Query() customerpagination: CustomerPaginationDto) {
+    return this.customersService.findAll(customerpagination);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

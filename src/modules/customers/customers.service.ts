@@ -1,18 +1,14 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { UpdateCustomerDto } from './dto';
+import { paginate } from 'src/common/pagination/paginate';
+import { UpdateCustomerDto, CustomerPaginationDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Customer } from './entities/customer.entity';
-import { paginate } from 'src/common/pagination/paginate';
 
 @Injectable()
 export class CustomersService {
@@ -25,22 +21,16 @@ export class CustomersService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll(pagination: PaginationDto) {
-    /* const { limit = 10, offset = 0 } = pagination;
-    const customers = await this.customerRepository.find({
-      take: limit,
-      skip: offset,
-    });
-    return customers; */
+  async findAll(pagination: CustomerPaginationDto) {
+    const options: any = {
+      where: {},
+    };
 
-    return paginate(
-      this.customerRepository,
-      {
-        /*  */
-      },
-      pagination,
-      ['name'],
-    );
+    if (pagination.type) {
+      options.where.type = pagination.type;
+    }
+
+    return paginate(this.customerRepository, options, pagination, ['name']);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
