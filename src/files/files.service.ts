@@ -4,6 +4,7 @@ import { envs } from 'src/config/environments/environments';
 import * as path from 'path';
 import { existsSync } from 'fs';
 import { promises as fs } from 'fs';
+import { readdir } from 'fs/promises';
 
 @Injectable()
 export class FilesService {
@@ -59,7 +60,7 @@ export class FilesService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                 deletedFiles                                                   */
+  //?                                 DeletedFiles                                                   */
   //? ---------------------------------------------------------------------------------------------- */
 
   async deletedFiles(multimediaFiles: string[] | undefined) {
@@ -78,22 +79,22 @@ export class FilesService {
         // Si no existe o falla, simplemente se ignora
       }
     }
+  }
 
-    /*     if (!multimediaFiles || multimediaFiles.length === 0) return;
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                  GetAllFiles                                                   */
+  //? ---------------------------------------------------------------------------------------------- */
 
-    for (const multimediaFile of multimediaFiles) {
-      // extrae la carpeta también
-      const relativePath = multimediaFile.split('/upload/').pop();
-      if (!relativePath) continue;
+  async getAllFiles(): Promise<string[]> {
+    try {
+      const files = await readdir(this.uploadPath);
 
-      const filePath = path.resolve('./static/uploads', relativePath);
+      const filePaths = files.map((file) => file);
 
-      try {
-        await fs.access(filePath); // Verifica si existe
-        await fs.unlink(filePath); // Lo elimina
-      } catch {
-        // Si no existe o falla, simplemente se ignora
-      }
-    } */
+      return filePaths;
+    } catch (error) {
+      console.error(error);
+      throw new Error('No se pudo leer la carpeta de uploads');
+    }
   }
 }

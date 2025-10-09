@@ -7,14 +7,14 @@ import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
-import { SizesService } from '../sizes/sizes.service';
 import { FilesService } from '../../files/files.service';
 import { ColorsService } from '../colors/colors.service';
+import { SizesService } from '../sizes/sizes.service';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
-import { Variant } from './entities/variant.entity';
 import { ProductColor } from './entities/product-color.entity';
+import { Variant } from './entities/variant.entity';
 
 @Injectable()
 export class VariantsService {

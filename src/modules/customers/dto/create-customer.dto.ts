@@ -1,11 +1,5 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 
 import { AuthProviders } from 'src/auth/enums/providers.enum';
 
