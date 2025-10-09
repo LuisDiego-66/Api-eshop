@@ -59,16 +59,16 @@ export class VariantsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateVariantDto: UpdateVariantDto,
   ) {
-    return this.variantsService.update(id, updateVariantDto);
+    return this.variantsService.updateProductColor(id, updateVariantDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
-  @Delete(':id')
+  /*   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.variantsService.remove(id);
-  }
+    return this.variantsService.removeProductColor(id);
+  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                       getStock                                                 */

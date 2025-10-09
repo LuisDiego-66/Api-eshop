@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateColorDto, UpdateColorDto } from './dto';
@@ -20,7 +20,7 @@ export class ColorsService {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async create(createColorDto: CreateColorDto) {
+  /*   async create(createColorDto: CreateColorDto) {
     let { name, code } = createColorDto;
 
     try {
@@ -36,6 +36,25 @@ export class ColorsService {
       return colorExists;
     } catch (error) {
       handleDBExceptions(error);
+    }
+  } */
+
+  async create(createColorDto: CreateColorDto, manager?: EntityManager) {
+    const repo = manager ? manager.getRepository(Color) : this.colorRepository;
+    const { name, code } = createColorDto;
+
+    try {
+      const colorExists = await repo.findOne({ where: { name, code } });
+
+      if (!colorExists) {
+        const newColor = repo.create(createColorDto);
+        return await repo.save(newColor);
+      }
+
+      return colorExists;
+    } catch (error) {
+      handleDBExceptions(error);
+      throw error;
     }
   }
 

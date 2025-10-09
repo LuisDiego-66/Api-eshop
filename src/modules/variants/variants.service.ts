@@ -41,26 +41,34 @@ export class VariantsService {
     await queryRunner.startTransaction();
 
     try {
-      const { variants, multimedia, productId, ...data } = createVariantsDto;
+      const { variants, multimedia, productId, pdfs, ...data } =
+        createVariantsDto;
 
       //! se crea el color (si no existe)
-      const color = await this.colorService.create({
-        code: data.colorCode,
-        name: data.colorName,
-      });
+      const color = await this.colorService.create(
+        {
+          code: data.colorCode,
+          name: data.colorName,
+        },
+        queryRunner.manager,
+      );
 
       //! se crea el product-color
       const productColor = queryRunner.manager.create(ProductColor, {
         product: { id: productId },
         color: { id: color?.id },
         multimedia,
+        pdfs,
 
         //! se crean las variants
         variants: await Promise.all(
           variants.map(async (size) => {
-            const sizeEntity = await this.sizeService.create({
-              name: size.size,
-            });
+            const sizeEntity = await this.sizeService.create(
+              {
+                name: size.size,
+              },
+              queryRunner.manager,
+            );
             return {
               size: { id: sizeEntity?.id },
               transactions: [{ quantity: size.quantity }],
@@ -114,7 +122,7 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        FindOne                                                 */
+  //?                                 FindOneVariant                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   async findOneVariant(id: number) {
@@ -148,22 +156,24 @@ export class VariantsService {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async update(id: number, updateVariantDto: UpdateVariantDto) {
+  async updateProductColor(id: number, updateVariantDto: UpdateVariantDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const { multimedia, variants } = updateVariantDto;
+      const { multimedia, variants, pdfs, ...data } = updateVariantDto;
 
       //! se obtiene el entity con sus relaciones
       const productColorEntity = await this.findOneProductColor(id);
 
-      if (multimedia) {
-        //! se borran físicamente los archivos si hay multimedia
-        await this.filesService.deletedFiles(productColorEntity.multimedia);
-        productColorEntity.multimedia = multimedia;
-        await queryRunner.manager.save(productColorEntity);
+      //! se crea el color (si no existe)
+      if (data.colorCode && data.colorName) {
+        const color = await this.colorService.create(
+          { code: data.colorCode, name: data.colorName },
+          queryRunner.manager,
+        );
+        productColorEntity.color = color;
       }
 
       //! se recorren los variants para crear nuevos
@@ -179,18 +189,26 @@ export class VariantsService {
             productColor: { id: productColorEntity.id },
             transactions: [{ quantity: variant.quantity }],
           });
-
           await queryRunner.manager.save(variantEntity);
         }
       }
+
+      //! se borran físicamente los archivos si hay multimedia o pdfs
+      if (multimedia) {
+        await this.filesService.deletedFiles(productColorEntity.multimedia);
+        productColorEntity.multimedia = multimedia;
+      }
+      if (pdfs) {
+        productColorEntity.pdfs = pdfs;
+      }
+      await queryRunner.manager.save(productColorEntity);
+      await queryRunner.commitTransaction();
 
       //! se retorna el entity actualizado
       const productColor = await queryRunner.manager.findOne(ProductColor, {
         where: { id },
         relations: { variants: { size: true } },
       });
-      await queryRunner.commitTransaction();
-
       return productColor;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -203,7 +221,7 @@ export class VariantsService {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async remove(id: number) {
+  /*   async removeProductColor(id: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -231,7 +249,7 @@ export class VariantsService {
     } finally {
       await queryRunner.release();
     }
-  }
+  } */
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */

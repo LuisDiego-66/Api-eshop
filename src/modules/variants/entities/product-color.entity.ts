@@ -29,9 +29,6 @@ export class ProductColor {
   @CreateDateColumn({ select: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
-
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;
 
