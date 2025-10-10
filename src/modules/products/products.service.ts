@@ -42,7 +42,7 @@ export class ProductsService {
   async findAll(pagination: PaginationDto) {
     return paginate(
       this.productRepository,
-      { relations: { subcategory: { category: true } } },
+      { relations: { subcategory: { category: true }, discount: true } },
       pagination,
       ['name'], //! busqueda por:
     );
@@ -72,7 +72,7 @@ export class ProductsService {
     const product = await this.productRepository.findOne({
       where: { id },
       relations: {
-        productColors: { variants: true, color: true },
+        productColors: { variants: { size: true }, color: true },
         subcategory: true,
       },
     });
