@@ -30,7 +30,10 @@ export class CustomersService {
       options.where.type = pagination.type;
     }
 
-    return paginate(this.customerRepository, options, pagination, ['name']);
+    return paginate(this.customerRepository, options, pagination, [
+      'name',
+      'email',
+    ]);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
