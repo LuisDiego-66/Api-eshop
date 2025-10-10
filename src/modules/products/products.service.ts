@@ -42,7 +42,13 @@ export class ProductsService {
   async findAll(pagination: PaginationDto) {
     return paginate(
       this.productRepository,
-      { relations: { subcategory: { category: true }, discount: true } },
+      {
+        relations: {
+          subcategory: { category: true },
+          discount: true,
+          productColors: true,
+        },
+      },
       pagination,
       ['name'], //! busqueda por:
     );

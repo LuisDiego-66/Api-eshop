@@ -9,10 +9,10 @@ import {
 } from 'typeorm';
 
 import { AuthProviders } from 'src/auth/enums/providers.enum';
+import { CustomerType } from '../enums/customer-type.enum';
 
 import { Address } from 'src/modules/addresses/entities/address.entity';
 import { Order } from 'src/modules/orders/entities/order.entity';
-import { CustomerType } from '../enums/customer-type.enum';
 
 @Entity('customers')
 export class Customer {

@@ -167,7 +167,7 @@ export async function paginate<T extends ObjectLiteral>(
     }
   }
 
-  // Ejecutamos la consulta paginada
+  // se ejecuta la consulta paginada
   const [data, total] = await repository.findAndCount({
     ...options,
     skip,

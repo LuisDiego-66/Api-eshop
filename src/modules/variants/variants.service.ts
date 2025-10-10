@@ -145,11 +145,27 @@ export class VariantsService {
       where: { id },
       relations: { variants: { size: true }, product: true, color: true },
     });
+
     if (!productColor) {
       throw new NotFoundException('Product-Color not found: ' + id);
     }
 
-    return productColor;
+    //! Mapea las variantes para añadir el stock disponible
+    const variantsWithStock = await Promise.all(
+      productColor.variants.map(async (variant) => {
+        const availableStock = await this.getAvailableStock(variant.id);
+        return {
+          ...variant,
+          availableStock,
+        };
+      }),
+    );
+
+    //! Devuelve el producto con las variantes actualizadas
+    return {
+      ...productColor,
+      variants: variantsWithStock,
+    };
   }
 
   //? ---------------------------------------------------------------------------------------------- */
