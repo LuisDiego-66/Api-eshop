@@ -185,16 +185,17 @@ export class VariantsService {
 
       //! se crea el color (si no existe)
       if (data.colorCode && data.colorName) {
-        if (
+        /*         if (
           data.colorCode != productColorEntity.color.code &&
           data.colorName != productColorEntity.color.name
-        ) {
-          const color = await this.colorService.create(
-            { code: data.colorCode, name: data.colorName },
-            queryRunner.manager,
-          );
-          productColorEntity.color = color;
-        }
+        ) { */
+        const color = await this.colorService.create(
+          { code: data.colorCode, name: data.colorName },
+          queryRunner.manager,
+        );
+
+        productColorEntity.color = color;
+        /* } */
       }
 
       //! se recorren los variants para crear nuevos
@@ -222,7 +223,7 @@ export class VariantsService {
       if (pdfs) {
         productColorEntity.pdfs = pdfs;
       }
-      await queryRunner.manager.save(productColorEntity);
+      await queryRunner.manager.save(ProductColor, productColorEntity);
       await queryRunner.commitTransaction();
 
       //! se retorna el entity actualizado
