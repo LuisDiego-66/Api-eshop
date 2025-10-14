@@ -11,6 +11,7 @@ import { ProductColor } from './entities/product-color.entity';
 import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
 import { ColorsModule } from '../colors/colors.module';
+import { TransactionsService } from './transaction.service';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { ColorsModule } from '../colors/colors.module';
     ColorsModule,
   ],
   controllers: [VariantsController],
-  providers: [VariantsService],
+  providers: [VariantsService, TransactionsService],
   exports: [TypeOrmModule, VariantsService],
 })
 export class VariantsModule {}

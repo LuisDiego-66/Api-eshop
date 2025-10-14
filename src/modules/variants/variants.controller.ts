@@ -12,14 +12,23 @@ import {
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { CreateVariantsDto, UpdateVariantDto } from './dto';
+import {
+  CreateTransactionDto,
+  CreateVariantsDto,
+  UpdateVariantDto,
+} from './dto';
 
 import { VariantsService } from './variants.service';
+import { TransactionsService } from './transaction.service';
 
 @ApiTags('Variants')
 @Controller('variants')
 export class VariantsController {
-  constructor(private readonly variantsService: VariantsService) {}
+  constructor(
+    private readonly variantsService: VariantsService,
+
+    private readonly transactionsService: TransactionsService,
+  ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Create                                                  */
@@ -77,5 +86,14 @@ export class VariantsController {
   @Get('stock/:id')
   getStock(@Param('id', ParseIntPipe) id: number) {
     return this.variantsService.getAvailableStock(id);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                       AddStock                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Post('addstock')
+  addStock(@Body() createTransactionDto: CreateTransactionDto) {
+    return this.transactionsService.create(createTransactionDto);
   }
 }

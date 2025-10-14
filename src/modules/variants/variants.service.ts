@@ -185,17 +185,12 @@ export class VariantsService {
 
       //! se crea el color (si no existe)
       if (data.colorCode && data.colorName) {
-        /*         if (
-          data.colorCode != productColorEntity.color.code &&
-          data.colorName != productColorEntity.color.name
-        ) { */
         const color = await this.colorService.create(
           { code: data.colorCode, name: data.colorName },
           queryRunner.manager,
         );
 
         productColorEntity.color = color;
-        /* } */
       }
 
       //! se recorren los variants para crear nuevos
