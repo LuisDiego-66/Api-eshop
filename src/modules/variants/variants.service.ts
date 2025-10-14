@@ -14,6 +14,7 @@ import { SizesService } from '../sizes/sizes.service';
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { ProductColor } from './entities/product-color.entity';
+import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
 
 @Injectable()
@@ -180,7 +181,7 @@ export class VariantsService {
     try {
       const { multimedia, variants, pdfs, ...data } = updateVariantDto;
 
-      //! se obtiene el entity con sus relaciones
+      //! Obtener el ProductColor
       const productColorEntity = await this.findOneProductColor(id);
 
       //! se crea el color (si no existe)
@@ -189,25 +190,7 @@ export class VariantsService {
           { code: data.colorCode, name: data.colorName },
           queryRunner.manager,
         );
-
         productColorEntity.color = color;
-      }
-
-      //! se recorren los variants para crear nuevos
-      if (variants && variants.length > 0) {
-        for (const variant of variants) {
-          const sizeEntity = await this.sizeService.create({
-            name: variant.size,
-          });
-
-          //! se crean los variants
-          const variantEntity = queryRunner.manager.create(Variant, {
-            size: { id: sizeEntity?.id },
-            productColor: { id: productColorEntity.id },
-            transactions: [{ quantity: variant.quantity }],
-          });
-          await queryRunner.manager.save(variantEntity);
-        }
       }
 
       //! se borran físicamente los archivos si hay multimedia o pdfs
@@ -218,15 +201,38 @@ export class VariantsService {
       if (pdfs) {
         productColorEntity.pdfs = pdfs;
       }
-      await queryRunner.manager.save(ProductColor, productColorEntity);
+
+      const productColor = await queryRunner.manager.save(
+        ProductColor,
+        productColorEntity,
+      );
+
+      //! Crear nuevas variantes si se envían
+      if (variants && variants.length > 0) {
+        const variantEntities = await Promise.all(
+          variants.map(async (variant) => {
+            const sizeEntity = await this.sizeService.create({
+              name: variant.size,
+            });
+
+            return queryRunner.manager.create(Variant, {
+              size: { id: sizeEntity.id },
+              productColor: productColor,
+
+              transactions: [{ quantity: variant.quantity }],
+            });
+          }),
+        );
+        await queryRunner.manager.save(Variant, variantEntities);
+      }
+
       await queryRunner.commitTransaction();
 
       //! se retorna el entity actualizado
-      const productColor = await queryRunner.manager.findOne(ProductColor, {
+      return await queryRunner.manager.findOne(ProductColor, {
         where: { id },
         relations: { variants: { size: true } },
       });
-      return productColor;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleDBExceptions(error);
@@ -234,6 +240,7 @@ export class VariantsService {
       await queryRunner.release();
     }
   }
+
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */

@@ -8,11 +8,12 @@ import {
   Delete,
   Query,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { CreateProductDto, UpdateProductDto } from './dto';
+import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
 import { ProductsService } from './products.service';
 
@@ -62,6 +63,15 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
   ) {
     return this.productsService.update(id, updateProductDto);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                  AddDiscounts                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Put('add-discounts')
+  addDiscounts(@Body() addDiscountsDto: AddDiscountsDto) {
+    return this.productsService.addDiscounts(addDiscountsDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
-import { CreateProductDto, UpdateProductDto } from './dto';
+import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
+import { Discount } from '../discounts/entities/discount.entity';
 import { Product } from './entities/product.entity';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    private dataSource: DataSource,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -99,6 +102,63 @@ export class ProductsService {
       return await this.productRepository.save(product);
     } catch (error) {
       handleDBExceptions(error);
+    }
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                  AddDiscounts                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async addDiscounts(addDiscountsDto: AddDiscountsDto) {
+    const { productsIds, discountId } = addDiscountsDto;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      //! Verificar que el descuento exista
+      const discountEntity = await queryRunner.manager.findOne(Discount, {
+        where: { id: discountId },
+      });
+      if (!discountEntity)
+        throw new NotFoundException(`Discount with ID ${discountId} not found`);
+
+      //! Buscar los productos
+      const products = await queryRunner.manager.find(Product, {
+        where: { id: In(productsIds) },
+      });
+      if (products.length === 0)
+        throw new NotFoundException('No products found with given IDs');
+
+      //! Verificar que existan todos los IDs
+      const foundIds = products.map((p) => p.id);
+      const missingIds = productsIds.filter((id) => !foundIds.includes(id));
+      if (missingIds.length > 0)
+        throw new NotFoundException(
+          `Products not found: [${missingIds.join(', ')}]`,
+        );
+
+      //! Actualización masiva con un solo UPDATE
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(Product)
+        .set({ discount: discountEntity })
+        .whereInIds(productsIds)
+        .execute();
+
+      await queryRunner.commitTransaction();
+
+      return {
+        message: 'Discount applied successfully to products',
+        count: products.length,
+        products: products.map((p) => ({ id: p.id, name: p.name })),
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
     }
   }
 
