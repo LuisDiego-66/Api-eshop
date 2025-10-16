@@ -3,7 +3,7 @@ import { OrderType } from '../enums/order-type.enum';
 import { IsEnum, IsNumber, IsString, ValidateIf } from 'class-validator';
 
 export abstract class CreateOrderDto {
-  @ApiProperty({ enum: OrderType })
+  @ApiProperty({ enum: OrderType, example: OrderType.IN_STORE })
   @IsEnum(OrderType)
   type: OrderType;
 
