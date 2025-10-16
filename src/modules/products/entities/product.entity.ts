@@ -47,7 +47,9 @@ export class Product {
   @ManyToOne(() => Subcategory, (subcategory) => subcategory.products)
   subcategory: Subcategory;
 
-  @OneToMany(() => ProductColor, (productColors) => productColors.product)
+  @OneToMany(() => ProductColor, (productColors) => productColors.product, {
+    cascade: true,
+  })
   productColors: ProductColor[];
 
   @ManyToOne(() => Brand, (brand) => brand.products, { nullable: true }) //! NULL

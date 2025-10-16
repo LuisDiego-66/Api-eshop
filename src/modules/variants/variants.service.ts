@@ -245,7 +245,7 @@ export class VariantsService {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  /*   async removeProductColor(id: number) {
+  /* async removeProductColor(id: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -257,10 +257,10 @@ export class VariantsService {
       if (productColorEntity.multimedia) {
         await this.filesService.deletedFiles(productColorEntity.multimedia);
         productColorEntity.multimedia = [];
-        await queryRunner.manager.save(productColorEntity);
+        await queryRunner.manager.save(ProductColor, productColorEntity);
       }
 
-      await queryRunner.manager.softRemove(productColorEntity);
+      await queryRunner.manager.softRemove(ProductColor, productColorEntity);
       await queryRunner.commitTransaction();
 
       return {

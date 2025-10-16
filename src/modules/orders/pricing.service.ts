@@ -33,8 +33,6 @@ export class PricingService {
           item.variantId,
         );
 
-        console.log(variant);
-
         //! Precio actual del producto
         const unit_price = Number(variant.productColor.product.price);
 

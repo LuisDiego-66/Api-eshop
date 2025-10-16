@@ -74,7 +74,7 @@ export class VariantsController {
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
-  /*   @Delete(':id')
+  /* @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.variantsService.removeProductColor(id);
   } */
