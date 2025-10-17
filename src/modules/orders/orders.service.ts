@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, LessThan, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import { paginate } from 'src/common/pagination/paginate';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
@@ -23,7 +24,6 @@ import { Transaction } from '../variants/entities/transaction.entity';
 import { Variant } from '../variants/entities/variant.entity';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
-import { paginate } from 'src/common/pagination/paginate';
 
 @Injectable()
 export class OrdersService {
@@ -113,10 +113,10 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                   ConfirmOrder                                                 */
+  //?                            ConfirmOrderInStore                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async confirmOrder(orderId: number /* QrData */) {
+  async confirmOrderInStore(orderId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -172,12 +172,11 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                   CancelOrder                                                 */
+  //?                                   ConfirmOrder                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async cancelOrder(orderId: number) {
-    //! revisar
-    const queryRunner = this.dataSource.createQueryRunner();
+  async confirmOrderOnline(qrDataInterface: any) {
+    /*     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -185,6 +184,8 @@ export class OrdersService {
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write') //! solo bloquea "order"
+        .innerJoinAndSelect('order.items', 'items') //! los items de la order
+        .innerJoinAndSelect('items.variant', 'variant') //! las variantes de los items
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status = :status', { status: OrderStatus.PENDING })
         .andWhere('order.expiresAt > NOW()')
@@ -196,8 +197,66 @@ export class OrdersService {
         );
       }
 
-      order.status = OrderStatus.CANCELLED;
+      //! Actualizar el estado de la orden a PAID
+      order.status = OrderStatus.PAID;
       await queryRunner.manager.save(order);
+
+      //! Actualizar las reservas a PAID
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(StockReservation)
+        .set({ status: ReservationStatus.PAID })
+        .where('orderId = :orderId', { orderId })
+        .andWhere('status = :status', { status: ReservationStatus.PENDING })
+        .andWhere('expiresAt > NOW()') //! condición de no expirada
+        .execute();
+
+      //! Crear las transacciones negativas de stock
+      const transactions = order.items.map((item) =>
+        queryRunner.manager.create(Transaction, {
+          quantity: item.quantity * -1,
+          variant: { id: item.variant.id },
+        }),
+      );
+      await queryRunner.manager.save(transactions);
+
+      await queryRunner.commitTransaction();
+      return order;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
+    } */
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                   CancelOrder                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async cancelOrder(orderId: number) {
+    //! revisar
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const orderEntity = await queryRunner.manager
+        .createQueryBuilder(Order, 'order')
+        .setLock('pessimistic_write') //! solo bloquea "order"
+        .where('order.id = :id', { id: orderId })
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+        .andWhere('order.expiresAt > NOW()')
+        .getOne();
+
+      if (!orderEntity) {
+        throw new NotFoundException(
+          `Order ${orderId} not found or not pending`,
+        );
+      }
+
+      orderEntity.status = OrderStatus.CANCELLED;
+      const order = await queryRunner.manager.save(Order, orderEntity);
 
       await queryRunner.manager
         .createQueryBuilder()
@@ -223,21 +282,6 @@ export class OrdersService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    /* const { limit = 10, offset = 0 } = pagination;
-
-    const orders = await this.orderRepository.find({
-      take: limit,
-      skip: offset,
-      relations: {
-        items: { variant: true },
-        customer: true,
-        shipment: true,
-        address: true,
-      },
-    });
-
-    return orders; */
-
     return paginate(
       this.orderRepository,
       {

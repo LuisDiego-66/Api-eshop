@@ -38,7 +38,16 @@ export class OrdersController {
 
   @Post('confirm/:id')
   confirm(@Param('id') id: number) {
-    return this.ordersService.confirmOrder(id);
+    return this.ordersService.confirmOrderInStore(id);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                    CancelOrder                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Post('cancel/:id')
+  cancel(@Param('id') id: number) {
+    return this.ordersService.cancelOrder(id);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

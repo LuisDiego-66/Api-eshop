@@ -193,12 +193,14 @@ export class VariantsService {
         productColorEntity.color = color;
       }
 
-      //! se borran físicamente los archivos si hay multimedia o pdfs
       if (multimedia) {
-        await this.filesService.deletedFiles(productColorEntity.multimedia);
+        //! se borran físicamente los archivos si hay multimedia
+        //await this.filesService.deletedFiles(productColorEntity.multimedia);
         productColorEntity.multimedia = multimedia;
       }
       if (pdfs) {
+        //! se borran físicamente los archivos si hay multimedia
+        //await this.filesService.deletedFiles(productColorEntity.pdfs);
         productColorEntity.pdfs = pdfs;
       }
 
