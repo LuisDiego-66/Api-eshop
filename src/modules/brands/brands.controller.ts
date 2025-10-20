@@ -9,13 +9,18 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateBrandDto, UpdateBrandDto } from './dto';
 
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { BrandsService } from './brands.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Brands')
 @Controller('brands')
 export class BrandsController {
@@ -35,8 +40,6 @@ export class BrandsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  //@ApiQuery({ name: 'limit', required: false, type: Number })
-  //@ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
     return this.brandsService.findAll(pagination);
   }

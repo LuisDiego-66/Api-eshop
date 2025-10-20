@@ -8,13 +8,20 @@ import {
   Delete,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateAddressDto, UpdateAddressDto } from './dto';
 
+import { Auth, GetUser } from 'src/auth/decorators';
+
+import { Customer } from '../customers/entities/customer.entity';
+import { User } from '../users/entities/user.entity';
+
 import { AddressesService } from './addresses.service';
 
+@Auth()
+@ApiBearerAuth('access-token')
 @ApiTags('Addresses')
 @Controller('addresses')
 export class AddressesController {
@@ -25,8 +32,11 @@ export class AddressesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Post()
-  create(@Body() createAddreseDto: CreateAddressDto) {
-    return this.addressesService.create(createAddreseDto);
+  create(
+    @Body() createAddreseDto: CreateAddressDto,
+    @GetUser() customer: User | Customer,
+  ) {
+    return this.addressesService.create(createAddreseDto, customer);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -34,10 +44,8 @@ export class AddressesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  //@ApiQuery({ name: 'limit', required: false, type: Number })
-  //@ApiQuery({ name: 'offset', required: false, type: Number })
-  findAll(pagination: PaginationDto) {
-    return this.addressesService.findAll(pagination);
+  findAll(pagination: PaginationDto, @GetUser() customer: User | Customer) {
+    return this.addressesService.findAll(pagination, customer);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

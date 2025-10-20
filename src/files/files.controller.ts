@@ -11,15 +11,20 @@ import {
   Body,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { diskStorage } from 'multer';
 
 import { fileFilter } from './helpers/fileFilter.helper';
 import { fileNamer } from './helpers/fileNamer.helper';
 
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { FilesService } from './files.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Files')
 @Controller('multimedia')
 export class FilesController {

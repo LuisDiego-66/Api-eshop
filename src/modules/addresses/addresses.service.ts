@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -7,6 +11,8 @@ import { CreateAddressDto, UpdateAddressDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
+import { Customer } from '../customers/entities/customer.entity';
+import { User } from '../users/entities/user.entity';
 import { Address } from './entities/address.entity';
 
 @Injectable()
@@ -20,9 +26,16 @@ export class AddressesService {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async create(createAddressDto: CreateAddressDto) {
+  async create(createAddressDto: CreateAddressDto, customer: User | Customer) {
+    if (!(customer instanceof Customer)) {
+      throw new BadRequestException('Only customers can create addresses');
+    }
+
     try {
-      const newAddress = this.addressRepository.create(createAddressDto);
+      const newAddress = this.addressRepository.create({
+        ...createAddressDto,
+        customer,
+      });
       return await this.addressRepository.save(newAddress);
     } catch (error) {
       handleDBExceptions(error);
@@ -33,14 +46,12 @@ export class AddressesService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
+  async findAll(pagination: PaginationDto, customer: User | Customer) {
+    if (!(customer instanceof Customer)) {
+      throw new BadRequestException('Only customers can create addresses');
+    }
 
-    const addresses = await this.addressRepository.find({
-      //take: limit,
-      //skip: offset,
-    });
-
+    const addresses = await this.addressRepository.findBy({ id: customer.id });
     return addresses;
   }
 

@@ -1,10 +1,15 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { SendMailDto } from './dto/send-mail.dto';
 
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { MailService } from './mail.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Mail')
 @Controller('mail')
 export class MailController {

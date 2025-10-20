@@ -34,11 +34,7 @@ export class BrandsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-
     const brands = await this.brandRepository.find({
-      //take: limit,
-      //skip: offset,
       relations: { products: true },
     });
 

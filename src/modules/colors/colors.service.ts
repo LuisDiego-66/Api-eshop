@@ -20,25 +20,6 @@ export class ColorsService {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  /*   async create(createColorDto: CreateColorDto) {
-    let { name, code } = createColorDto;
-
-    try {
-      const colorExists = await this.colorRepository.findOne({
-        where: { name, code },
-      });
-
-      if (!colorExists) {
-        const newSize = this.colorRepository.create(createColorDto);
-        return await this.colorRepository.save(newSize);
-      }
-
-      return colorExists;
-    } catch (error) {
-      handleDBExceptions(error);
-    }
-  } */
-
   async create(createColorDto: CreateColorDto, manager?: EntityManager) {
     const repo = manager ? manager.getRepository(Color) : this.colorRepository;
     const { name, code } = createColorDto;

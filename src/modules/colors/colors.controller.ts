@@ -9,13 +9,18 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateColorDto, UpdateColorDto } from './dto';
 
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { ColorsService } from './colors.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Colors')
 @Controller('colors')
 export class ColorsController {
@@ -34,8 +39,6 @@ export class ColorsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  //@ApiQuery({ name: 'limit', required: false, type: Number })
-  //@ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
     return this.colorsService.findAll(pagination);
   }

@@ -4,14 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, LessThan, Repository } from 'typeorm';
+import { DataSource, LessThan, QueryRunner, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
-import { OrderStatus } from './enums';
+import { OrderStatus, OrderType } from './enums';
 
 import { StockReservationsService } from '../stock-reservations/stock-reservations.service';
 import { VariantsService } from '../variants/variants.service';
@@ -21,7 +21,9 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
 import { Transaction } from '../variants/entities/transaction.entity';
+import { Customer } from '../customers/entities/customer.entity';
 import { Variant } from '../variants/entities/variant.entity';
+import { User } from '../users/entities/user.entity';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
 
@@ -37,12 +39,45 @@ export class OrdersService {
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                  Create Order                                                  */
+  //?                         Create Order In Store                                                  */
   //? ---------------------------------------------------------------------------------------------- */
-  async createOrder(createOrderDto: CreateOrderDto) {
-    const { items: token, type, customer, shipment, address } = createOrderDto;
 
-    //! Reprice
+  async createOrderInStore(dto: CreateOrderInStoreDto) {
+    return this.createOrderBase({
+      dto,
+      buyer: null,
+      isOnline: false,
+    });
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                           Create Order Online                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async createOrderOnline(dto: CreateOrderOnlineDto, buyer: User | Customer) {
+    if (!(buyer instanceof Customer)) {
+      throw new BadRequestException('Only customers can create online orders');
+    }
+    return this.createOrderBase({
+      dto,
+      buyer,
+      isOnline: true,
+    });
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  private async createOrderBase({
+    dto,
+    buyer,
+    isOnline,
+  }: {
+    dto: CreateOrderInStoreDto | CreateOrderOnlineDto;
+    buyer?: Customer | null;
+    isOnline: boolean;
+  }) {
+    const { items: token, type } = dto;
+
     const rePricing = await this.pricingService.rePrice(token);
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -50,59 +85,33 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
-      //! Creacion de la orden
-      const newOrder = queryRunner.manager.create(Order, {
+      //! Crear la orden base
+      const orderData: Partial<Order> = {
         type,
-        customer: customer ? { id: customer } : null,
-        shipment: shipment ? { id: shipment } : null,
-        address: address ? { id: address } : null,
         totalPrice: rePricing.total,
-      });
-      await queryRunner.manager.save(newOrder);
+      };
 
-      for (const item of rePricing.items) {
-        //! Bloqueo pesimista sobre la creacion e insercion de reservas sobre la variante
-        const available = await this.variantsService.getAvailableStockWithLock(
-          queryRunner,
-          item.variantId,
-        );
-
-        if (available < item.quantity) {
-          throw new BadRequestException(
-            `Insufficient stock for variant ${item.variantId}`,
-          );
-        }
-
-        //! Bloqueo pesimista sobre la variante
-        const variant = await queryRunner.manager.findOne(Variant, {
-          where: { id: item.variantId },
-          lock: { mode: 'pessimistic_write' },
+      if (isOnline) {
+        const { shipment, address } = dto as CreateOrderOnlineDto;
+        Object.assign(orderData, {
+          customer: { id: buyer!.id },
+          shipment: { id: shipment },
+          address: { id: address },
         });
-
-        if (!variant)
-          throw new NotFoundException(`Variant ${item.variantId} not found`);
-
-        //! Creacion del item de orden
-        const orderItem = queryRunner.manager.create(Item, {
-          order: { id: newOrder.id },
-          variant: { id: variant.id },
-          quantity: item.quantity,
-          unit_price: item.unit_price.toString(),
-          discountValue: item.discountValue,
-          totalPrice: item.totalPrice,
-        });
-        await queryRunner.manager.save(orderItem);
-
-        //! Creacion de la reserva de stock
-        await this.stockReservationsService.createReservation(
-          queryRunner.manager,
-          variant.id,
-          newOrder.id,
-          item.quantity,
-        );
       }
 
+      const newOrder = queryRunner.manager.create(Order, orderData);
+      await queryRunner.manager.save(newOrder);
+
+      //! Crear los items y reservas
+      for (const item of rePricing.items) {
+        await this.handleItemCreationWithLock(queryRunner, newOrder, item);
+      }
+
+      //! Confirmar la transacción
       await queryRunner.commitTransaction();
+
+      //! Retornar la orden creada
       return await this.findOne(newOrder.id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -113,10 +122,65 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+
+  private async handleItemCreationWithLock(
+    queryRunner: QueryRunner,
+    order: Order,
+    item: {
+      variantId: number;
+      quantity: number;
+      unit_price: number;
+      discountValue: number;
+      totalPrice: string;
+    },
+  ) {
+    //! Verificar stock disponible con bloqueo
+    const available = await this.variantsService.getAvailableStockWithLock(
+      queryRunner,
+      item.variantId,
+    );
+
+    if (available < item.quantity) {
+      throw new BadRequestException(
+        `Insufficient stock for variant ID: ${item.variantId}`,
+      );
+    }
+
+    //! Bloquear la variante para escritura
+    const variant = await queryRunner.manager.findOne(Variant, {
+      where: { id: item.variantId },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (!variant) {
+      throw new NotFoundException(`Variant ID ${item.variantId} not found`);
+    }
+
+    //! Crear el item de la orden
+    const orderItem = queryRunner.manager.create(Item, {
+      order: { id: order.id },
+      variant: { id: variant.id },
+      quantity: item.quantity,
+      unit_price: item.unit_price.toString(),
+      discountValue: item.discountValue,
+      totalPrice: item.totalPrice,
+    });
+    await queryRunner.manager.save(orderItem);
+
+    //! Crear reserva de stock
+    await this.stockReservationsService.createReservation(
+      queryRunner.manager,
+      variant.id,
+      order.id,
+      item.quantity,
+    );
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
   //?                            ConfirmOrderInStore                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async confirmOrderInStore(orderId: number) {
+  async confirmOrderManual(orderId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -129,12 +193,13 @@ export class OrdersService {
         .innerJoinAndSelect('items.variant', 'variant') //! las variantes de los items
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+        .andWhere('order.type = :type', { type: OrderType.IN_STORE })
         .andWhere('order.expiresAt > NOW()')
         .getOne();
 
       if (!order) {
         throw new NotFoundException(
-          `Order ${orderId} not found or not pending`,
+          `Order ${orderId} not found or not pending or not in-store`,
         );
       }
 
@@ -172,66 +237,19 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                                     GenerateQr                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  generateQr() {}
+
+  //? ---------------------------------------------------------------------------------------------- */
   //?                                   ConfirmOrder                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async confirmOrderOnline(qrDataInterface: any) {
-    /*     const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const order = await queryRunner.manager
-        .createQueryBuilder(Order, 'order')
-        .setLock('pessimistic_write') //! solo bloquea "order"
-        .innerJoinAndSelect('order.items', 'items') //! los items de la order
-        .innerJoinAndSelect('items.variant', 'variant') //! las variantes de los items
-        .where('order.id = :id', { id: orderId })
-        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
-        .andWhere('order.expiresAt > NOW()')
-        .getOne();
-
-      if (!order) {
-        throw new NotFoundException(
-          `Order ${orderId} not found or not pending`,
-        );
-      }
-
-      //! Actualizar el estado de la orden a PAID
-      order.status = OrderStatus.PAID;
-      await queryRunner.manager.save(order);
-
-      //! Actualizar las reservas a PAID
-      await queryRunner.manager
-        .createQueryBuilder()
-        .update(StockReservation)
-        .set({ status: ReservationStatus.PAID })
-        .where('orderId = :orderId', { orderId })
-        .andWhere('status = :status', { status: ReservationStatus.PENDING })
-        .andWhere('expiresAt > NOW()') //! condición de no expirada
-        .execute();
-
-      //! Crear las transacciones negativas de stock
-      const transactions = order.items.map((item) =>
-        queryRunner.manager.create(Transaction, {
-          quantity: item.quantity * -1,
-          variant: { id: item.variant.id },
-        }),
-      );
-      await queryRunner.manager.save(transactions);
-
-      await queryRunner.commitTransaction();
-      return order;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      handleDBExceptions(error);
-    } finally {
-      await queryRunner.release();
-    } */
-  }
+  async confirmOrderQr(qrDataInterface: any) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                   CancelOrder                                                 */
+  //?                                    CancelOrder                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   async cancelOrder(orderId: number) {

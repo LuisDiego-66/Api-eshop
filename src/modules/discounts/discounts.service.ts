@@ -41,11 +41,7 @@ export class DiscountsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-    const discounts = await this.discountRepository.find({
-      //take: limit,
-      //skip: offset,
-    });
+    const discounts = await this.discountRepository.find({});
     return discounts;
   }
 

@@ -37,11 +37,7 @@ export class SubcategoriesService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-
     const subCategories = await this.subcategoryRepository.find({
-      //take: limit,
-      //skip: offset,
       relations: { products: true },
     });
 

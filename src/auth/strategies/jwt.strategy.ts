@@ -2,9 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt'; //! strategy JWT
 import { envs } from 'src/config/environments/environments';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { IJwtPayload } from '../interfaces/jwt-payload.interface';
 import { LoginType } from 'src/common/enums/login-type.enum';
+
 import { UsersService } from 'src/modules/users/users.service';
 import { CustomersService } from 'src/modules/customers/customers.service';
 

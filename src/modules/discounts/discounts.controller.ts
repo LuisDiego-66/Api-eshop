@@ -9,7 +9,7 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
@@ -19,8 +19,13 @@ import {
   UpdatePermanentDiscountDto,
 } from './dto';
 
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { DiscountsService } from './discounts.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Discounts')
 @Controller('discounts')
 export class DiscountsController {
@@ -51,8 +56,6 @@ export class DiscountsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  //@ApiQuery({ name: 'limit', required: false, type: Number })
-  //@ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
     return this.discountsService.findAll(pagination);
   }

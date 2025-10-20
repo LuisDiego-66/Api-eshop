@@ -33,13 +33,7 @@ export class UsersService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-
-    const users = await this.userRepository.find({
-      //take: limit,
-      //skip: offset,
-    });
-
+    const users = await this.userRepository.find();
     return users;
   }
 

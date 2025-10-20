@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
 import { UpdateCustomerDto, CustomerPaginationDto } from './dto';
 
@@ -43,6 +42,7 @@ export class CustomersService {
   async findOne(id: number) {
     const customer = await this.customerRepository.findOne({
       where: { id },
+      select: { id: true, email: true, name: true, type: true, provider: true },
     });
     if (!customer) {
       throw new NotFoundException('Customer not found');

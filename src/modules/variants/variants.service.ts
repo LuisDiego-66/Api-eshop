@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { DataSource, ILike, QueryRunner, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import { paginate } from 'src/common/pagination/paginate';
 import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
@@ -16,6 +17,7 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { ProductColor } from './entities/product-color.entity';
 import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
+import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 
 @Injectable()
 export class VariantsService {
@@ -94,7 +96,7 @@ export class VariantsService {
   //?                         FindAll Product Colors                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAllProductColors(pagination: PaginationDto) {
+  /*   async findAllProductColors(pagination: PaginationDto) {
     const productColors = await this.productColorRepository.find({
       relations: { variants: { size: true }, color: true, product: true },
     });
@@ -120,6 +122,38 @@ export class VariantsService {
     );
 
     return result;
+  }
+ */
+
+  async findAllProductColors(pagination: PaginationDto) {
+    const paginated = await paginateAdvanced(
+      this.productColorRepository,
+      pagination,
+      ['product.name'], //! campos buscables (en relaciones)
+      ['variants.size', 'color', 'product'], //! relaciones a cargar
+      { id: 'ASC' }, //! orden
+      true, //! caseInsensitive
+    );
+
+    //! Calcula el stock solo para los resultados paginados
+    const dataWithStock = await Promise.all(
+      paginated.data.map(async (productColor) => {
+        const variantsWithStock = await Promise.all(
+          productColor.variants.map(async (variant) => {
+            const availableStock = await this.getAvailableStock(variant.id);
+            return { ...variant, availableStock };
+          }),
+        );
+
+        return { ...productColor, variants: variantsWithStock };
+      }),
+    );
+
+    //! Devuelve los resultados paginados con la meta
+    return {
+      data: dataWithStock,
+      meta: paginated.meta,
+    };
   }
 
   //? ---------------------------------------------------------------------------------------------- */

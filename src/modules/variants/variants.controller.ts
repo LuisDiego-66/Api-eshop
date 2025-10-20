@@ -9,7 +9,7 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
@@ -18,9 +18,14 @@ import {
   UpdateVariantDto,
 } from './dto';
 
-import { VariantsService } from './variants.service';
-import { TransactionsService } from './transaction.service';
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
 
+import { TransactionsService } from './transaction.service';
+import { VariantsService } from './variants.service';
+
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Variants')
 @Controller('variants')
 export class VariantsController {
@@ -43,9 +48,10 @@ export class VariantsController {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @Get()
-  //@ApiQuery({ name: 'limit', required: false, type: Number })
-  //@ApiQuery({ name: 'offset', required: false, type: Number })
   findAll(@Query() pagination: PaginationDto) {
     return this.variantsService.findAllProductColors(pagination);
   }

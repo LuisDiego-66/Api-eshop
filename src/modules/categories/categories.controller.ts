@@ -9,13 +9,17 @@ import {
   ParseIntPipe,
   Put,
 } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { CategoriesService } from './categories.service';
 
-// @ApiBearerAuth('access-token') // para la autenticacion
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {

@@ -39,7 +39,9 @@ export class Address {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  @ManyToOne(() => Customer, (customer) => customer.address)
+  @ManyToOne(() => Customer, (customer) => customer.address, {
+    nullable: false,
+  })
   customer: Customer;
 
   @OneToMany(() => Order, (order) => order.address)

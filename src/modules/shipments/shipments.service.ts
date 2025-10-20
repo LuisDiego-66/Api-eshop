@@ -59,31 +59,19 @@ export class ShipmentsService {
 
   // All
   async findAll(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-    const shipments = await this.shipmentRepository.find({
-      //take: limit,
-      //skip: offset,
-    });
+    const shipments = await this.shipmentRepository.find({});
     return shipments;
   }
 
   // National
   async findAllNational(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-    const shipments = await this.nationalRepository.find({
-      //take: limit,
-      //skip: offset,
-    });
+    const shipments = await this.nationalRepository.find({});
     return shipments;
   }
 
   // International
   async findAllInterNational(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-    const shipments = await this.internationalRepository.find({
-      //take: limit,
-      //skip: offset,
-    });
+    const shipments = await this.internationalRepository.find({});
     return shipments;
   }
 
