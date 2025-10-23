@@ -23,8 +23,6 @@ import { Roles } from 'src/auth/enums';
 
 import { FilesService } from './files.service';
 
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
 @ApiTags('Files')
 @Controller('multimedia')
 export class FilesController {
@@ -34,6 +32,8 @@ export class FilesController {
   //?                                        Upload                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
   @Post()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -96,6 +96,8 @@ export class FilesController {
   //?                                   GetAllFiles                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
   @Get('uploads')
   getAllFiles() {
     return this.filesService.getAllFiles();
@@ -105,6 +107,8 @@ export class FilesController {
   //?                                  deletedFiles                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
   @Delete()
   deleteFiles(@Body() deleteDto: string[]) {
     return this.filesService.deletedFiles(deleteDto);

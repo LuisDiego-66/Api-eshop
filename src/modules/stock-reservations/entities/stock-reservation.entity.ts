@@ -6,6 +6,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { envs } from 'src/config/environments/environments';
+
 import { ReservationStatus } from '../enum/reservation-status.enum';
 
 import { Variant } from '../../variants/entities/variant.entity';
@@ -49,10 +51,9 @@ export class StockReservation {
 
   @BeforeInsert()
   setReservationDates() {
-    const minutes = 10;
+    const minutes = /* envs.RESERVATION_EXPIRE_MINUTES || */ 10;
     const now = new Date();
-    const end = new Date(now);
-    end.setMinutes(end.getMinutes() + minutes);
-    this.expiresAt = end;
+    const expires = new Date(now.getTime() + minutes * 60 * 1000);
+    this.expiresAt = expires;
   }
 }

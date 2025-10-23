@@ -304,7 +304,7 @@ export class OrdersService {
       this.orderRepository,
       {
         relations: {
-          items: { variant: true },
+          items: { variant: { productColor: { product: true } } },
           customer: true,
           shipment: true,
           address: true,

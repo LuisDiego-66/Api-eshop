@@ -9,5 +9,6 @@ export class StatusChangerCronJob {
   //@Cron('*/1 * * * *')
   async handleExpiration() {
     await this.stockService.expireReservations();
+    console.log('\x1b[32m%s\x1b[0m', '✅ Expired stock reservations handled.');
   }
 }

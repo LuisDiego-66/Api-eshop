@@ -48,7 +48,7 @@ export class AddressesService {
 
   async findAll(pagination: PaginationDto, customer: User | Customer) {
     if (!(customer instanceof Customer)) {
-      throw new BadRequestException('Only customers can create addresses');
+      throw new BadRequestException('Only customers can find addresses');
     }
 
     const addresses = await this.addressRepository.findBy({ id: customer.id });
