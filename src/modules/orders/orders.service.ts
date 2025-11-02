@@ -39,7 +39,7 @@ export class OrdersService {
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                         Create Order In Store                                                  */
+  //?                         Create_Order_In_Store                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   async createOrderInStore(dto: CreateOrderInStoreDto) {
@@ -51,7 +51,7 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                           Create Order Online                                                  */
+  //?                           Create_Order_Online                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   async createOrderOnline(dto: CreateOrderOnlineDto, buyer: User | Customer) {
@@ -85,7 +85,10 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
-      //! Crear la orden base
+      // --------------------------------------------------------------------------
+      // 1. Se crea la order Base
+      // --------------------------------------------------------------------------
+
       const orderData: Partial<Order> = {
         type,
         totalPrice: rePricing.total,
@@ -103,12 +106,18 @@ export class OrdersService {
       const newOrder = queryRunner.manager.create(Order, orderData);
       await queryRunner.manager.save(newOrder);
 
-      //! Crear los items y reservas
+      // --------------------------------------------------------------------------
+      // 2. Se crea los items y las reservas de stock
+      // --------------------------------------------------------------------------
+
       for (const item of rePricing.items) {
         await this.handleItemCreationWithLock(queryRunner, newOrder, item);
       }
 
-      //! Confirmar la transacción
+      // --------------------------------------------------------------------------
+      // 3. Commit Transaction
+      // --------------------------------------------------------------------------
+
       await queryRunner.commitTransaction();
 
       //! Retornar la orden creada
@@ -134,7 +143,10 @@ export class OrdersService {
       totalPrice: string;
     },
   ) {
-    //! Verificar stock disponible con bloqueo
+    // --------------------------------------------------------------------------
+    // 1. Verificar stock disponible
+    // --------------------------------------------------------------------------
+
     const available = await this.variantsService.getAvailableStockWithLock(
       queryRunner,
       item.variantId,
@@ -146,7 +158,10 @@ export class OrdersService {
       );
     }
 
-    //! Bloquear la variante para escritura
+    // --------------------------------------------------------------------------
+    // 2. Obtener la variante con lock
+    // --------------------------------------------------------------------------
+
     const variant = await queryRunner.manager.findOne(Variant, {
       where: { id: item.variantId },
       lock: { mode: 'pessimistic_write' },
@@ -156,7 +171,10 @@ export class OrdersService {
       throw new NotFoundException(`Variant ID ${item.variantId} not found`);
     }
 
-    //! Crear el item de la orden
+    // --------------------------------------------------------------------------
+    // 3. Crear el item de la order
+    // --------------------------------------------------------------------------
+
     const orderItem = queryRunner.manager.create(Item, {
       order: { id: order.id },
       variant: { id: variant.id },
@@ -167,7 +185,10 @@ export class OrdersService {
     });
     await queryRunner.manager.save(orderItem);
 
-    //! Crear reserva de stock
+    // --------------------------------------------------------------------------
+    // 4. Crear la reserva de stock
+    // --------------------------------------------------------------------------
+
     await this.stockReservationsService.createReservation(
       queryRunner.manager,
       variant.id,
@@ -177,7 +198,7 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                            ConfirmOrderInStore                                                 */
+  //?                          Confirm_Order_Manual                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   async confirmOrderManual(orderId: number) {
@@ -186,6 +207,10 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
+      // --------------------------------------------------------------------------
+      // 1. Obtener la orden con lock
+      // --------------------------------------------------------------------------
+
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write') //! solo bloquea "order"
@@ -203,11 +228,17 @@ export class OrdersService {
         );
       }
 
-      //! Actualizar el estado de la orden a PAID
+      // --------------------------------------------------------------------------
+      // 2. Actualizar la orden a PAID
+      // --------------------------------------------------------------------------
+
       order.status = OrderStatus.PAID;
       await queryRunner.manager.save(order);
 
-      //! Actualizar las reservas a PAID
+      // --------------------------------------------------------------------------
+      // 3. Actualizar las reservas de stock a PAID
+      // --------------------------------------------------------------------------
+
       await queryRunner.manager
         .createQueryBuilder()
         .update(StockReservation)
@@ -217,7 +248,10 @@ export class OrdersService {
         .andWhere('expiresAt > NOW()') //! condición de no expirada
         .execute();
 
-      //! Crear las transacciones negativas de stock
+      // --------------------------------------------------------------------------
+      // 4. Se crea las transacciones negativas en el stock
+      // --------------------------------------------------------------------------
+
       const transactions = order.items.map((item) =>
         queryRunner.manager.create(Transaction, {
           quantity: item.quantity * -1,
@@ -237,19 +271,19 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                     GenerateQr                                                 */
+  //?                                    Generate_Qr                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   generateQr() {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                   ConfirmOrder                                                 */
+  //?                               Confirm_Order_QR                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   async confirmOrderQr(qrDataInterface: any) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                    CancelOrder                                                 */
+  //?                                   Cancel_Order                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   async cancelOrder(orderId: number) {
@@ -259,6 +293,10 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
+      // --------------------------------------------------------------------------
+      // 1. Obtener la orden con lock
+      // --------------------------------------------------------------------------
+
       const orderEntity = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write') //! solo bloquea "order"
@@ -273,8 +311,16 @@ export class OrdersService {
         );
       }
 
+      // --------------------------------------------------------------------------
+      // 2. Actualizar la orden a CANCELLED
+      // --------------------------------------------------------------------------
+
       orderEntity.status = OrderStatus.CANCELLED;
       const order = await queryRunner.manager.save(Order, orderEntity);
+
+      // --------------------------------------------------------------------------
+      // 3. Actualizar las reservas de stock a CANCELLED
+      // --------------------------------------------------------------------------
 
       await queryRunner.manager
         .createQueryBuilder()

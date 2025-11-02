@@ -11,10 +11,10 @@ export class CreateOutfitDto {
   @ApiProperty({
     type: [Number],
     example: [1, 2, 3],
-    description: 'Variants IDs',
+    description: 'ProductColor IDs',
   })
   @IsArray()
   @ArrayNotEmpty()
   @IsInt({ each: true })
-  variantIds: number[];
+  productColorIds: number[];
 }

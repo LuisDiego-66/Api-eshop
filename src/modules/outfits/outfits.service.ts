@@ -8,7 +8,7 @@ import { CreateOutfitDto, UpdateOutfitDto } from './dto';
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Outfit } from './entities/outfit.entity';
-import { Variant } from '../variants/entities/variant.entity';
+import { ProductColor } from '../variants/entities/product-color.entity';
 
 @Injectable()
 export class OutfitsService {
@@ -16,8 +16,8 @@ export class OutfitsService {
     @InjectRepository(Outfit)
     private readonly outfitRepository: Repository<Outfit>,
 
-    @InjectRepository(Variant)
-    private readonly variantRepository: Repository<Variant>,
+    @InjectRepository(ProductColor)
+    private readonly productColorRepository: Repository<ProductColor>,
 
     private readonly dataSourse: DataSource,
   ) {}
@@ -28,17 +28,17 @@ export class OutfitsService {
 
   async create(createOutfitDto: CreateOutfitDto) {
     try {
-      const variants = await this.variantRepository.findByIds(
-        createOutfitDto.variantIds,
+      const productColors = await this.productColorRepository.findByIds(
+        createOutfitDto.productColorIds,
       );
 
-      if (variants.length !== createOutfitDto.variantIds.length) {
-        throw new NotFoundException('Some variant does not exist');
+      if (productColors.length !== createOutfitDto.productColorIds.length) {
+        throw new NotFoundException('Some Product-Colors does not exist');
       }
 
       const outfit = this.outfitRepository.create({
         ...createOutfitDto,
-        variants,
+        productColors,
       });
       return await this.outfitRepository.save(outfit);
     } catch (error) {
@@ -55,7 +55,7 @@ export class OutfitsService {
     const outfits = await this.outfitRepository.find({
       //take: limit,
       //skip: offset,
-      relations: { variants: true },
+      relations: { productColors: true },
     });
 
     return outfits;
@@ -68,7 +68,7 @@ export class OutfitsService {
   async findOne(id: number) {
     const outfit = await this.outfitRepository.findOne({
       where: { id },
-      relations: { variants: true },
+      relations: { productColors: true },
     });
 
     if (!outfit) {
@@ -83,7 +83,7 @@ export class OutfitsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async update(id: number, updateOutfitDto: UpdateOutfitDto) {
-    const { variantIds } = updateOutfitDto;
+    const { productColorIds } = updateOutfitDto;
     const outfitEntity = await this.findOne(id);
 
     const queryRunner = this.dataSourse.createQueryRunner();
@@ -91,8 +91,8 @@ export class OutfitsService {
     await queryRunner.startTransaction();
 
     try {
-      if (variantIds) {
-        outfitEntity.variants = [];
+      if (productColorIds) {
+        outfitEntity.productColors = [];
       }
 
       Object.assign(outfitEntity, updateOutfitDto);

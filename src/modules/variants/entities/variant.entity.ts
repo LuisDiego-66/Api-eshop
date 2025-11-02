@@ -2,16 +2,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { StockReservation } from '../../stock-reservations/entities/stock-reservation.entity';
-import { Outfit } from 'src/modules/outfits/entities/outfit.entity';
 import { Item } from 'src/modules/orders/entities/item.entity';
 import { Size } from 'src/modules/sizes/entities/size.entity';
 import { ProductColor } from './product-color.entity';
@@ -39,8 +36,8 @@ export class Variant {
   @OneToMany(() => Item, (item) => item.variant)
   items: Item[];
 
-  @ManyToMany(() => Outfit, (outfit) => outfit.variants)
-  outfits: Outfit[];
+  /*   @ManyToMany(() => Outfit, (outfit) => outfit.variants)
+  outfits: Outfit[]; */
 
   @OneToMany(() => StockReservation, (reservation) => reservation.variant)
   stock_reservations: StockReservation[];

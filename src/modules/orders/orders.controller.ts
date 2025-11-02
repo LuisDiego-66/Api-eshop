@@ -15,8 +15,8 @@ import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
 import { Auth, GetUser } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums';
 
-import { OrdersService } from './orders.service';
 import { PricingService } from './pricing.service';
+import { OrdersService } from './orders.service';
 
 import { Customer } from '../customers/entities/customer.entity';
 import { User } from '../users/entities/user.entity';

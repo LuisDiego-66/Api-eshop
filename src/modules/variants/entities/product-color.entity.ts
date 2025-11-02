@@ -3,15 +3,16 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { Product } from 'src/modules/products/entities/product.entity';
 import { Variant } from 'src/modules/variants/entities/variant.entity';
+import { Outfit } from 'src/modules/outfits/entities/outfit.entity';
 import { Color } from 'src/modules/colors/entities/color.entity';
 
 @Unique(['product', 'color'])
@@ -48,6 +49,9 @@ export class ProductColor {
     cascade: true,
   })
   variants: Variant[];
+
+  @ManyToMany(() => Outfit, (outfit) => outfit.productColors)
+  outfits: Outfit[];
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */

@@ -58,13 +58,13 @@ export class Order {
   @OneToMany(() => Item, (item) => item.order, { cascade: true })
   items: Item[];
 
-  @ManyToOne(() => Customer, (customer) => customer.order, { nullable: true }) //! NULL
+  @ManyToOne(() => Customer, (customer) => customer.order, { nullable: true }) //! NULLABLE
   customer?: Customer | null;
 
-  @ManyToOne(() => Shipment, (shipment) => shipment.orders, { nullable: true }) //! NULL
+  @ManyToOne(() => Shipment, (shipment) => shipment.orders, { nullable: true }) //! NULLABLE
   shipment?: Shipment | null;
 
-  @ManyToOne(() => Address, (address) => address.orders, { nullable: true }) //! NULL
+  @ManyToOne(() => Address, (address) => address.orders, { nullable: true }) //! NULLABLE
   address?: Address | null;
 
   @OneToMany(() => StockReservation, (reservation) => reservation.order)
@@ -89,10 +89,9 @@ export class Order {
 
   @BeforeInsert()
   setReservationDates() {
-    const minutes = 10;
+    const minutes = /* envs.RESERVATION_EXPIRE_MINUTES || */ 10;
     const now = new Date();
-    const end = new Date(now);
-    end.setMinutes(end.getMinutes() + minutes);
-    this.expiresAt = end;
+    const expires = new Date(now.getTime() + minutes * 60 * 1000);
+    this.expiresAt = expires;
   }
 }

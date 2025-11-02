@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-google-oauth2'; //! strategy JWT
+
 import { envs } from 'src/config/environments/environments';
-//? ---------------------------------------------------------------------------------------------- */
+
 import { AuthProviders } from '../enums/providers.enum';
 
 @Injectable()

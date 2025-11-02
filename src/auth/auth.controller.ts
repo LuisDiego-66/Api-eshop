@@ -33,7 +33,7 @@ export class AuthController {
   //?                                       Google                                                   */
   //? ---------------------------------------------------------------------------------------------- */
 
-  // redirecciona al inicio de session de google
+  //! redirecciona al inicio de session de google
   @Get('google')
   @UseGuards(GoogleOauthGuard)
   async auth() {}
@@ -41,7 +41,7 @@ export class AuthController {
   //? ---------------------------------------------------------------------------------------------- */
   //?                              Google CallBack                                                   */
   //? ---------------------------------------------------------------------------------------------- */
-  // se ejecuta cuando google redirecciona al usuario de vuelta a la aplicacion
+  //! se ejecuta cuando google redirecciona al usuario de vuelta a la aplicacion
   @Get('google/callback')
   @UseGuards(GoogleOauthGuard)
   async googleAuthCallback(@Req() req /*  @Res() res: Response */) {
