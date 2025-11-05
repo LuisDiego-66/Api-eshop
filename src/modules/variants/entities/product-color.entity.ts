@@ -22,10 +22,10 @@ export class ProductColor {
   id: number;
 
   @Column('text', { array: true, default: [] })
-  multimedia?: string[];
+  multimedia: string[];
 
   @Column('text', { array: true, default: [] })
-  pdfs?: string[];
+  pdfs: string[];
 
   @CreateDateColumn({ select: false })
   createdAt: Date;

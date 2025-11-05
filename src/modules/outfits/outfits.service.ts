@@ -92,7 +92,8 @@ export class OutfitsService {
 
     try {
       if (productColorIds) {
-        outfitEntity.productColors = [];
+        outfitEntity.productColors =
+          await this.productColorRepository.findByIds(productColorIds);
       }
 
       Object.assign(outfitEntity, updateOutfitDto);

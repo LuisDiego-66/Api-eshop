@@ -21,22 +21,37 @@ export class PricingService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async rePrice(token: string) {
-    //! Decodificar carrito desde el token
+    // --------------------------------------------------------------------------
+    // 1. Validar y decodificar el token JWT del carrito
+    // --------------------------------------------------------------------------
+
     const payload = await this.validateJwtToken(token);
     const cart = payload.cart;
 
-    //! Procesar en paralelo
+    // --------------------------------------------------------------------------
+    // 2. Recalcular precios y descuentos del carrito
+    // --------------------------------------------------------------------------
+
     const cartRepriced = await Promise.all(
       cart.map(async (item) => {
-        //! Obtener variante con producto y descuento
+        // --------------------------------------------------------------------------
+        // 3. Obtener la variante del producto
+        // --------------------------------------------------------------------------
+
         const variant = await this.variantsService.findOneVariant(
           item.variantId,
         );
 
-        //! Precio actual del producto
+        // --------------------------------------------------------------------------
+        // 4. Calcular precio unitario, descuento y total
+        // --------------------------------------------------------------------------
+
         const unit_price = Number(variant.productColor.product.price);
 
-        //! Validar descuento (enabled + fechas)
+        // --------------------------------------------------------------------------
+        // 5. Verificar descuento activo y válido
+        // --------------------------------------------------------------------------
+
         let discountValue = 0;
         const discount = variant.productColor.product.discount;
         if (discount && discount.isActive) {
@@ -50,7 +65,10 @@ export class PricingService {
           }
         }
 
-        //! Stock disponible en este momento
+        // --------------------------------------------------------------------------
+        // 6. Verificar stock disponible
+        // --------------------------------------------------------------------------
+
         const available = await this.variantsService.getAvailableStock(
           item.variantId,
         );
@@ -60,12 +78,18 @@ export class PricingService {
           );
         }
 
-        //! Calcular subtotal con descuento
+        // --------------------------------------------------------------------------
+        // 7. Calcular subtotal, descuento y total
+        // --------------------------------------------------------------------------
+
         const subtotal = unit_price * item.quantity;
         const discountAmount = (subtotal * discountValue) / 100;
         const totalPrice = (subtotal - discountAmount).toFixed(2);
 
-        //! Armar nuevo carrito
+        // --------------------------------------------------------------------------
+        // 8. Retornar el item revaluado
+        // --------------------------------------------------------------------------
+
         return {
           variantId: variant.id,
           quantity: item.quantity,
@@ -76,7 +100,10 @@ export class PricingService {
       }),
     );
 
-    //! Calcular total
+    // --------------------------------------------------------------------------
+    // 9. Calcular el total del carrito
+    // --------------------------------------------------------------------------
+
     const total = cartRepriced.reduce(
       (acc, item) => acc + Number(item.totalPrice),
       0,
