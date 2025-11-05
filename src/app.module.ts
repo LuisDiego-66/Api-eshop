@@ -30,6 +30,7 @@ import { ShipmentsModule } from './modules/shipments/shipments.module';
 
 import { StockReservationsModule } from './modules/stock-reservations/stock-reservations.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { SlidersModule } from './modules/sliders/sliders.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     CartModule,
     StockReservationsModule,
     PaymentsModule,
+    SlidersModule,
   ],
   controllers: [],
   providers: [],

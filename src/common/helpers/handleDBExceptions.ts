@@ -9,5 +9,6 @@ export function handleDBExceptions(error: any) {
   if (error.code === '23505') throw new ConflictException(error.detail); //! email
   if (error.code === '23503') throw new ConflictException(error.detail); //! key not exist
 
-  throw new InternalServerErrorException(error.detail);
+  //throw new InternalServerErrorException(error.detail);
+  throw error;
 }
