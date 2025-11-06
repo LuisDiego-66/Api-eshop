@@ -7,18 +7,19 @@ import {
 import { Customer } from 'src/modules/customers/entities/customer.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
-export const GetUser = createParamDecorator(
+export const GetCustomer = createParamDecorator(
   (data: string, cxt: ExecutionContext) => {
     const req = cxt.switchToHttp().getRequest();
-    const user: User | Customer = req.user;
+    const customer: User | Customer = req.user;
 
-    if (!user)
-      throw new InternalServerErrorException('User not found (request)');
+    if (!customer)
+      /* return undefined; */
+      throw new InternalServerErrorException('Customer not found (request)');
 
-    if (!(user instanceof User)) {
+    if (!(customer instanceof Customer)) {
       return undefined;
     }
 
-    return user;
+    return customer;
   },
 );

@@ -6,7 +6,6 @@ import {
   DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
@@ -33,9 +32,6 @@ export class User {
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;

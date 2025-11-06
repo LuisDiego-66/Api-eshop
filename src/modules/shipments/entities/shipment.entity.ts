@@ -1,36 +1,32 @@
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  TableInheritance,
-  UpdateDateColumn,
 } from 'typeorm';
 
-import { ShipmentMethod } from '../enums/shipment-method.enum';
-
 import { Order } from 'src/modules/orders/entities/order.entity';
+import { Place } from 'src/modules/places/entities/place.entity';
 
 @Entity('shipments')
-@TableInheritance({ column: { type: 'varchar', name: 'type' } })
-export abstract class Shipment extends BaseEntity {
+export class Shipment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'enum', enum: ShipmentMethod })
-  method: ShipmentMethod;
+  @Column()
+  name: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  price: string; //! string
 
   @Column('boolean', { default: true }) //! default: true
   enabled: boolean;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;
@@ -39,6 +35,11 @@ export abstract class Shipment extends BaseEntity {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  @OneToMany(() => Order, (order) => order.shipment /* { cascade: true } */)
+  @OneToMany(() => Order, (order) => order.shipment)
   orders: Order[];
+
+  @ManyToOne(() => Place, (place) => place.shipments, {
+    onDelete: 'CASCADE',
+  })
+  place: Place;
 }

@@ -1,41 +1,34 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreateAddressDto, UpdateAddressDto } from './dto';
+import { CreatePlaceDto, UpdatePlaceDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
-import { Customer } from '../customers/entities/customer.entity';
-import { Address } from './entities/address.entity';
+import { Place } from './entities/place.entity';
 
 @Injectable()
-export class AddressesService {
+export class PlacesService {
   constructor(
-    @InjectRepository(Address)
-    private readonly addressRepository: Repository<Address>,
+    @InjectRepository(Place)
+    private readonly placeRepository: Repository<Place>,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async create(createAddressDto: CreateAddressDto, customer?: Customer) {
-    if (!customer) {
-      throw new BadRequestException('Only customers can create addresses');
-    }
-
+  async create(createPlaceDto: CreatePlaceDto) {
     try {
-      const newAddress = this.addressRepository.create({
-        ...createAddressDto,
-        customer,
-        place: { id: createAddressDto.place },
+      const { shipments, ...data } = createPlaceDto;
+
+      const newPlace = this.placeRepository.create({
+        ...data,
+        shipments,
       });
-      return await this.addressRepository.save(newAddress);
+
+      return await this.placeRepository.save(newPlace);
     } catch (error) {
       handleDBExceptions(error);
     }
@@ -45,45 +38,33 @@ export class AddressesService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll(customer?: Customer) {
-    if (!customer) {
-      throw new BadRequestException('Only customers can find addresses');
-    }
-    const addresses = await this.addressRepository.findBy({ id: customer.id });
-    return addresses;
+  async findAll() {
+    return await this.placeRepository.find({ relations: { shipments: true } });
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findOne(id: number, customer?: Customer) {
-    if (!customer) {
-      throw new BadRequestException('Only customers can find addresses');
-    }
-
-    const address = await this.addressRepository.findOne({
+  async findOne(id: number) {
+    const place = await this.placeRepository.findOne({
       where: { id },
+      relations: { shipments: true },
     });
-    if (!address) {
-      throw new NotFoundException('Address not found');
-    }
-    return address;
+    if (!place) throw new NotFoundException('Place not found');
+    return place;
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async update(
-    id: number,
-    updateAddreseDto: UpdateAddressDto,
-    customer?: Customer,
-  ) {
-    const address = await this.findOne(id, customer);
+  async update(id: number, updatePlaceDto: UpdatePlaceDto) {
+    const place = await this.findOne(id);
+
     try {
-      Object.assign(address, updateAddreseDto);
-      return await this.addressRepository.save(address);
+      Object.assign(place, updatePlaceDto);
+      return await this.placeRepository.save(place);
     } catch (error) {
       handleDBExceptions(error);
     }
@@ -93,13 +74,13 @@ export class AddressesService {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async remove(id: number, customer?: Customer) {
-    const address = await this.findOne(id, customer);
+  async remove(id: number) {
+    const place = await this.findOne(id);
     try {
-      await this.addressRepository.softRemove(address);
+      await this.placeRepository.softRemove(place);
       return {
-        message: 'Address deleted successfully',
-        deleted: address,
+        message: 'Place deleted successfully',
+        deleted: place,
       };
     } catch (error) {
       handleDBExceptions(error);

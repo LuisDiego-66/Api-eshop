@@ -1,4 +1,4 @@
-export enum ShipmentMethod {
+export enum AddressType {
   NATIONAL = 'national',
   INTERNATIONAL = 'international',
 }

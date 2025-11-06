@@ -7,7 +7,6 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { DiscountType } from '../enums/discount-type.enum';
@@ -42,9 +41,6 @@ export class Discount {
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ select: false, nullable: true })
   deletedAt?: Date;

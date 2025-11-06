@@ -6,61 +6,50 @@ import {
   Patch,
   Param,
   Delete,
-  ParseIntPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { UpdateShipmentDto } from './dto';
+import { CreatePlaceDto, UpdatePlaceDto } from './dto';
 
-import { Auth } from 'src/auth/decorators';
-import { Roles } from 'src/auth/enums';
+import { PlacesService } from './places.service';
 
-import { ShipmentsService } from './shipments.service';
-
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-@ApiTags('Shipments')
-@Controller('shipments')
-export class ShipmentsController {
-  constructor(private readonly shipmentsService: ShipmentsService) {}
+@Controller('places')
+export class PlacesController {
+  constructor(private readonly placesService: PlacesService) {}
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  /* @Post()
-  create(@Body() createShipmentDto: CreateShipmentDto) {
-    return this.shipmentsService.create(createShipmentDto);
-  } */
+  @Post()
+  create(@Body() createPlaceDto: CreatePlaceDto) {
+    return this.placesService.create(createPlaceDto);
+  }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  /* @Get()
+  @Get()
   findAll() {
-    return this.shipmentsService.findAll();
-  } */
+    return this.placesService.findAll();
+  }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  /* @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.shipmentsService.findOne(id);
-  } */
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.placesService.findOne(+id);
+  }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateShipmentDto: UpdateShipmentDto,
-  ) {
-    return this.shipmentsService.updateNational(id, updateShipmentDto);
+  update(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceDto) {
+    return this.placesService.update(+id, updatePlaceDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -68,7 +57,7 @@ export class ShipmentsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.shipmentsService.remove(id);
+  remove(@Param('id') id: string) {
+    return this.placesService.remove(+id);
   }
 }

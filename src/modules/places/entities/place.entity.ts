@@ -4,32 +4,35 @@ import {
   DeleteDateColumn,
   Entity,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { PlacesEnum } from '../enums/places.enum';
 
-import { ProductColor } from 'src/modules/variants/entities/product-color.entity';
+import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
+import { Address } from 'src/modules/addresses/entities/address.entity';
 
-@Entity('colors')
-export class Color {
+@Entity('places')
+export class Place {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text', { unique: true }) //! unique
-  name: string;
-
-  @Column('text', { unique: true }) //! unique
-  code: string;
+  @Column({ type: 'enum', enum: PlacesEnum, unique: true })
+  place: PlacesEnum;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
-  deletedAt?: Date;
+  deletedAt: Date;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  @OneToMany(() => ProductColor, (productColor) => productColor.color)
-  productColors: ProductColor[];
+  @OneToOne(() => Address, (address) => address.place)
+  address: Address;
+
+  @OneToMany(() => Shipment, (shipment) => shipment.place, { cascade: true })
+  shipments: Shipment[];
 }

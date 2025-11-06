@@ -5,7 +5,6 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { GenderType } from '../enums/gender-type.enum';
@@ -31,9 +30,6 @@ export class Category {
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ select: false, nullable: true })
   deletedAt?: Date;

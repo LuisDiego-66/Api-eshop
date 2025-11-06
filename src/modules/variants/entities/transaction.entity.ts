@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -18,6 +19,9 @@ export class Transaction {
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
+
+  @DeleteDateColumn({ nullable: true, select: false })
+  deletedAt: Date;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */

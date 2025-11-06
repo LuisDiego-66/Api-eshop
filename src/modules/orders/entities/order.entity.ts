@@ -9,11 +9,12 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { OrderType } from '../enums/order-type.enum';
 import { OrderStatus } from '../enums/order-status.enum';
+
+import { AddressData } from '../dto';
 
 import { StockReservation } from 'src/modules/stock-reservations/entities/stock-reservation.entity';
 import { Customer } from 'src/modules/customers/entities/customer.entity';
@@ -39,11 +40,11 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalPrice: string;
 
+  @Column('json', { nullable: true })
+  address_data?: AddressData;
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;

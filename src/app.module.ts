@@ -31,6 +31,7 @@ import { ShipmentsModule } from './modules/shipments/shipments.module';
 import { StockReservationsModule } from './modules/stock-reservations/stock-reservations.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { SlidersModule } from './modules/sliders/sliders.module';
+import { PlacesModule } from './modules/places/places.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { SlidersModule } from './modules/sliders/sliders.module';
     VariantsModule,
     OutfitsModule,
     OrdersModule,
+    PlacesModule,
     ShipmentsModule,
     AddressesModule,
     MailModule,

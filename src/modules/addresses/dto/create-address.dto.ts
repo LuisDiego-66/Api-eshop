@@ -1,5 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+
+import { AddressType } from '../enums/address-type.enum';
 
 export class CreateAddressDto {
   @ApiProperty({
@@ -15,10 +17,39 @@ export class CreateAddressDto {
   @IsString()
   address: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Springfield',
   })
+  @IsOptional()
   @IsString()
   @IsString()
-  city: string;
+  city?: string;
+
+  @ApiPropertyOptional({
+    example: 'USA',
+  })
+  @IsOptional()
+  country?: string;
+
+  @ApiPropertyOptional({
+    example: '62704',
+  })
+  @IsOptional()
+  postal_code?: string;
+
+  @ApiProperty({ enum: AddressType, example: AddressType.NATIONAL })
+  @IsEnum(AddressType)
+  type: AddressType;
+
+  //* ---------------------------------------------------------------------------------------------- */
+  //*                                        Relations                                               */
+  //* ---------------------------------------------------------------------------------------------- */
+
+  @ApiPropertyOptional({
+    description: 'Place Id',
+    example: '1',
+  })
+  @IsOptional()
+  @IsNumber()
+  place?: number;
 }

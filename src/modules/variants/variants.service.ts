@@ -324,7 +324,7 @@ export class VariantsService {
             SELECT SUM(t.quantity) 
             FROM transactions t 
             WHERE t."variantId" = v.id
-          ), 0)
+              AND t."deletedAt" IS NULL), 0)
           -
           COALESCE((
             SELECT SUM(sr.quantity) 
@@ -367,7 +367,8 @@ export class VariantsService {
       SELECT
           COALESCE((SELECT SUM(t.quantity) 
             FROM transactions t 
-            WHERE t."variantId" = $1), 0)
+            WHERE t."variantId" = $1
+            AND t."deletedAt" IS NULL), 0)
         - 
         COALESCE((SELECT SUM(sr.quantity) 
             FROM stock_reservations sr 

@@ -2,76 +2,36 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import {
-  CreateNationalShipmentDto,
-  CreateInternationalShipmentDto,
-  UpdateNationalShipmentDto,
-  UpdateInternationalShipmentDto,
-} from './dto';
-
-import { ShipmentMethod } from './enums/shipment-method.enum';
+import { CreateShipmentDto, UpdateShipmentDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Shipment } from './entities/shipment.entity';
-import { NationalShipment } from './entities/national-shipment.entity';
-import { InternationalShipment } from './entities/international-shipment.entity';
 
 @Injectable()
 export class ShipmentsService {
   constructor(
     @InjectRepository(Shipment)
     private readonly shipmentRepository: Repository<Shipment>,
-
-    @InjectRepository(NationalShipment)
-    private readonly nationalRepository: Repository<NationalShipment>,
-
-    @InjectRepository(InternationalShipment)
-    private readonly internationalRepository: Repository<InternationalShipment>,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  // National
-  async createNational(createShipmentDto: CreateNationalShipmentDto) {
-    const newShipment = this.nationalRepository.create({
+  async create(createShipmentDto: CreateShipmentDto) {
+    const newShipment = this.shipmentRepository.create({
       ...createShipmentDto,
-      method: ShipmentMethod.NATIONAL, //! se asigna el método de envío ( nacional )
     });
-    return await this.nationalRepository.save(newShipment);
-  }
-
-  // International
-  async createInternational(createShipmentDto: CreateInternationalShipmentDto) {
-    const newShipment = this.internationalRepository.create({
-      ...createShipmentDto,
-      method: ShipmentMethod.INTERNATIONAL, //! se asigna el método de envío ( internacional )
-    });
-    return await this.internationalRepository.save(newShipment);
+    return await this.shipmentRepository.save(newShipment);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  // All
-  async findAll(pagination: PaginationDto) {
+  async findAll() {
     const shipments = await this.shipmentRepository.find({});
-    return shipments;
-  }
-
-  // National
-  async findAllNational(pagination: PaginationDto) {
-    const shipments = await this.nationalRepository.find({});
-    return shipments;
-  }
-
-  // International
-  async findAllInterNational(pagination: PaginationDto) {
-    const shipments = await this.internationalRepository.find({});
     return shipments;
   }
 
@@ -93,29 +53,11 @@ export class ShipmentsService {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  // National
-  async updateNational(
-    id: number,
-    updateShipmentDto: UpdateNationalShipmentDto,
-  ) {
+  async updateNational(id: number, updateShipmentDto: UpdateShipmentDto) {
     const shipment = await this.findOne(id);
     try {
       Object.assign(shipment, updateShipmentDto);
-      return await this.nationalRepository.save(shipment);
-    } catch (error) {
-      handleDBExceptions(error);
-    }
-  }
-
-  // International
-  async updateInternational(
-    id: number,
-    updateShipmentDto: UpdateInternationalShipmentDto,
-  ) {
-    const shipment = await this.findOne(id);
-    try {
-      Object.assign(shipment, updateShipmentDto);
-      return await this.internationalRepository.save(shipment);
+      return await this.shipmentRepository.save(shipment);
     } catch (error) {
       handleDBExceptions(error);
     }

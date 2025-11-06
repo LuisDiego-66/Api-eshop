@@ -6,7 +6,6 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { Category } from 'src/modules/categories/entities/category.entity';
@@ -25,9 +24,6 @@ export class Subcategory {
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ select: false, nullable: true })
   deletedAt?: Date;

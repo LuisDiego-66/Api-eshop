@@ -217,7 +217,7 @@ export class OrdersService {
         .innerJoinAndSelect('order.items', 'items') //! los items de la order
         .innerJoinAndSelect('items.variant', 'variant') //! las variantes de los items
         .where('order.id = :id', { id: orderId })
-        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //! la orden debe estar pendiente
         .andWhere('order.type = :type', { type: OrderType.IN_STORE })
         .andWhere('order.expiresAt > NOW()')
         .getOne();
@@ -229,10 +229,10 @@ export class OrdersService {
       }
 
       // --------------------------------------------------------------------------
-      // 2. Actualizar la orden a PAID
+      // 2. Actualizar la orden a SENT
       // --------------------------------------------------------------------------
 
-      order.status = OrderStatus.PAID;
+      order.status = OrderStatus.SENT;
       await queryRunner.manager.save(order);
 
       // --------------------------------------------------------------------------
@@ -287,7 +287,6 @@ export class OrdersService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async cancelOrder(orderId: number) {
-    //! revisar
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -301,21 +300,32 @@ export class OrdersService {
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write') //! solo bloquea "order"
         .where('order.id = :id', { id: orderId })
-        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+        .andWhere('order.status IN (:...statuses)', {
+          statuses: [OrderStatus.PENDING, OrderStatus.PAID],
+        })
         .andWhere('order.expiresAt > NOW()')
         .getOne();
 
       if (!orderEntity) {
         throw new NotFoundException(
-          `Order ${orderId} not found or not pending`,
+          `Order ${orderId} not found or not pending / paid`,
         );
       }
 
       // --------------------------------------------------------------------------
-      // 2. Actualizar la orden a CANCELLED
+      // 2. Actualizar la orden a CANCELLED o deletedAt si PENDING
       // --------------------------------------------------------------------------
 
-      orderEntity.status = OrderStatus.CANCELLED;
+      orderEntity.status =
+        orderEntity.status === OrderStatus.PAID
+          ? OrderStatus.CANCELLED
+          : orderEntity.status;
+
+      orderEntity.deletedAt =
+        orderEntity.status === OrderStatus.PENDING
+          ? new Date()
+          : orderEntity.deletedAt;
+
       const order = await queryRunner.manager.save(Order, orderEntity);
 
       // --------------------------------------------------------------------------

@@ -5,7 +5,6 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { Product } from 'src/modules/products/entities/product.entity';
@@ -23,9 +22,6 @@ export class Brand {
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt: Date;

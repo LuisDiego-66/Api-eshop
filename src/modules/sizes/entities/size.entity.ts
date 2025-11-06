@@ -7,7 +7,6 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import { Variant } from 'src/modules/variants/entities/variant.entity';
@@ -22,9 +21,6 @@ export class Size {
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @UpdateDateColumn({ select: false })
-  updatedAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;

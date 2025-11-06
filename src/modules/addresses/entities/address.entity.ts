@@ -3,14 +3,19 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { AddressType } from '../enums/address-type.enum';
+
 import { Customer } from 'src/modules/customers/entities/customer.entity';
 import { Order } from 'src/modules/orders/entities/order.entity';
+import { Place } from 'src/modules/places/entities/place.entity';
 
 @Entity('addresses')
 export class Address {
@@ -25,6 +30,19 @@ export class Address {
 
   @Column('text')
   city: string;
+
+  @Column('text', { nullable: true })
+  country?: string;
+
+  @Column('text', { nullable: true })
+  postal_code?: string;
+
+  @Column({
+    type: 'enum',
+    enum: AddressType,
+    default: AddressType.NATIONAL,
+  })
+  type: AddressType;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -46,4 +64,11 @@ export class Address {
 
   @OneToMany(() => Order, (order) => order.address)
   orders: Order[];
+
+  @OneToOne(() => Place, (place) => place.address, {
+    cascade: true,
+    nullable: true, //! null cuando la direccion es extranjera
+  })
+  @JoinColumn()
+  place?: Place;
 }

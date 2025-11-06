@@ -10,10 +10,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateAddressDto, UpdateAddressDto } from './dto';
 
-import { Auth, GetUser } from 'src/auth/decorators';
+import { Auth, GetCustomer, GetUser } from 'src/auth/decorators';
 
 import { Customer } from '../customers/entities/customer.entity';
 import { User } from '../users/entities/user.entity';
@@ -34,7 +33,7 @@ export class AddressesController {
   @Post()
   create(
     @Body() createAddreseDto: CreateAddressDto,
-    @GetUser() customer: User | Customer,
+    @GetCustomer() customer: Customer,
   ) {
     return this.addressesService.create(createAddreseDto, customer);
   }
@@ -44,8 +43,8 @@ export class AddressesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  findAll(pagination: PaginationDto, @GetUser() customer: User | Customer) {
-    return this.addressesService.findAll(pagination, customer);
+  findAll(@GetCustomer() customer: Customer) {
+    return this.addressesService.findAll(customer);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -53,8 +52,11 @@ export class AddressesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.addressesService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @GetCustomer() customer: Customer,
+  ) {
+    return this.addressesService.findOne(id, customer);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -65,8 +67,9 @@ export class AddressesController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAddreseDto: UpdateAddressDto,
+    @GetCustomer() customer: Customer,
   ) {
-    return this.addressesService.update(id, updateAddreseDto);
+    return this.addressesService.update(id, updateAddreseDto, customer);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -74,7 +77,10 @@ export class AddressesController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.addressesService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @GetCustomer() customer: Customer,
+  ) {
+    return this.addressesService.remove(id, customer);
   }
 }
