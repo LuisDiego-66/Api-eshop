@@ -10,7 +10,7 @@ structure.json
 
 /static/uploads/*
 !/static/uploads/.gitkeep
-*.yml
+docker-compose.yml
 
 
 # Logs
