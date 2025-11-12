@@ -256,6 +256,7 @@ export class OrdersService {
         queryRunner.manager.create(Transaction, {
           quantity: item.quantity * -1,
           variant: { id: item.variant.id },
+          order: order, //! se asigna la order a la transaccion negativa
         }),
       );
       await queryRunner.manager.save(transactions);
@@ -301,7 +302,7 @@ export class OrdersService {
         .setLock('pessimistic_write') //! solo bloquea "order"
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status IN (:...statuses)', {
-          statuses: [OrderStatus.PENDING, OrderStatus.PAID],
+          statuses: [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SENT],
         })
         .andWhere('order.expiresAt > NOW()')
         .getOne();
@@ -317,7 +318,8 @@ export class OrdersService {
       // --------------------------------------------------------------------------
 
       orderEntity.status =
-        orderEntity.status === OrderStatus.PAID
+        orderEntity.status === OrderStatus.PAID ||
+        orderEntity.status === OrderStatus.SENT
           ? OrderStatus.CANCELLED
           : orderEntity.status;
 
@@ -339,6 +341,17 @@ export class OrdersService {
         .where('orderId = :orderId', { orderId })
         .andWhere('status = :status', { status: ReservationStatus.PENDING })
         .andWhere('expiresAt > NOW()') //! condición de no expirada
+        .execute();
+
+      // --------------------------------------------------------------------------
+      // 4. Se eliminan las transacciones de la orden
+      // --------------------------------------------------------------------------
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(Transaction)
+        .set({ deletedAt: new Date() })
+        .where('orderId = :orderId', { orderId })
         .execute();
 
       await queryRunner.commitTransaction();

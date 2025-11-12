@@ -53,20 +53,6 @@ export class FilesController {
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       fileFilter: fileFilter,
-      /* storage: diskStorage({
-        destination: (req, file, cb) => {
-          let uploadPath = './static/uploads/others';
-
-          if (file.mimetype.startsWith('image')) {
-            uploadPath = './static/uploads/images';
-          } else if (file.mimetype === 'application/pdf') {
-            uploadPath = './static/uploads/pdfs';
-          }
-
-          cb(null, uploadPath);
-        },
-        filename: fileNamer,
-      }), */
       storage: diskStorage({
         destination: './static/uploads',
         filename: fileNamer,

@@ -17,6 +17,7 @@ import { OrderStatus } from '../enums/order-status.enum';
 import { AddressData } from '../dto';
 
 import { StockReservation } from 'src/modules/stock-reservations/entities/stock-reservation.entity';
+import { Transaction } from 'src/modules/variants/entities/transaction.entity';
 import { Customer } from 'src/modules/customers/entities/customer.entity';
 import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
 import { Address } from 'src/modules/addresses/entities/address.entity';
@@ -73,6 +74,12 @@ export class Order {
 
   @OneToOne(() => Payment, (payment) => payment.order, { cascade: true })
   payment: Payment;
+
+  @OneToMany(
+    () => Transaction,
+    (transaction) => transaction.order /* { cascade: true } */,
+  )
+  transactions: Transaction[];
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */

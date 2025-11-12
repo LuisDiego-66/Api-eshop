@@ -32,6 +32,7 @@ import { StockReservationsModule } from './modules/stock-reservations/stock-rese
 import { PaymentsModule } from './modules/payments/payments.module';
 import { SlidersModule } from './modules/sliders/sliders.module';
 import { PlacesModule } from './modules/places/places.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { PlacesModule } from './modules/places/places.module';
     AddressesModule,
     MailModule,
     CartModule,
+    FilesModule,
     StockReservationsModule,
     PaymentsModule,
     SlidersModule,

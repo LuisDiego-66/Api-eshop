@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { Order } from 'src/modules/orders/entities/order.entity';
 import { Variant } from './variant.entity';
 
 @Entity('transactions')
@@ -29,6 +30,9 @@ export class Transaction {
 
   @ManyToOne(() => Variant, (variant) => variant.transactions)
   variant: Variant;
+
+  @ManyToOne(() => Order, (order) => order.transactions, { nullable: true })
+  order?: Order;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
