@@ -55,7 +55,7 @@ export class ProductsController {
   //?                    FindAll_with_search_advance                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Get('advanced')
+  /* @Get('advanced')
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
@@ -63,7 +63,7 @@ export class ProductsController {
     return this.productsService.findAllForCategoriesAndSubCategories(
       pagination,
     );
-  }
+  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindOne                                                 */
