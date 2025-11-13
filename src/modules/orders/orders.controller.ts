@@ -9,8 +9,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
+import {
+  CreateOrderInStoreDto,
+  CreateOrderOnlineDto,
+  OrderPaginationDto,
+} from './dto';
 
 import { Auth, GetUser } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums';
@@ -20,6 +23,7 @@ import { OrdersService } from './orders.service';
 
 import { Customer } from '../customers/entities/customer.entity';
 import { User } from '../users/entities/user.entity';
+import { OrderType } from './enums';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -33,14 +37,16 @@ export class OrdersController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
+  //!
   @Post('in-store')
   createInStore(@Body() createOrderInStoreDto: CreateOrderInStoreDto) {
     return this.ordersService.createOrderInStore(createOrderInStoreDto);
   }
 
-  @Auth() //! solo customers autenticados y superUser
+  @Auth()
   @ApiBearerAuth('access-token')
   @Post('online')
   createOnline(
@@ -54,8 +60,10 @@ export class OrdersController {
   //?                                   ConfirmOrder                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
+  //!
   @Post('confirm/:id')
   confirmManual(@Param('id') id: number) {
     return this.ordersService.confirmOrderManual(id);
@@ -65,8 +73,10 @@ export class OrdersController {
   //?                                    CancelOrder                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
+  //!
   @Post('cancel/:id')
   cancel(@Param('id') id: number) {
     return this.ordersService.cancelOrder(id);
@@ -76,12 +86,19 @@ export class OrdersController {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
+  //!
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: OrderType,
+  })
   @Get()
-  findAll(@Query() pagination: PaginationDto) {
+  findAll(@Query() pagination: OrderPaginationDto) {
     return this.ordersService.findAll(pagination);
   }
 
@@ -89,8 +106,10 @@ export class OrdersController {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
+  //!
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.ordersService.findOne(id);
@@ -100,8 +119,10 @@ export class OrdersController {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
   @Auth()
   @ApiBearerAuth('access-token')
+  //!
   @Post('reprice/:token')
   reprice(@Param('token') token: string) {
     return this.pricingService.rePrice(token);

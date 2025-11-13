@@ -7,10 +7,19 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 import { CreatePlaceDto, UpdatePlaceDto } from './dto';
 
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { PlacesService } from './places.service';
+
+//!
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
+//!
 
 @Controller('places')
 export class PlacesController {

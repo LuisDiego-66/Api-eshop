@@ -1,7 +1,5 @@
 import {
   Controller,
-  Get,
-  Post,
   Body,
   Patch,
   Param,
@@ -17,8 +15,11 @@ import { Roles } from 'src/auth/enums';
 
 import { ShipmentsService } from './shipments.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Shipments')
 @Controller('shipments')
 export class ShipmentsController {

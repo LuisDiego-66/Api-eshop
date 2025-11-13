@@ -20,8 +20,11 @@ import { Roles } from 'src/auth/enums';
 
 import { ProductsService } from './products.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
@@ -46,6 +49,18 @@ export class ProductsController {
   @ApiQuery({ name: 'search', required: false, type: String })
   findAll(@Query() pagination: PaginationDto) {
     return this.productsService.findAll(pagination);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Get('advance')
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  findAllForCategoriesAndSubCategories(@Query() pagination: PaginationDto) {
+    return this.productsService.findAllForCategoriesAndSubCategories(
+      pagination,
+    );
   }
 
   //? ---------------------------------------------------------------------------------------------- */

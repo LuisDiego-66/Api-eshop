@@ -16,8 +16,11 @@ import { Roles } from 'src/auth/enums';
 
 import { SlidersService } from './sliders.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Sliders')
 @Controller('sliders')
 export class SlidersController {

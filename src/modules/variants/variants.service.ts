@@ -1,14 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, ILike, QueryRunner, Repository } from 'typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 
+import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { paginate } from 'src/common/pagination/paginate';
 import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
-import { FilesService } from '../../files/files.service';
 import { ColorsService } from '../colors/colors.service';
 import { SizesService } from '../sizes/sizes.service';
 
@@ -17,7 +16,6 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { ProductColor } from './entities/product-color.entity';
 import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
-import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 
 @Injectable()
 export class VariantsService {
@@ -30,7 +28,6 @@ export class VariantsService {
 
     private sizeService: SizesService,
     private colorService: ColorsService,
-    private filesService: FilesService,
     private dataSource: DataSource,
   ) {}
 
@@ -47,7 +44,10 @@ export class VariantsService {
       const { variants, multimedia, productId, pdfs, ...data } =
         createVariantsDto;
 
-      //! se crea el color (si no existe)
+      // --------------------------------------------------------------------------
+      // 1. Se crea el color (si no existe)
+      // --------------------------------------------------------------------------
+
       const color = await this.colorService.create(
         {
           code: data.colorCode,
@@ -56,14 +56,20 @@ export class VariantsService {
         queryRunner.manager,
       );
 
-      //! se crea el product-color
+      // --------------------------------------------------------------------------
+      // 2. Se crea el product-color
+      // --------------------------------------------------------------------------
+
       const productColor = queryRunner.manager.create(ProductColor, {
         product: { id: productId },
         color: { id: color?.id },
         multimedia,
         pdfs,
 
-        //! se crean las variants
+        // --------------------------------------------------------------------------
+        // 3. Se crean las variants
+        // --------------------------------------------------------------------------
+
         variants: await Promise.all(
           variants.map(async (size) => {
             const sizeEntity = await this.sizeService.create(
@@ -96,35 +102,7 @@ export class VariantsService {
   //?                         FindAll Product Colors                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  /*   async findAllProductColors(pagination: PaginationDto) {
-    const productColors = await this.productColorRepository.find({
-      relations: { variants: { size: true }, color: true, product: true },
-    });
-
-    //! se mapea y se agrega el stock disponible
-    const result = await Promise.all(
-      productColors.map(async (productColor) => {
-        const variantsWithStock = await Promise.all(
-          productColor.variants.map(async (variant) => {
-            const availableStock = await this.getAvailableStock(variant.id);
-            return {
-              ...variant,
-              availableStock,
-            };
-          }),
-        );
-
-        return {
-          ...productColor,
-          variants: variantsWithStock,
-        };
-      }),
-    );
-
-    return result;
-  }
- */
-
+  //! Busca productColors por nombre de su producto
   async findAllProductColors(pagination: PaginationDto) {
     const paginated = await paginateAdvanced(
       this.productColorRepository,
@@ -135,7 +113,10 @@ export class VariantsService {
       true, //! caseInsensitive
     );
 
-    //! Calcula el stock solo para los resultados paginados
+    // --------------------------------------------------------------------------
+    // 1. Calcula el stock solo para los resultados paginados
+    // --------------------------------------------------------------------------
+
     const dataWithStock = await Promise.all(
       paginated.data.map(async (productColor) => {
         const variantsWithStock = await Promise.all(
@@ -149,7 +130,10 @@ export class VariantsService {
       }),
     );
 
-    //! Devuelve los resultados paginados con la meta
+    // --------------------------------------------------------------------------
+    // 2. Devuelve los resultados paginados con la meta
+    // --------------------------------------------------------------------------
+
     return {
       data: dataWithStock,
       meta: paginated.meta,
@@ -185,7 +169,10 @@ export class VariantsService {
       throw new NotFoundException('Product-Color not found: ' + id);
     }
 
-    //! Mapea las variantes para añadir el stock disponible
+    // --------------------------------------------------------------------------
+    // 1. Mapea las variantes para añadir el stock disponible
+    // --------------------------------------------------------------------------
+
     const variantsWithStock = await Promise.all(
       productColor.variants.map(async (variant) => {
         const availableStock = await this.getAvailableStock(variant.id);
@@ -196,7 +183,10 @@ export class VariantsService {
       }),
     );
 
-    //! Devuelve el producto con las variantes actualizadas
+    // --------------------------------------------------------------------------
+    // 2. Devuelve el producto con las variantes actualizadas
+    // --------------------------------------------------------------------------
+
     return {
       ...productColor,
       variants: variantsWithStock,
@@ -215,10 +205,16 @@ export class VariantsService {
     try {
       const { multimedia, variants, pdfs, ...data } = updateVariantDto;
 
-      //! Obtener el ProductColor
+      // --------------------------------------------------------------------------
+      // 1. Obtener el ProductColor
+      // --------------------------------------------------------------------------
+
       const productColorEntity = await this.findOneProductColor(id);
 
-      //! se crea el color (si no existe)
+      // --------------------------------------------------------------------------
+      // 2. Se crea el color (si no existe)
+      // --------------------------------------------------------------------------
+
       if (data.colorCode && data.colorName) {
         const color = await this.colorService.create(
           { code: data.colorCode, name: data.colorName },
@@ -228,13 +224,9 @@ export class VariantsService {
       }
 
       if (multimedia) {
-        //! se borran físicamente los archivos si hay multimedia
-        //await this.filesService.deletedFiles(productColorEntity.multimedia);
         productColorEntity.multimedia = multimedia;
       }
       if (pdfs) {
-        //! se borran físicamente los archivos si hay multimedia
-        //await this.filesService.deletedFiles(productColorEntity.pdfs);
         productColorEntity.pdfs = pdfs;
       }
 
@@ -243,7 +235,10 @@ export class VariantsService {
         productColorEntity,
       );
 
-      //! Crear nuevas variantes si se envían
+      // --------------------------------------------------------------------------
+      // 3. Crear nuevas variantes si se envían
+      // --------------------------------------------------------------------------
+
       if (variants && variants.length > 0) {
         const variantEntities = await Promise.all(
           variants.map(async (variant) => {
@@ -264,7 +259,10 @@ export class VariantsService {
 
       await queryRunner.commitTransaction();
 
-      //! se retorna el entity actualizado
+      // --------------------------------------------------------------------------
+      // 4. Se retorna el entity actualizado
+      // --------------------------------------------------------------------------
+
       return await queryRunner.manager.findOne(ProductColor, {
         where: { id },
         relations: { variants: { size: true } },
@@ -348,7 +346,10 @@ export class VariantsService {
     queryRunner: QueryRunner,
     variantId: number,
   ): Promise<number> {
-    //! Bloquear las reservas existentes para esta variante
+    // --------------------------------------------------------------------------
+    // 1. Bloquear las reservas existentes para esta variante
+    // --------------------------------------------------------------------------
+
     await queryRunner.manager.query(
       `
       SELECT 1
@@ -361,7 +362,10 @@ export class VariantsService {
       [variantId, ReservationStatus.PENDING],
     );
 
-    //! Calcular stock disponible (sin FOR UPDATE en agregaciones)
+    // --------------------------------------------------------------------------
+    // 2. Calcular stock disponible (sin FOR UPDATE en agregaciones)
+    // --------------------------------------------------------------------------
+
     const result = await queryRunner.manager.query(
       `
       SELECT

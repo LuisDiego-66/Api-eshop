@@ -24,8 +24,11 @@ import { Roles } from 'src/auth/enums';
 
 import { DiscountsService } from './discounts.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Discounts')
 @Controller('discounts')
 export class DiscountsController {
@@ -42,6 +45,8 @@ export class DiscountsController {
   ) {
     return this.discountsService.create(createDiscountDto);
   }
+
+  //? ---------------------------------------------------------------------------------------------- */
 
   @Post('permanent')
   createPermanent(
@@ -93,6 +98,20 @@ export class DiscountsController {
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Delete                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Delete('permanents')
+  removePermanent() {
+    return this.discountsService.removePermanent();
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  @Delete('seasonals')
+  removeSeasonal() {
+    return this.discountsService.removeSeasonal();
+  }
+
   //? ---------------------------------------------------------------------------------------------- */
 
   @Delete(':id')

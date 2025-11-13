@@ -19,8 +19,11 @@ import { Roles } from 'src/auth/enums/roles.enum';
 
 import { UsersService } from './users.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {

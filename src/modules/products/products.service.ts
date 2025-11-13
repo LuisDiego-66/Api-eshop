@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 
+import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
 import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
@@ -54,6 +55,18 @@ export class ProductsService {
       },
       pagination,
       ['name'], //! busqueda por:
+    );
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findAllForCategoriesAndSubCategories(pagination: PaginationDto) {
+    return paginateAdvanced(
+      this.productRepository,
+      pagination,
+      ['name', 'subcategory.name', 'subcategory.category.name'],
+      ['subcategory', 'subcategory.category'],
+      { id: 'DESC' },
     );
   }
 
@@ -117,21 +130,30 @@ export class ProductsService {
     await queryRunner.startTransaction();
 
     try {
-      //! Verificar que el descuento exista
+      // --------------------------------------------------------------------------
+      // 1. Verificar que el descuento exista
+      // --------------------------------------------------------------------------
+
       const discountEntity = await queryRunner.manager.findOne(Discount, {
         where: { id: discountId },
       });
       if (!discountEntity)
         throw new NotFoundException(`Discount with ID ${discountId} not found`);
 
-      //! Buscar los productos
+      // --------------------------------------------------------------------------
+      // 2. Buscar los productos
+      // --------------------------------------------------------------------------
+
       const products = await queryRunner.manager.find(Product, {
         where: { id: In(productsIds) },
       });
       if (products.length === 0)
         throw new NotFoundException('No products found with given IDs');
 
-      //! Verificar que existan todos los IDs
+      // --------------------------------------------------------------------------
+      // 3. Verificar que existan todos los IDs
+      // --------------------------------------------------------------------------
+
       const foundIds = products.map((p) => p.id);
       const missingIds = productsIds.filter((id) => !foundIds.includes(id));
       if (missingIds.length > 0)
@@ -139,7 +161,10 @@ export class ProductsService {
           `Products not found: [${missingIds.join(', ')}]`,
         );
 
-      //! Actualización masiva con un solo UPDATE
+      // --------------------------------------------------------------------------
+      // 4. Actualización masiva con un solo UPDATE
+      // --------------------------------------------------------------------------
+
       await queryRunner.manager
         .createQueryBuilder()
         .update(Product)

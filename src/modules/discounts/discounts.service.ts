@@ -10,6 +10,8 @@ import {
   UpdatePermanentDiscountDto,
 } from './dto';
 
+import { DiscountType } from './enums/discount-type.enum';
+
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Discount } from './entities/discount.entity';
@@ -83,6 +85,42 @@ export class DiscountsService {
       return {
         message: 'Discount deleted successfully',
         deleted: discount,
+      };
+    } catch (error) {
+      handleDBExceptions(error);
+    }
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async removePermanent() {
+    const discounts = await this.discountRepository.find({
+      where: { discountType: DiscountType.PERMANENT },
+    });
+
+    try {
+      await this.discountRepository.softRemove(discounts);
+      return {
+        message: 'Discount deleted successfully',
+        deleted: discounts,
+      };
+    } catch (error) {
+      handleDBExceptions(error);
+    }
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async removeSeasonal() {
+    const discounts = await this.discountRepository.find({
+      where: { discountType: DiscountType.SEASONAL },
+    });
+
+    try {
+      await this.discountRepository.softRemove(discounts);
+      return {
+        message: 'Discount deleted successfully',
+        deleted: discounts,
       };
     } catch (error) {
       handleDBExceptions(error);

@@ -18,8 +18,11 @@ import { Roles } from 'src/auth/enums';
 
 import { CategoriesService } from './categories.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {

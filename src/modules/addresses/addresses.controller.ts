@@ -12,15 +12,17 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CreateAddressDto, UpdateAddressDto } from './dto';
 
-import { Auth, GetCustomer, GetUser } from 'src/auth/decorators';
+import { Auth, GetCustomer } from 'src/auth/decorators';
 
 import { Customer } from '../customers/entities/customer.entity';
-import { User } from '../users/entities/user.entity';
 
 import { AddressesService } from './addresses.service';
 
+//!
 @Auth()
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Addresses')
 @Controller('addresses')
 export class AddressesController {

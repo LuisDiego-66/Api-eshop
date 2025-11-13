@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -24,8 +23,11 @@ import { Roles } from 'src/auth/enums';
 import { TransactionsService } from './transaction.service';
 import { VariantsService } from './variants.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Variants')
 @Controller('variants')
 export class VariantsController {

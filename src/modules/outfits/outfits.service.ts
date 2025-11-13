@@ -50,11 +50,7 @@ export class OutfitsService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
   async findAll(pagination: PaginationDto) {
-    //const { limit = 10, offset = 0 } = pagination;
-
     const outfits = await this.outfitRepository.find({
-      //take: limit,
-      //skip: offset,
       relations: { productColors: true },
     });
 

@@ -19,8 +19,11 @@ import { Roles } from 'src/auth/enums';
 
 import { ColorsService } from './colors.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Colors')
 @Controller('colors')
 export class ColorsController {

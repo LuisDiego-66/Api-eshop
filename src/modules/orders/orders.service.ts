@@ -8,7 +8,11 @@ import { DataSource, LessThan, QueryRunner, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
-import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
+import {
+  CreateOrderInStoreDto,
+  CreateOrderOnlineDto,
+  OrderPaginationDto,
+} from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 import { OrderStatus, OrderType } from './enums';
@@ -368,10 +372,19 @@ export class OrdersService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll(pagination: PaginationDto) {
+  async findAll(pagination: OrderPaginationDto) {
+    const options: any = {
+      where: {},
+    };
+
+    if (pagination.type) {
+      options.where.type = pagination.type;
+    }
+
     return paginate(
       this.orderRepository,
       {
+        ...options,
         relations: {
           items: { variant: { productColor: { product: true } } },
           customer: true,

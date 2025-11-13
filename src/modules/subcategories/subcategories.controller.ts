@@ -19,8 +19,11 @@ import { Roles } from 'src/auth/enums';
 
 import { SubcategoriesService } from './subcategories.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Subcategories')
 @Controller('subcategories')
 export class SubcategoriesController {
