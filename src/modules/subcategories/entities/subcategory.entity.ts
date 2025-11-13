@@ -22,6 +22,9 @@ export class Subcategory {
   @Column('boolean', { default: true })
   enabled: boolean;
 
+  @Column('text', { array: true, default: [] })
+  videos: string[];
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
 

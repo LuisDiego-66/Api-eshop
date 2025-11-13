@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateSubcategoryDto {
   @ApiProperty({
@@ -15,6 +21,18 @@ export class CreateSubcategoryDto {
   @IsBoolean()
   @IsOptional()
   enabled: boolean;
+
+  @ApiPropertyOptional({
+    example: ['http://localhost:3000/api/files/product/video.mp4'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  videos: string[];
+
+  //* ---------------------------------------------------------------------------------------------- */
+  //*                                        Relations                                               */
+  //* ---------------------------------------------------------------------------------------------- */
 
   @ApiProperty({
     description: 'Category Id',

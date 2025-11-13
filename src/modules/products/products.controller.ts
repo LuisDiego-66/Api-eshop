@@ -52,8 +52,10 @@ export class ProductsController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                    FindAll_with_search_advance                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
 
-  @Get('advance')
+  @Get('advanced')
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })

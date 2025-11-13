@@ -12,11 +12,15 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { Discount } from '../discounts/entities/discount.entity';
 import { Product } from './entities/product.entity';
 
+import { SearchsService } from './searchs.service';
+
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    private readonly searchsService: SearchsService,
 
     private dataSource: DataSource,
   ) {}
@@ -59,19 +63,48 @@ export class ProductsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                    FindAll_with_search_advance                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
 
   async findAllForCategoriesAndSubCategories(pagination: PaginationDto) {
-    return paginateAdvanced(
+    // --------------------------------------------------------------------------
+    // 1. Busqueda avanzada (por relaciones) de category y subcategory
+    // --------------------------------------------------------------------------
+
+    const products = await paginateAdvanced(
       this.productRepository,
       pagination,
       ['name', 'subcategory.name', 'subcategory.category.name'],
       ['subcategory', 'subcategory.category'],
       { id: 'DESC' },
     );
+
+    const names = new Set<string>();
+
+    // --------------------------------------------------------------------------
+    // 2. Obtiene los nombres de las categories o subcategories
+    // --------------------------------------------------------------------------
+
+    for (const product of products.data) {
+      //if (product.name) names.add(product.name);
+      if (product.subcategory?.name) names.add(product.subcategory.name);
+      if (product.subcategory?.category?.name)
+        names.add(product.subcategory.category.name);
+    }
+
+    // --------------------------------------------------------------------------
+    // 3. Guarda o incrementa cada término
+    // --------------------------------------------------------------------------
+
+    for (const name of names) {
+      await this.searchsService.create(name.toLowerCase());
+    }
+
+    return products;
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                       FindOne Product Variants                                                 */
+  //?                       FindOne_Product_Variants                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   async findOneProductVariants(id: number) {

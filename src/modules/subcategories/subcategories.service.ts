@@ -65,8 +65,15 @@ export class SubcategoriesService {
 
   async update(id: number, updateSubcategoryDto: UpdateSubcategoryDto) {
     const subCategory = await this.findOne(id);
+
     try {
-      Object.assign(subCategory, updateSubcategoryDto);
+      const { videos, ...data } = updateSubcategoryDto;
+
+      if (videos) {
+        subCategory.videos = videos;
+      }
+
+      Object.assign(subCategory, { ...data });
       return await this.subcategoryRepository.save(subCategory);
     } catch (error) {
       handleDBExceptions(error);
