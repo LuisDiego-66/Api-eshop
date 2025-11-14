@@ -107,7 +107,7 @@ export class VariantsService {
     if (pagination.search) {
       const productId = this.getIdProducto(pagination.search);
 
-      if (typeof productId === 'number' && !isNaN(productId)) {
+      if (productId) {
         return await this.findProductColorsForProduct(productId);
       }
     }
@@ -192,7 +192,7 @@ export class VariantsService {
       }),
     );
 
-    return productColorsWithStock;
+    return { data: productColorsWithStock };
   }
 
   //? ---------------------------------------------------------------------------------------------- */
