@@ -104,6 +104,14 @@ export class VariantsService {
 
   //! Busca productColors por nombre de su producto
   async findAllProductColors(pagination: PaginationDto) {
+    if (pagination.search) {
+      const productId = this.getIdProducto(pagination.search);
+
+      if (typeof productId === 'number' && !isNaN(productId)) {
+        return await this.findProductColorsForProduct(productId);
+      }
+    }
+
     const paginated = await paginateAdvanced(
       this.productColorRepository,
       pagination,
@@ -141,6 +149,53 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+
+  private getIdProducto(texto: string): number | null {
+    const regex = /^<qr>(\d+)<\/qr>$/;
+    const coincidencia = texto.match(regex);
+
+    if (coincidencia && coincidencia[1]) {
+      return parseInt(coincidencia[1], 10);
+    }
+
+    return null;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  private async findProductColorsForProduct(productId: number) {
+    const productColors = await this.productColorRepository.find({
+      where: { product: { id: productId } },
+      relations: { variants: { size: true }, product: true, color: true },
+    });
+
+    // --------------------------------------------------------------------------
+    // 1. Mapea las variantes para añadir el stock disponible
+    // --------------------------------------------------------------------------
+
+    const productColorsWithStock = await Promise.all(
+      productColors.map(async (pc) => {
+        const variantsWithStock = await Promise.all(
+          pc.variants.map(async (variant) => {
+            const availableStock = await this.getAvailableStock(variant.id);
+            return {
+              ...variant,
+              availableStock,
+            };
+          }),
+        );
+
+        return {
+          ...pc,
+          variants: variantsWithStock,
+        };
+      }),
+    );
+
+    return productColorsWithStock;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
   //?                                 FindOneVariant                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
@@ -156,7 +211,7 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                           FindOneProductColor                                                  */
+  //?                         Find_One_ProductColor                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   async findOneProductColor(id: number) {

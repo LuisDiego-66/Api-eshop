@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, LessThan, QueryRunner, Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
 import {
   CreateOrderInStoreDto,
