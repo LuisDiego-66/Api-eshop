@@ -33,9 +33,11 @@ export class ProductsService {
     try {
       const newProduct = this.productRepository.create({
         ...createProductDto,
-        subcategory: { id: createProductDto.subcategory }, //! Is a number, not an object
-        brand: { id: createProductDto.brand },
-        discount: { id: createProductDto.discount },
+        subcategory: { id: createProductDto.subcategory },
+        brand: createProductDto.brand ? { id: createProductDto.brand } : null,
+        discount: createProductDto.discount
+          ? { id: createProductDto.discount }
+          : null,
       });
       return await this.productRepository.save(newProduct);
     } catch (error) {

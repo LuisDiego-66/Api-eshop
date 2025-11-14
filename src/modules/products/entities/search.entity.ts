@@ -3,8 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  BeforeInsert,
-  BeforeUpdate,
 } from 'typeorm';
 
 @Entity('searchs')

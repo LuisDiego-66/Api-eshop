@@ -49,10 +49,10 @@ export class Product {
   productColors: ProductColor[];
 
   @ManyToOne(() => Brand, (brand) => brand.products, { nullable: true }) //! NULL
-  brand?: Brand;
+  brand?: Brand | null;
 
   @ManyToOne(() => Discount, (discount) => discount.products, {
     nullable: true, //! NULL
   })
-  discount?: Discount;
+  discount?: Discount | null;
 }
