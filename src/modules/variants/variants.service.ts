@@ -16,6 +16,7 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { ProductColor } from './entities/product-color.entity';
 import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
+import { paginate } from 'src/common/pagination/paginate';
 
 @Injectable()
 export class VariantsService {
@@ -108,7 +109,7 @@ export class VariantsService {
       const productId = this.getIdProducto(pagination.search);
 
       if (productId) {
-        return await this.findProductColorsForProduct(productId);
+        return await this.findProductColorsForProduct(pagination, productId);
       }
     }
 
@@ -163,18 +164,34 @@ export class VariantsService {
 
   //? ---------------------------------------------------------------------------------------------- */
 
-  private async findProductColorsForProduct(productId: number) {
-    const productColors = await this.productColorRepository.find({
+  private async findProductColorsForProduct(
+    pagination: PaginationDto,
+    productId: number,
+  ) {
+    // --------------------------------------------------------------------------
+    // 1. paginacion
+    // --------------------------------------------------------------------------
+
+    const productColors = await paginate(
+      this.productColorRepository,
+      {
+        where: { product: { id: productId } },
+        relations: { variants: { size: true }, product: true, color: true },
+      },
+      pagination,
+    );
+
+    /*     const productColors = await this.productColorRepository.find({
       where: { product: { id: productId } },
       relations: { variants: { size: true }, product: true, color: true },
-    });
+    }); */
 
     // --------------------------------------------------------------------------
-    // 1. Mapea las variantes para añadir el stock disponible
+    // 2. Mapea las variantes para añadir el stock disponible
     // --------------------------------------------------------------------------
 
     const productColorsWithStock = await Promise.all(
-      productColors.map(async (pc) => {
+      productColors.data.map(async (pc) => {
         const variantsWithStock = await Promise.all(
           pc.variants.map(async (variant) => {
             const availableStock = await this.getAvailableStock(variant.id);
@@ -192,7 +209,10 @@ export class VariantsService {
       }),
     );
 
-    return { data: productColorsWithStock };
+    return {
+      data: productColorsWithStock,
+      meta: productColors.meta,
+    };
   }
 
   //? ---------------------------------------------------------------------------------------------- */
