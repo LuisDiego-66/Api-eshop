@@ -11,6 +11,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { envs } from 'src/config/environments/environments';
+
 import { OrderType } from '../enums/order-type.enum';
 import { OrderStatus } from '../enums/order-status.enum';
 
@@ -97,7 +99,7 @@ export class Order {
 
   @BeforeInsert()
   setReservationDates() {
-    const minutes = /* envs.RESERVATION_EXPIRE_MINUTES || */ 10;
+    const minutes = envs.RESERVATION_EXPIRE_MINUTES || 10;
     const now = new Date();
     const expires = new Date(now.getTime() + minutes * 60 * 1000);
     this.expiresAt = expires;

@@ -6,9 +6,9 @@ import { OrdersService } from '../orders.service';
 export class StatusChangerCronJob {
   constructor(private readonly orderService: OrdersService) {}
 
-  //@Cron('*/1 * * * *') // cada minuto
+  @Cron('*/1 * * * *') // cada minuto
   async handleExpiration() {
     await this.orderService.expireOrders();
-    console.log('\x1b[32m%s\x1b[0m', '✅ Expired orders handled.');
+    //console.log('\x1b[32m%s\x1b[0m', '✅ Expired orders handled.');
   }
 }
