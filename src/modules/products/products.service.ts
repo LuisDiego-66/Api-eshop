@@ -26,10 +26,10 @@ export class ProductsService {
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                Create Product                                                  */
+  //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async createProduct(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto) {
     try {
       const newProduct = this.productRepository.create({
         ...createProductDto,

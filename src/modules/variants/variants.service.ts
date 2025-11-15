@@ -4,6 +4,7 @@ import { DataSource, QueryRunner, Repository } from 'typeorm';
 
 import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import { paginate } from 'src/common/pagination/paginate';
 import { CreateVariantsDto, UpdateVariantDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
@@ -16,7 +17,6 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { ProductColor } from './entities/product-color.entity';
 import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
-import { paginate } from 'src/common/pagination/paginate';
 
 @Injectable()
 export class VariantsService {
@@ -33,10 +33,10 @@ export class VariantsService {
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Create                                                  */
+  //?                           Create_ProdcutColor                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async create(createVariantsDto: CreateVariantsDto) {
+  async createProductColor(createVariantsDto: CreateVariantsDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -100,11 +100,14 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                         FindAll Product Colors                                                 */
+  //?                          FindAll_ProductColors                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  //! Busca productColors por nombre de su producto
   async findAllProductColors(pagination: PaginationDto) {
+    // --------------------------------------------------------------------------
+    // 1. Busca por <qr>idProduct</qr>
+    // --------------------------------------------------------------------------
+
     if (pagination.search) {
       const productId = this.getIdProducto(pagination.search);
 
@@ -117,13 +120,13 @@ export class VariantsService {
       this.productColorRepository,
       pagination,
       ['product.name'], //! campos buscables (en relaciones)
-      ['variants.size', 'color', 'product'], //! relaciones a cargar
+      ['variants.size', 'color', 'product'], //! relaciones
       { id: 'ASC' }, //! orden
       true, //! caseInsensitive
     );
 
     // --------------------------------------------------------------------------
-    // 1. Calcula el stock solo para los resultados paginados
+    // 2. Calcula el stock solo para los resultados paginados
     // --------------------------------------------------------------------------
 
     const dataWithStock = await Promise.all(
@@ -140,7 +143,7 @@ export class VariantsService {
     );
 
     // --------------------------------------------------------------------------
-    // 2. Devuelve los resultados paginados con la meta
+    // 3. Devuelve los resultados paginados con la meta
     // --------------------------------------------------------------------------
 
     return {
@@ -152,13 +155,15 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   private getIdProducto(texto: string): number | null {
+    // --------------------------------------------------------------------------
+    // 1. se Obtiene el id de <qr>idProduct</qr>
+    // --------------------------------------------------------------------------
+
     const regex = /^<qr>(\d+)<\/qr>$/;
     const coincidencia = texto.match(regex);
-
     if (coincidencia && coincidencia[1]) {
       return parseInt(coincidencia[1], 10);
     }
-
     return null;
   }
 
@@ -169,7 +174,7 @@ export class VariantsService {
     productId: number,
   ) {
     // --------------------------------------------------------------------------
-    // 1. paginacion
+    // 1. paginacion normal
     // --------------------------------------------------------------------------
 
     const productColors = await paginate(
@@ -180,11 +185,6 @@ export class VariantsService {
       },
       pagination,
     );
-
-    /*     const productColors = await this.productColorRepository.find({
-      where: { product: { id: productId } },
-      relations: { variants: { size: true }, product: true, color: true },
-    }); */
 
     // --------------------------------------------------------------------------
     // 2. Mapea las variantes para añadir el stock disponible
@@ -216,7 +216,7 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                 FindOneVariant                                                 */
+  //?                                FindOne_Variant                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   async findOneVariant(id: number) {
@@ -231,7 +231,7 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                         Find_One_ProductColor                                                  */
+  //?                           FindOne_ProductColor                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   async findOneProductColor(id: number) {
@@ -269,7 +269,7 @@ export class VariantsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Update                                                  */
+  //?                           Update_ProductColor                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   async updateProductColor(id: number, updateVariantDto: UpdateVariantDto) {

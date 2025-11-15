@@ -38,16 +38,16 @@ export class VariantsController {
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Create                                                  */
+  //?                           Create_ProdcutColor                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   @Post()
   create(@Body() createVariantsDto: CreateVariantsDto) {
-    return this.variantsService.create(createVariantsDto);
+    return this.variantsService.createProductColor(createVariantsDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        FindAll                                                 */
+  //?                          FindAll_ProductColors                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -59,7 +59,7 @@ export class VariantsController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        FindOne                                                 */
+  //?                           FindOne_ProductColor                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get(':id')
@@ -68,7 +68,7 @@ export class VariantsController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Update                                                  */
+  //?                           Update_ProductColor                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
   @Patch(':id')
@@ -78,14 +78,6 @@ export class VariantsController {
   ) {
     return this.variantsService.updateProductColor(id, updateVariantDto);
   }
-
-  //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Delete                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
-  /* @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.variantsService.removeProductColor(id);
-  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                       getStock                                                 */

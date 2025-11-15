@@ -35,8 +35,8 @@ export class ProductsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Post()
-  createProduct(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.createProduct(createProductDto);
+  create(@Body() createProductDto: CreateProductDto) {
+    return this.productsService.create(createProductDto);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -52,26 +52,11 @@ export class ProductsController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                    FindAll_with_search_advance                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  /* @Get('advanced')
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  findAllForCategoriesAndSubCategories(@Query() pagination: PaginationDto) {
-    return this.productsService.findAllForCategoriesAndSubCategories(
-      pagination,
-    );
-  } */
-
-  //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    //return this.productsService.findOneProductVariants(id);
     return this.productsService.findOne(id);
   }
 

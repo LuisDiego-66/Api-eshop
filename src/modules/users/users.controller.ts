@@ -33,10 +33,10 @@ export class UsersController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Post()
+  /* @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
-  }
+  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
