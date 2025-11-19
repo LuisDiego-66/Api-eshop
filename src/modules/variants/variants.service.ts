@@ -178,10 +178,16 @@ export class VariantsService {
     // --------------------------------------------------------------------------
 
     const productColors = await paginate(
+      //this.variantRepository,
       this.productColorRepository,
       {
-        where: { product: { id: productId } },
+        //where: { product: { id: productId } },
+        where: {
+          /* product: { id: productId }, */ variants: { id: productId },
+        },
         relations: { variants: { size: true }, product: true, color: true },
+        //where: { id: productId },
+        //relations: { size: true, productColor: { color: true, product: true } },
       },
       pagination,
     );
