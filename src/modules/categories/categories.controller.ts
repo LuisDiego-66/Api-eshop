@@ -18,11 +18,6 @@ import { Roles } from 'src/auth/enums';
 
 import { CategoriesService } from './categories.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {
@@ -32,6 +27,10 @@ export class CategoriesController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post()
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
@@ -50,6 +49,10 @@ export class CategoriesController {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.categoriesService.findOne(id);
@@ -59,6 +62,10 @@ export class CategoriesController {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -67,6 +74,12 @@ export class CategoriesController {
     return this.categoriesService.update(id, updateCategoryDto);
   }
 
+  //? ---------------------------------------------------------------------------------------------- */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Put(':id')
   @ApiBody({
     schema: { type: 'object', properties: { newOrder: { type: 'number' } } },
@@ -82,6 +95,10 @@ export class CategoriesController {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.categoriesService.remove(id);

@@ -19,11 +19,6 @@ import { Roles } from 'src/auth/enums';
 
 import { SubcategoriesService } from './subcategories.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @ApiTags('Subcategories')
 @Controller('subcategories')
 export class SubcategoriesController {
@@ -33,6 +28,10 @@ export class SubcategoriesController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post()
   create(@Body() createSubcategoryDto: CreateSubcategoryDto) {
     return this.subcategoriesService.create(createSubcategoryDto);
@@ -51,6 +50,10 @@ export class SubcategoriesController {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.subcategoriesService.findOne(id);
@@ -60,6 +63,10 @@ export class SubcategoriesController {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -72,6 +79,10 @@ export class SubcategoriesController {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.subcategoriesService.remove(id);

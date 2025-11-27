@@ -16,11 +16,6 @@ import { Roles } from 'src/auth/enums';
 
 import { SlidersService } from './sliders.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @ApiTags('Sliders')
 @Controller('sliders')
 export class SlidersController {
@@ -30,6 +25,10 @@ export class SlidersController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post()
   create(@Body() createSliderDto: CreateSliderDto) {
     return this.slidersService.create(createSliderDto);
@@ -48,6 +47,10 @@ export class SlidersController {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.slidersService.findOne(id);
@@ -57,6 +60,10 @@ export class SlidersController {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(@Param('id') id: number, @Body() updateSliderDto: UpdateSliderDto) {
     return this.slidersService.update(id, updateSliderDto);
@@ -66,6 +73,10 @@ export class SlidersController {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id') id: number) {
     return this.slidersService.remove(id);

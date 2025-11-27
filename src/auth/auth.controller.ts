@@ -41,8 +41,14 @@ export class AuthController {
   //? ---------------------------------------------------------------------------------------------- */
   //?                              Google CallBack                                                   */
   //? ---------------------------------------------------------------------------------------------- */
-  //! se ejecuta cuando google redirecciona al usuario de vuelta a la aplicacion
+
+  //se ejecuta cuando google me llama con sus datos directamente a mi servidor
   //@Get('google/callback')
+
+  //callback de moneroget
+  //https://api.moneroget.com/api/auth/google/callback
+
+  //! se ejecuta cuando el front me llama con los datos de google
   @Post('google/exchange')
   @UseGuards(GoogleOauthGuard)
   async googleAuthCallback(@Req() req /*  @Res() res: Response */) {

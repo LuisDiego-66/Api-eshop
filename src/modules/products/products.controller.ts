@@ -20,11 +20,6 @@ import { Roles } from 'src/auth/enums';
 
 import { ProductsService } from './products.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
@@ -34,6 +29,10 @@ export class ProductsController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
@@ -64,6 +63,10 @@ export class ProductsController {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -76,6 +79,10 @@ export class ProductsController {
   //?                                  AddDiscounts                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Put('add-discounts')
   addDiscounts(@Body() addDiscountsDto: AddDiscountsDto) {
     return this.productsService.addDiscounts(addDiscountsDto);
@@ -85,6 +92,10 @@ export class ProductsController {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.remove(id);

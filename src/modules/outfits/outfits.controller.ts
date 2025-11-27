@@ -19,11 +19,6 @@ import { Roles } from 'src/auth/enums';
 
 import { OutfitsService } from './outfits.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @ApiTags('Outfits')
 @Controller('outfits')
 export class OutfitsController {
@@ -33,6 +28,10 @@ export class OutfitsController {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post()
   create(@Body() createOutfitDto: CreateOutfitDto) {
     return this.outfitsService.create(createOutfitDto);
@@ -51,6 +50,10 @@ export class OutfitsController {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.outfitsService.findOne(id);
@@ -60,6 +63,10 @@ export class OutfitsController {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -72,6 +79,10 @@ export class OutfitsController {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.outfitsService.remove(id);
