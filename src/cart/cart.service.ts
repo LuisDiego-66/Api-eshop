@@ -21,10 +21,73 @@ export class CartService {
   async createCart(dto: CreateCartDto) {
     let cart: CreateItemDto[] = [];
 
+    // --------------------------------------------------------------------------
+    // 1. Validar variantes pero también guardarlas para evitar 2 consultas
+    // --------------------------------------------------------------------------
+
+    /* const variants =  */ await Promise.all(
+      dto.items.map((item) =>
+        this.variantsService.findOneVariant(item.variantId),
+      ),
+    );
+
+    // --------------------------------------------------------------------------
+    // 2. Validar la existencia del token
+    // --------------------------------------------------------------------------
+
+    if (dto.token) {
+      const payload = await this.validateJwtToken(dto.token);
+
+      // Recuperamos carrito previo
+      cart = payload.cart;
+
+      // --------------------------------------------------------------------------
+      // 3. Se agregan los nuevos items
+      // --------------------------------------------------------------------------
+
+      cart.push(...dto.items);
+    } else {
+      cart = dto.items;
+    }
+
+    // --------------------------------------------------------------------------
+    // 4. Se genera nuevo token con el carrito actualizado
+    // --------------------------------------------------------------------------
+
+    const newToken = this.generateJwt({ cart });
+
+    // --------------------------------------------------------------------------
+    // 5. Transformar carrito para respuesta enriquecida
+    // --------------------------------------------------------------------------
+
+    const detailedCart = await Promise.all(
+      cart.map(async (item) => {
+        const variant = await this.variantsService.findOneVariant(
+          item.variantId,
+        );
+
+        return {
+          variantId: item.variantId,
+          quantity: item.quantity,
+          variant,
+        };
+      }),
+    );
+
+    return { cart: detailedCart, token: newToken };
+  }
+
+  /* async createCart(dto: CreateCartDto) {
+    let cart: CreateItemDto[] = [];
+
     //! se valida las variantes
     for (const item of dto.items) {
       await this.variantsService.findOneVariant(item.variantId);
     }
+
+    //const variants = await Promise.all(
+    // dto.items.map(item => this.variantsService.findOneVariant(item.variantId))
+    //);
 
     //! si existe token
     if (dto.token) {
@@ -40,7 +103,7 @@ export class CartService {
     //! se genera nuevo token con el carrito actualizado
     const newToken = this.generateJwt({ cart });
     return { cart, token: newToken };
-  }
+  } */
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
   //* ---------------------------------------------------------------------------------------------- */
