@@ -42,7 +42,8 @@ export class AuthController {
   //?                              Google CallBack                                                   */
   //? ---------------------------------------------------------------------------------------------- */
   //! se ejecuta cuando google redirecciona al usuario de vuelta a la aplicacion
-  @Get('google/callback')
+  //@Get('google/callback')
+  @Post('google/exchange')
   @UseGuards(GoogleOauthGuard)
   async googleAuthCallback(@Req() req /*  @Res() res: Response */) {
     const customer = req.user; //!  (en passport siempre en req.user)
