@@ -17,4 +17,18 @@ export class CreateOutfitDto {
   @ArrayNotEmpty()
   @IsInt({ each: true })
   productColorIds: number[];
+
+  @ApiProperty({
+    example: ['http://localhost:3000/api/files/product/imagen1.jpeg'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  images: string[];
+
+  @ApiProperty({
+    example: ['http://localhost:3000/api/files/product/video1.mp4'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  videos: string[];
 }

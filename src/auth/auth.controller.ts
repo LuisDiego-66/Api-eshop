@@ -43,13 +43,10 @@ export class AuthController {
   //? ---------------------------------------------------------------------------------------------- */
 
   //se ejecuta cuando google me llama con sus datos directamente a mi servidor
-  //@Get('google/callback')
-
-  //callback de moneroget
-  //https://api.moneroget.com/api/auth/google/callback
+  @Get('google/callback')
 
   //! se ejecuta cuando el front me llama con los datos de google
-  @Post('google/exchange')
+  //@Post('google/exchange')
   @UseGuards(GoogleOauthGuard)
   async googleAuthCallback(@Req() req /*  @Res() res: Response */) {
     const customer = req.user; //!  (en passport siempre en req.user)

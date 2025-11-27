@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsString } from 'class-validator';
 
 import { GenderType } from '../enums/gender-type.enum';
 
@@ -16,4 +16,10 @@ export class CreateCategoryDto {
   })
   @IsEnum(GenderType)
   gender: GenderType;
+
+  @ApiProperty({
+    example: 'http://localhost:3000/api/files/product/video.mp4',
+  })
+  @IsString()
+  image: string;
 }

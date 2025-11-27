@@ -17,6 +17,12 @@ export class Outfit {
   @Column('text')
   name: string;
 
+  @Column('text', { array: true, default: [] })
+  images: string[];
+
+  @Column('text', { array: true, default: [] })
+  videos: string[];
+
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;
 

@@ -15,14 +15,13 @@ import {
   OrderPaginationDto,
 } from './dto';
 
-import { Auth, GetUser } from 'src/auth/decorators';
+import { Auth, GetCustomer } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums';
 
 import { PricingService } from './pricing.service';
 import { OrdersService } from './orders.service';
 
 import { Customer } from '../customers/entities/customer.entity';
-import { User } from '../users/entities/user.entity';
 import { OrderType } from './enums';
 
 @ApiTags('Orders')
@@ -51,7 +50,7 @@ export class OrdersController {
   @Post('online')
   createOnline(
     @Body() createOrderOnlineDto: CreateOrderOnlineDto,
-    @GetUser() buyer: User | Customer,
+    @GetCustomer() buyer: Customer, //! GetUser
   ) {
     return this.ordersService.createOrderOnline(createOrderOnlineDto, buyer);
   }

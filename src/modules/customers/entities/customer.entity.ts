@@ -54,7 +54,7 @@ export class Customer {
   //* ---------------------------------------------------------------------------------------------- */
 
   @OneToMany(() => Order, (order) => order.customer)
-  order: Order[];
+  orders: Order[];
 
   @OneToMany(() => Address, (address) => address.customer)
   address: Address[];

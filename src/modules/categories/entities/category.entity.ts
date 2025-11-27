@@ -28,6 +28,9 @@ export class Category {
   @Column('boolean', { default: true })
   enabled: boolean;
 
+  @Column('text', { nullable: true })
+  image: string;
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
 

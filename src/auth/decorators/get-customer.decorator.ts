@@ -1,6 +1,6 @@
 import {
   ExecutionContext,
-  InternalServerErrorException,
+  UnauthorizedException,
   createParamDecorator,
 } from '@nestjs/common';
 
@@ -13,11 +13,10 @@ export const GetCustomer = createParamDecorator(
     const customer: User | Customer = req.user;
 
     if (!customer)
-      /* return undefined; */
-      throw new InternalServerErrorException('Customer not found (request)');
+      throw new UnauthorizedException('Customer not found (request)');
 
     if (!(customer instanceof Customer)) {
-      return undefined;
+      throw new UnauthorizedException('You need to be a customer');
     }
 
     return customer;

@@ -79,7 +79,7 @@ export class OutfitsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async update(id: number, updateOutfitDto: UpdateOutfitDto) {
-    const { productColorIds } = updateOutfitDto;
+    const { productColorIds, images, videos, ...data } = updateOutfitDto;
     const outfitEntity = await this.findOne(id);
 
     const queryRunner = this.dataSourse.createQueryRunner();
@@ -92,7 +92,14 @@ export class OutfitsService {
           await this.productColorRepository.findByIds(productColorIds);
       }
 
-      Object.assign(outfitEntity, updateOutfitDto);
+      if (images) {
+        outfitEntity.images = images;
+      }
+      if (videos) {
+        outfitEntity.videos = videos;
+      }
+
+      Object.assign(outfitEntity, { ...data });
       const outfit = await queryRunner.manager.save(outfitEntity);
 
       await queryRunner.commitTransaction();

@@ -14,15 +14,11 @@ import { UpdateCustomerDto, CustomerPaginationDto } from './dto';
 
 import { CustomersService } from './customers.service';
 
-import { Auth } from 'src/auth/decorators';
+import { Auth, GetCustomer } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums/roles.enum';
-
 import { CustomerType } from './enums/customer-type.enum';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
+import { Customer } from './entities/customer.entity';
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -33,6 +29,10 @@ export class CustomersController {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -47,9 +47,26 @@ export class CustomersController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //?                                  Get_Customer                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  //!
+  @Auth()
+  @ApiBearerAuth('access-token')
+  //!
+  @Get('me')
+  async getCustomer(@GetCustomer() customer: Customer) {
+    return this.customersService.getCustomer(customer);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.findOne(id);
@@ -59,6 +76,10 @@ export class CustomersController {
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -71,6 +92,10 @@ export class CustomersController {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.remove(id);

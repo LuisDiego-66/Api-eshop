@@ -62,7 +62,7 @@ export class Order {
   @OneToMany(() => Item, (item) => item.order, { cascade: true })
   items: Item[];
 
-  @ManyToOne(() => Customer, (customer) => customer.order, { nullable: true }) //! NULLABLE
+  @ManyToOne(() => Customer, (customer) => customer.orders, { nullable: true }) //! NULLABLE
   customer?: Customer | null;
 
   @ManyToOne(() => Shipment, (shipment) => shipment.orders, { nullable: true }) //! NULLABLE

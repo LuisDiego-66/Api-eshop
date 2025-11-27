@@ -89,4 +89,15 @@ export class CustomersService {
       handleDBExceptions(error);
     }
   }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                  Get_Customer                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async getCustomer(customer: Customer) {
+    return await this.customerRepository.findOne({
+      where: { id: customer.id },
+      relations: { address: true, orders: true },
+    });
+  }
 }

@@ -59,7 +59,7 @@ export class CategoriesService {
   async findOne(id: number) {
     const category = await this.categoryRepository.findOne({
       where: { id },
-      relations: { subcategories: true },
+      relations: { subcategories: { products: true } },
     });
     if (!category) {
       throw new NotFoundException('Category not found');
@@ -75,7 +75,13 @@ export class CategoriesService {
     const category = await this.findOne(id);
 
     try {
-      Object.assign(category, updateCategoryDto);
+      const { image, ...data } = updateCategoryDto;
+
+      if (image) {
+        category.image = image;
+      }
+
+      Object.assign(category, { ...data });
       return await this.categoryRepository.save(category);
     } catch (error) {
       handleDBExceptions(error);

@@ -26,7 +26,6 @@ import { StockReservation } from '../stock-reservations/entities/stock-reservati
 import { Transaction } from '../variants/entities/transaction.entity';
 import { Customer } from '../customers/entities/customer.entity';
 import { Variant } from '../variants/entities/variant.entity';
-import { User } from '../users/entities/user.entity';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
 
@@ -48,7 +47,7 @@ export class OrdersService {
   async createOrderInStore(dto: CreateOrderInStoreDto) {
     return this.createOrderBase({
       dto,
-      buyer: null,
+      //buyer: null,
       isOnline: false,
     });
   }
@@ -57,7 +56,7 @@ export class OrdersService {
   //?                           Create_Order_Online                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async createOrderOnline(dto: CreateOrderOnlineDto, buyer: User | Customer) {
+  async createOrderOnline(dto: CreateOrderOnlineDto, buyer: Customer) {
     if (!(buyer instanceof Customer)) {
       throw new BadRequestException('Only customers can create online orders');
     }
@@ -76,7 +75,7 @@ export class OrdersService {
     isOnline,
   }: {
     dto: CreateOrderInStoreDto | CreateOrderOnlineDto;
-    buyer?: Customer | null;
+    buyer?: Customer /* | null */;
     isOnline: boolean;
   }) {
     const { items: token, type } = dto;
