@@ -112,7 +112,7 @@ export class OrdersService {
       // 2. Se crea los items y las reservas de stock
       // --------------------------------------------------------------------------
 
-      for (const item of rePricing.items) {
+      for (const item of rePricing.items /* success */) {
         await this.handleItemCreationWithLock(queryRunner, newOrder, item);
       }
 

@@ -20,6 +20,100 @@ export class PricingService {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  /* async rePrice(token: string) {
+    const payload = await this.validateJwtToken(token);
+    const cart = payload.cart;
+
+    const success: any[] = [];
+    const failed: any[] = [];
+
+    await Promise.all(
+      cart.map(async (item) => {
+        try {
+          // --------------------------------------------------------------------------
+          // 1. Obtener variante
+          // --------------------------------------------------------------------------
+
+          const variant = await this.variantsService.findOneVariant(
+            item.variantId,
+          );
+
+          // --------------------------------------------------------------------------
+          // 2. Precio unitario
+          // --------------------------------------------------------------------------
+
+          const unit_price = Number(variant.productColor.product.price);
+
+          // --------------------------------------------------------------------------
+          // 3. Descuento válido
+          // --------------------------------------------------------------------------
+
+          let discountValue = 0;
+          const discount = variant.productColor.product.discount;
+          if (discount && discount.isActive) {
+            const now = new Date();
+            const valid =
+              (!discount.startDate || discount.startDate <= now) &&
+              (!discount.endDate || discount.endDate >= now);
+
+            if (valid) discountValue = discount.value ?? 0;
+          }
+
+          // --------------------------------------------------------------------------
+          // 4. Stock disponible
+          // --------------------------------------------------------------------------
+
+          const available = await this.variantsService.getAvailableStock(
+            item.variantId,
+          );
+          if (available < item.quantity) {
+            throw new Error(
+              `Insufficient stock (available: ${available}, requested: ${item.quantity})`,
+            );
+          }
+
+          // --------------------------------------------------------------------------
+          // 5. Precios finales
+          // --------------------------------------------------------------------------
+
+          const subtotal = unit_price * item.quantity;
+          const discountAmount = (subtotal * discountValue) / 100;
+          const totalPrice = Number((subtotal - discountAmount).toFixed(2));
+
+          // --------------------------------------------------------------------------
+          // 6. Push exitoso
+          // --------------------------------------------------------------------------
+
+          success.push({
+            variantId: variant.id,
+            quantity: item.quantity,
+            unit_price,
+            discountValue,
+            totalPrice,
+          });
+        } catch (err) {
+          failed.push({
+            variantId: item.variantId,
+            quantity: item.quantity,
+            error: err.message || 'Error al procesar item',
+          });
+        }
+      }),
+    );
+
+    // --------------------------------------------------------------------------
+    // 7. Total solo de items válidos
+    // --------------------------------------------------------------------------
+
+    const total = success.reduce((acc, i) => acc + i.totalPrice, 0);
+
+    return {
+      success,
+      failed: failed.length ? failed : null,
+      total: total.toFixed(2),
+    };
+  } */
+
   async rePrice(token: string) {
     // --------------------------------------------------------------------------
     // 1. Validar y decodificar el token JWT del carrito
