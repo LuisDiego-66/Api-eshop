@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { MailDataRequired } from '@sendgrid/mail';
-import { SendGridClient } from './providers/sendgrid-client';
 
 import { envs } from 'src/config/environments/environments';
+
 import { SendMailDto } from './dto/send-mail.dto';
+
+import { SendGridClient } from './providers/sendgrid-client';
 
 @Injectable()
 export class MailService {
@@ -28,6 +30,7 @@ export class MailService {
       templateId: sendMailDto.templateId,
       dynamicTemplateData: {
         name: sendMailDto.name, // variabes usadas en el template {{name}} y {{body}}
+        body: sendMailDto.body,
       },
     };
     await this.sendGridClient.send(mail);

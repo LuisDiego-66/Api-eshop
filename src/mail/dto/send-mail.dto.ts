@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -10,9 +11,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendMailDto {
   @ApiProperty({
-    example: 'luisdiegoborja8@gmail.com',
+    example: ['luisdiegoborja8@gmail.com'],
   })
-  @IsEmail()
+  @IsArray()
+  @IsEmail({}, { each: true })
   to: string[];
 
   @ApiProperty({
@@ -35,18 +37,20 @@ export class SendMailDto {
   @IsNotEmpty()
   body: string;
 
-  @ApiPropertyOptional({
+  /* @ApiPropertyOptional({
     example: 'admin@gmail.com',
   })
   @IsOptional()
   @IsEmail()
-  cc?: string;
+  cc?: string; */
 
   @ApiProperty({
+    example: '62536125361235',
     description: 'ID of the email template to use',
-    enum: TemplatesIds,
-    example: TemplatesIds.TEMPLATE_1,
+    // enum: TemplatesIds,
+    // example: TemplatesIds.TEMPLATE_1,
   })
-  @IsEnum(TemplatesIds)
-  templateId: TemplatesIds;
+  @IsString()
+  //@IsEnum(TemplatesIds)
+  templateId: string;
 }

@@ -178,7 +178,22 @@ export class PricingService {
 
         const subtotal = unit_price * item.quantity;
         const discountAmount = (subtotal * discountValue) / 100;
-        const totalPrice = (subtotal - discountAmount).toFixed(2);
+
+        // --------------------------------------------------------------------------
+        // 8. Se aplica redondeo al total
+        // --------------------------------------------------------------------------
+
+        let total = subtotal - discountAmount;
+        const decimals = total - Math.floor(total);
+
+        if (decimals >= 0.5) {
+          total = Math.ceil(total);
+        } else {
+          total = Math.floor(total);
+        }
+        const totalPrice = total.toFixed(2);
+
+        //const totalPrice = (subtotal - discountAmount).toFixed(2); // antiguo
 
         // --------------------------------------------------------------------------
         // 8. Retornar el item revaluado

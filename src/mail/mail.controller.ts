@@ -8,8 +8,11 @@ import { Roles } from 'src/auth/enums';
 
 import { MailService } from './mail.service';
 
+//!
 @Auth(Roles.ADMIN)
 @ApiBearerAuth('access-token')
+//!
+
 @ApiTags('Mail')
 @Controller('mail')
 export class MailController {
