@@ -15,6 +15,7 @@ import { UpdateCustomerDto, CustomerPaginationDto } from './dto';
 import { CustomersService } from './customers.service';
 
 import { Auth, GetCustomer } from 'src/auth/decorators';
+
 import { Roles } from 'src/auth/enums/roles.enum';
 import { CustomerType } from './enums/customer-type.enum';
 
@@ -56,7 +57,7 @@ export class CustomersController {
   //!
   @Get('me')
   async getCustomer(@GetCustomer() customer: Customer) {
-    return this.customersService.getCustomer(customer);
+    return this.customersService.getCustomer(customer); //! GetCustomer
   }
 
   //? ---------------------------------------------------------------------------------------------- */

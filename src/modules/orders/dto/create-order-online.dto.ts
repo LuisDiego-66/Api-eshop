@@ -1,12 +1,7 @@
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { OrderType } from '../enums/order-type.enum';
-import { IsEnum, IsNumber, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsString } from 'class-validator';
 
 export abstract class CreateOrderOnlineDto {
-  @ApiHideProperty()
-  @IsEnum(OrderType)
-  type: OrderType = OrderType.ONLINE;
-
   @ApiProperty({
     description: 'Token items',
     example:

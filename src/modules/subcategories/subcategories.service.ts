@@ -51,7 +51,9 @@ export class SubcategoriesService {
   async findOne(id: number) {
     const subCategory = await this.subcategoryRepository.findOne({
       where: { id },
-      relations: { products: { productColors: true, discount: true } },
+      relations: {
+        products: { productColors: true, discount: true },
+      },
     });
     if (!subCategory) {
       throw new NotFoundException('Subcategory not found');

@@ -30,14 +30,11 @@ export class Variant {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  @ManyToOne(() => Size, (size) => size.variants)
+  @ManyToOne(() => Size, (size) => size.variants, { eager: true })
   size: Size;
 
   @OneToMany(() => Item, (item) => item.variant)
   items: Item[];
-
-  /*   @ManyToMany(() => Outfit, (outfit) => outfit.variants)
-  outfits: Outfit[]; */
 
   @OneToMany(() => StockReservation, (reservation) => reservation.variant)
   stock_reservations: StockReservation[];

@@ -60,7 +60,9 @@ export class CategoriesService {
     const category = await this.categoryRepository.findOne({
       where: { id },
       relations: {
-        subcategories: { products: { productColors: true, discount: true } },
+        subcategories: {
+          products: { productColors: { color: true }, discount: true },
+        },
       },
     });
     if (!category) {

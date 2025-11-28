@@ -1,12 +1,9 @@
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { OrderType } from '../enums/order-type.enum';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString } from 'class-validator';
 
-export abstract class CreateOrderInStoreDto {
-  @ApiHideProperty()
-  @IsEnum(OrderType)
-  type: OrderType = OrderType.IN_STORE;
+import { PaymentType } from '../enums';
 
+export abstract class CreateOrderInStoreDto {
   @ApiProperty({
     description: 'Token items',
     example:
@@ -14,4 +11,12 @@ export abstract class CreateOrderInStoreDto {
   })
   @IsString()
   items: string;
+
+  @ApiProperty({
+    example: PaymentType.CASH,
+    enum: PaymentType,
+  })
+  @IsString()
+  @IsEnum(PaymentType)
+  payment_type: PaymentType;
 }

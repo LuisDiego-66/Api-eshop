@@ -13,8 +13,7 @@ import {
 
 import { envs } from 'src/config/environments/environments';
 
-import { OrderType } from '../enums/order-type.enum';
-import { OrderStatus } from '../enums/order-status.enum';
+import { OrderStatus, OrderType, PaymentType } from '../enums';
 
 import { AddressData } from '../dto';
 
@@ -36,6 +35,9 @@ export class Order {
 
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING }) //! default
   status: OrderStatus;
+
+  @Column({ type: 'text', default: PaymentType.CASH })
+  payment_type: PaymentType;
 
   @Column('boolean', { default: true })
   enabled: boolean;

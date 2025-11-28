@@ -17,12 +17,12 @@ import {
 
 import { Auth, GetCustomer } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums';
+import { OrderType } from './enums';
 
 import { PricingService } from './pricing.service';
 import { OrdersService } from './orders.service';
 
 import { Customer } from '../customers/entities/customer.entity';
-import { OrderType } from './enums';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -45,8 +45,12 @@ export class OrdersController {
     return this.ordersService.createOrderInStore(createOrderInStoreDto);
   }
 
+  //? ---------------------------------------------------------------------------------------------- */
+
+  //!
   @Auth()
   @ApiBearerAuth('access-token')
+  //!
   @Post('online')
   createOnline(
     @Body() createOrderOnlineDto: CreateOrderOnlineDto,

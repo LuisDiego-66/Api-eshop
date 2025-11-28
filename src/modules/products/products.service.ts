@@ -7,14 +7,15 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
+
 import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
 import { GenderType } from '../categories/enums/gender-type.enum';
 
+import { SearchsService } from './searchs.service';
+
 import { Discount } from '../discounts/entities/discount.entity';
 import { Product } from './entities/product.entity';
-
-import { SearchsService } from './searchs.service';
 
 @Injectable()
 export class ProductsService {
@@ -72,7 +73,7 @@ export class ProductsService {
 
   async findAllForCategoriesAndSubCategories(pagination: PaginationDto) {
     // --------------------------------------------------------------------------
-    // 1. Busqueda avanzada de productos (por relaciones) de category y subcategory
+    // 1. Busqueda de productos (por relaciones category y subcategory)
     // --------------------------------------------------------------------------
 
     const products = await paginateAdvanced(

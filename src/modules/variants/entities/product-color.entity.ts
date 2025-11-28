@@ -37,7 +37,10 @@ export class ProductColor {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  @ManyToOne(() => Color, (color) => color.productColors, { nullable: false })
+  @ManyToOne(() => Color, (color) => color.productColors, {
+    nullable: false,
+    eager: true,
+  })
   color: Color;
 
   @ManyToOne(() => Product, (product) => product.productColors, {

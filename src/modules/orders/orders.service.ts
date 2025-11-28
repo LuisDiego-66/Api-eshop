@@ -14,7 +14,7 @@ import {
 } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
-import { OrderStatus, OrderType } from './enums';
+import { OrderStatus, OrderType, PaymentType } from './enums';
 
 import { StockReservationsService } from '../stock-reservations/stock-reservations.service';
 import { VariantsService } from '../variants/variants.service';
@@ -25,6 +25,7 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
 import { Transaction } from '../variants/entities/transaction.entity';
 import { Customer } from '../customers/entities/customer.entity';
+
 import { Variant } from '../variants/entities/variant.entity';
 import { Order } from './entities/order.entity';
 import { Item } from './entities/item.entity';
@@ -34,6 +35,7 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+
     private readonly dataSource: DataSource,
     private readonly pricingService: PricingService,
     private readonly variantsService: VariantsService,
@@ -45,10 +47,14 @@ export class OrdersService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async createOrderInStore(dto: CreateOrderInStoreDto) {
+    if (!Object.values(PaymentType).includes(dto.payment_type)) {
+      throw new Error('Invalid payment type');
+    }
+
     return this.createOrderBase({
       dto,
-      //buyer: null,
-      isOnline: false,
+      type: OrderType.IN_STORE,
+      payment_type: dto.payment_type,
     });
   }
 
@@ -63,7 +69,8 @@ export class OrdersService {
     return this.createOrderBase({
       dto,
       buyer,
-      isOnline: true,
+      type: OrderType.ONLINE,
+      payment_type: PaymentType.QR,
     });
   }
 
@@ -72,13 +79,15 @@ export class OrdersService {
   private async createOrderBase({
     dto,
     buyer,
-    isOnline,
+    type,
+    payment_type,
   }: {
     dto: CreateOrderInStoreDto | CreateOrderOnlineDto;
-    buyer?: Customer /* | null */;
-    isOnline: boolean;
+    buyer?: Customer;
+    type: OrderType;
+    payment_type: PaymentType;
   }) {
-    const { items: token, type } = dto;
+    const { items: token } = dto;
 
     const rePricing = await this.pricingService.rePrice(token);
 
@@ -96,20 +105,27 @@ export class OrdersService {
         totalPrice: rePricing.total,
       };
 
-      if (isOnline) {
+      if (type === OrderType.ONLINE && buyer) {
         const { shipment, address } = dto as CreateOrderOnlineDto;
         Object.assign(orderData, {
-          customer: { id: buyer!.id },
+          customer: { id: buyer.id },
           shipment: { id: shipment },
           address: { id: address },
         });
       }
 
-      const newOrder = queryRunner.manager.create(Order, orderData);
+      // --------------------------------------------------------------------------
+      // 2. Se agrega el tipo de pago (QR, CASH, CARD)
+      // --------------------------------------------------------------------------
+
+      const newOrder = queryRunner.manager.create(Order, {
+        ...orderData,
+        payment_type,
+      });
       await queryRunner.manager.save(newOrder);
 
       // --------------------------------------------------------------------------
-      // 2. Se crea los items y las reservas de stock
+      // 3. Se crea los items y las reservas de stock
       // --------------------------------------------------------------------------
 
       for (const item of rePricing.items /* success */) {
@@ -117,7 +133,7 @@ export class OrdersService {
       }
 
       // --------------------------------------------------------------------------
-      // 3. Commit Transaction
+      // 4. Commit Transaction
       // --------------------------------------------------------------------------
 
       await queryRunner.commitTransaction();
@@ -216,8 +232,8 @@ export class OrdersService {
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write') //! solo bloquea "order"
-        .innerJoinAndSelect('order.items', 'items') //! los items de la order
-        .innerJoinAndSelect('items.variant', 'variant') //! las variantes de los items
+        .innerJoinAndSelect('order.items', 'items') //* Items
+        .innerJoinAndSelect('items.variant', 'variant') //* Variants
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //! la orden debe estar pendiente
         .andWhere('order.type = :type', { type: OrderType.IN_STORE })
