@@ -5,6 +5,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Search } from './entities/search.entity';
+import { GenderType } from '../categories/enums/gender-type.enum';
 
 @Injectable()
 export class SearchsService {
@@ -17,7 +18,10 @@ export class SearchsService {
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async create(name: string, manager?: EntityManager) {
+  async create(
+    { name, gender }: { name: string; gender?: GenderType },
+    manager?: EntityManager,
+  ) {
     const repo = manager
       ? manager.getRepository(Search)
       : this.searchRepository;
@@ -26,7 +30,7 @@ export class SearchsService {
       const searchExists = await repo.findOne({ where: { name } });
 
       if (!searchExists) {
-        const newSearch = repo.create({ name });
+        const newSearch = repo.create({ name, gender });
         return await repo.save(newSearch);
       }
 
@@ -42,7 +46,15 @@ export class SearchsService {
   //?                                       FindAll                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findMostSearched(limit = 10) {
+  async findMostSearched(gender?: GenderType, limit = 10) {
+    if (gender) {
+      return this.searchRepository.find({
+        where: { gender },
+        order: { count: 'DESC' },
+        take: limit,
+      });
+    }
+
     return this.searchRepository.find({
       order: { count: 'DESC' },
       take: limit,

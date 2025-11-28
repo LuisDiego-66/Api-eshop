@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
 import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
 import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
-import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+import { GenderType } from '../categories/enums/gender-type.enum';
 
 import { Discount } from '../discounts/entities/discount.entity';
 import { Product } from './entities/product.entity';
@@ -81,29 +83,72 @@ export class ProductsService {
       { id: 'DESC' },
     );
 
-    const names = new Set<string>();
+    // --------------------------------------------------------------------------
+    // 2. Se Almacena el nombre + gender
+    // --------------------------------------------------------------------------
 
+    await this.createSearch(products);
+
+    return products;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async createSearch(products: any) {
+    const results = new Map<string, GenderType>();
+
+    for (const product of products.data) {
+      const sub = product.subcategory;
+      const cat = product.subcategory?.category;
+      const gender = cat?.gender ?? null;
+
+      //* ------- SUBCATEGORÍA -------
+      if (sub?.name) {
+        const subName = sub.name.toLowerCase();
+        results.set(subName, gender);
+      }
+
+      //* ------- CATEGORÍA -------
+      if (cat?.name) {
+        const catName = cat.name.toLowerCase();
+        results.set(catName, gender);
+      }
+    }
+
+    for (const [name, gender] of results) {
+      await this.searchsService.create({ name, gender });
+    }
+  }
+
+  /*async findAllForCategoriesAndSubCategories(pagination: PaginationDto) {
+    // --------------------------------------------------------------------------
+    // 1. Busqueda avanzada (por relaciones) de category y subcategory
+    // --------------------------------------------------------------------------
+    const products = await paginateAdvanced(
+      this.productRepository,
+      pagination,
+      ['name', 'subcategory.name', 'subcategory.category.name'],
+      ['subcategory', 'subcategory.category'],
+      { id: 'DESC' },
+    );
+    const names = new Set<string>();
     // --------------------------------------------------------------------------
     // 2. Obtiene los nombres de las categories o subcategories
     // --------------------------------------------------------------------------
-
     for (const product of products.data) {
       //if (product.name) names.add(product.name);
       if (product.subcategory?.name) names.add(product.subcategory.name);
       if (product.subcategory?.category?.name)
         names.add(product.subcategory.category.name);
     }
-
     // --------------------------------------------------------------------------
     // 3. Guarda o incrementa cada término
     // --------------------------------------------------------------------------
-
     for (const name of names) {
       await this.searchsService.create(name.toLowerCase());
     }
-
     return products;
-  }
+  }*/
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                       FindOne_Product_Variants                                                 */

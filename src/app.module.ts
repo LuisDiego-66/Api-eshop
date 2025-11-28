@@ -22,17 +22,20 @@ import { SizesModule } from './modules/sizes/sizes.module';
 
 import { VariantsModule } from './modules/variants/variants.module';
 import { OutfitsModule } from './modules/outfits/outfits.module';
+
 import { OrdersModule } from './modules/orders/orders.module';
+import { StockReservationsModule } from './modules/stock-reservations/stock-reservations.module';
 
 import { CustomersModule } from './modules/customers/customers.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { ShipmentsModule } from './modules/shipments/shipments.module';
 
-import { StockReservationsModule } from './modules/stock-reservations/stock-reservations.module';
 import { PaymentsModule } from './modules/payments/payments.module';
-import { SlidersModule } from './modules/sliders/sliders.module';
-import { PlacesModule } from './modules/places/places.module';
 import { FilesModule } from './files/files.module';
+
+import { PlacesModule } from './modules/places/places.module';
+import { SlidersModule } from './modules/sliders/sliders.module';
+import { AdvertisementsModule } from './modules/advertisements/advertisements.module';
 
 @Module({
   imports: [
@@ -75,6 +78,7 @@ import { FilesModule } from './files/files.module';
     StockReservationsModule,
     PaymentsModule,
     SlidersModule,
+    AdvertisementsModule,
   ],
   controllers: [],
   providers: [],

@@ -3,6 +3,8 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
+import { GenderType } from '../categories/enums/gender-type.enum';
+
 import { ProductsService } from './products.service';
 import { SearchsService } from './searchs.service';
 
@@ -33,8 +35,13 @@ export class SearchsController {
   //?                                FindAll_Searchs                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: GenderType,
+  })
   @Get()
-  findMostSearched() {
-    return this.searchsService.findMostSearched();
+  findMostSearched(@Query('type') gender: GenderType) {
+    return this.searchsService.findMostSearched(gender);
   }
 }
