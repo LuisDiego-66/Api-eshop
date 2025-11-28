@@ -23,7 +23,6 @@ export class MailService {
   async sendEmailWithTemplate(sendMailDto: SendMailDto) {
     const mail: MailDataRequired = {
       to: sendMailDto.to,
-      //cc: 'example@mail.com',
       from: envs.SENDGRID_SENDER,
       subject: sendMailDto.subject,
       templateId: sendMailDto.templateId,

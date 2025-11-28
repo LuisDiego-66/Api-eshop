@@ -7,6 +7,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { GenderType } from 'src/modules/categories/enums/gender-type.enum';
+
 import { ProductColor } from 'src/modules/variants/entities/product-color.entity';
 
 @Entity('outfits')
@@ -22,6 +24,9 @@ export class Outfit {
 
   @Column('text', { array: true, default: [] })
   videos: string[];
+
+  @Column({ type: 'text', nullable: true })
+  gender: GenderType;
 
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;

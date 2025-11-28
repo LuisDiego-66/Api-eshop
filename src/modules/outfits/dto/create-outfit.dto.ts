@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsInt, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsString,
+} from 'class-validator';
+
+import { GenderType } from 'src/modules/categories/enums/gender-type.enum';
 
 export class CreateOutfitDto {
   @ApiProperty({
@@ -31,4 +39,11 @@ export class CreateOutfitDto {
   @IsArray()
   @IsString({ each: true })
   videos: string[];
+
+  @ApiProperty({
+    enum: GenderType,
+    example: GenderType.MALE,
+  })
+  @IsEnum(GenderType)
+  gender: GenderType;
 }

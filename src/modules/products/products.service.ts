@@ -72,7 +72,7 @@ export class ProductsService {
 
   async findAllForCategoriesAndSubCategories(pagination: PaginationDto) {
     // --------------------------------------------------------------------------
-    // 1. Busqueda avanzada (por relaciones) de category y subcategory
+    // 1. Busqueda avanzada de productos (por relaciones) de category y subcategory
     // --------------------------------------------------------------------------
 
     const products = await paginateAdvanced(

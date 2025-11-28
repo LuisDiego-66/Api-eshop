@@ -15,11 +15,6 @@ import { MailService } from './mail.service';
 export class MailController {
   constructor(private readonly emailService: MailService) {}
 
-  @Post('send-test-email')
-  async sendEmail(@Body() sendEmailDTO: SendMailDto) {
-    await this.emailService.sendEmail(sendEmailDTO);
-  }
-
   @Post()
   async sendEmailWithTemplate(@Body() sendMailDto: SendMailDto) {
     await this.emailService.sendEmailWithTemplate(sendMailDto);
