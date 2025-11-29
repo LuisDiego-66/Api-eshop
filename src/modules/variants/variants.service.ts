@@ -298,6 +298,7 @@ export class VariantsService {
     // --------------------------------------------------------------------------
     // 1. Se obtienen las variants mas vendidas y su stock vendido
     // --------------------------------------------------------------------------
+    const limit = 10;
 
     const result = await this.transactionRepository
       .createQueryBuilder('t')
@@ -312,7 +313,7 @@ export class VariantsService {
       .groupBy('t.variantId')
       .addGroupBy('v.id')
       .orderBy('sales', 'DESC')
-      .take(10)
+      .take(limit)
       .getRawMany();
 
     // --------------------------------------------------------------------------
@@ -323,11 +324,13 @@ export class VariantsService {
     const variants = await this.variantRepository.find({
       where: { id: In(topVariantIds) },
       relations: { productColor: { product: true } },
+      take: limit,
     });
 
     // --------------------------------------------------------------------------
     // 3. Se inserta el stock vendido y se devuelve ordenado
     // --------------------------------------------------------------------------
+
     return topVariantIds.map((id) => {
       const v = variants.find((v) => v.id === id);
       const stockEntry = result.find((r) => r.variantId === id);
@@ -343,6 +346,12 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async getLowStock() {
+    // --------------------------------------------------------------------------
+    // 1. Se obtienen las variants con menor stock actual
+    // --------------------------------------------------------------------------
+
+    const limit = 10;
+
     const result = await this.transactionRepository
       .createQueryBuilder('t')
       .select('t.variantId', 'variantId')
@@ -351,19 +360,24 @@ export class VariantsService {
       .where('t.deletedAt IS NULL')
       .groupBy('t.variantId')
       .orderBy('stock', 'ASC') // de menor a mayor
-      .take(10)
+      .take(limit)
       .getRawMany();
 
-    //return result;
+    // --------------------------------------------------------------------------
+    // 2. Se obtienen las variants completas
+    // --------------------------------------------------------------------------
 
     const topVariantIds = result.map((r) => r.variantId);
-
     const variants = await this.variantRepository.find({
       where: { id: In(topVariantIds) },
       relations: { productColor: { product: true } },
+      take: limit,
     });
 
-    // Fusionar stock calculado
+    // --------------------------------------------------------------------------
+    // 3. Se inserta el stock vendido y se devuelve ordenado
+    // --------------------------------------------------------------------------
+
     return topVariantIds.map((id) => {
       const v = variants.find((v) => v.id === id);
       const stockEntry = result.find((r) => r.variantId === id);
