@@ -362,8 +362,8 @@ export class VariantsService {
     // Traer todas las variantes de una sola query
     const variants = await this.variantRepository
       .createQueryBuilder('v')
-      .leftJoinAndSelect('v.productColor', 'pc')
-      .leftJoinAndSelect('pc.product', 'p')
+      .innerJoinAndSelect('v.productColor', 'pc')
+      .innerJoinAndSelect('pc.product', 'p')
       .whereInIds(topVariantIds)
       .getMany();
 
