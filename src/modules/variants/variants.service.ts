@@ -324,7 +324,7 @@ export class VariantsService {
     const variants = await this.variantRepository.find({
       where: { id: In(topVariantIds) },
       relations: { productColor: { product: true } },
-      take: limit,
+      //take: limit,
     });
 
     // --------------------------------------------------------------------------
@@ -370,9 +370,11 @@ export class VariantsService {
     const topVariantIds = result.map((r) => r.variantId);
     const variants = await this.variantRepository.find({
       where: { id: In(topVariantIds) },
-      relations: { productColor: { product: true } },
-      take: limit,
+      //relations: { productColor: { product: true } },
+      //take: limit,
     });
+
+    return variants;
 
     // --------------------------------------------------------------------------
     // 3. Se inserta el stock vendido y se devuelve ordenado
