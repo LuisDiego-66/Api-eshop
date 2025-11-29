@@ -7,6 +7,8 @@ import { CreateOutfitDto, UpdateOutfitDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
+import { VariantsService } from '../variants/variants.service';
+
 import { Outfit } from './entities/outfit.entity';
 import { ProductColor } from '../variants/entities/product-color.entity';
 
@@ -18,6 +20,8 @@ export class OutfitsService {
 
     @InjectRepository(ProductColor)
     private readonly productColorRepository: Repository<ProductColor>,
+
+    private readonly variantsService: VariantsService,
 
     private readonly dataSourse: DataSource,
   ) {}
@@ -49,7 +53,7 @@ export class OutfitsService {
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
-  async findAll(pagination: PaginationDto) {
+  async findAll() {
     const outfits = await this.outfitRepository.find({
       relations: { productColors: true },
     });
@@ -70,6 +74,33 @@ export class OutfitsService {
     if (!outfit) {
       throw new NotFoundException('Outfit not found: ' + id);
     }
+
+    return outfit;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOneWithStock(id: number) {
+    const outfit = await this.outfitRepository.findOne({
+      where: { id },
+      relations: {
+        productColors: { product: { discount: true }, variants: true },
+      },
+    });
+
+    if (!outfit) {
+      throw new NotFoundException('Outfit not found: ' + id);
+    }
+
+    // --------------------------------------------------------------------------
+    // 1. Agregar stock a las variantes
+    // --------------------------------------------------------------------------
+
+    const outfitWithStock = await this.variantsService.addStock(
+      outfit.productColors,
+    );
+
+    outfit.productColors = outfitWithStock;
 
     return outfit;
   }

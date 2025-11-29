@@ -129,18 +129,7 @@ export class VariantsService {
     // 2. Calcula el stock solo para los resultados paginados
     // --------------------------------------------------------------------------
 
-    const dataWithStock = await Promise.all(
-      paginated.data.map(async (productColor) => {
-        const variantsWithStock = await Promise.all(
-          productColor.variants.map(async (variant) => {
-            const availableStock = await this.getAvailableStock(variant.id);
-            return { ...variant, availableStock };
-          }),
-        );
-
-        return { ...productColor, variants: variantsWithStock };
-      }),
-    );
+    const dataWithStock = await this.addStock(paginated.data);
 
     // --------------------------------------------------------------------------
     // 3. Devuelve los resultados paginados con la meta
@@ -154,11 +143,33 @@ export class VariantsService {
 
   //? ---------------------------------------------------------------------------------------------- */
 
-  private getIdProducto(texto: string): number | null {
-    // --------------------------------------------------------------------------
-    // 1. se Obtiene el id de <qr>idProduct</qr>
-    // --------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // 1. Calcula el stock solo para los resultados paginados
+  // --------------------------------------------------------------------------
 
+  async addStock(producColors: ProductColor[]) {
+    const dataWithStock = await Promise.all(
+      producColors.map(async (productColor) => {
+        const variantsWithStock = await Promise.all(
+          productColor.variants.map(async (variant) => {
+            const availableStock = await this.getAvailableStock(variant.id);
+            return { ...variant, availableStock };
+          }),
+        );
+
+        return { ...productColor, variants: variantsWithStock };
+      }),
+    );
+    return dataWithStock;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  // --------------------------------------------------------------------------
+  // 1. se Obtiene el id de <qr>idProduct</qr>
+  // --------------------------------------------------------------------------
+
+  private getIdProducto(texto: string): number | null {
     const regex = /^<qr>(\d+)<\/qr>$/;
     const coincidencia = texto.match(regex);
     if (coincidencia && coincidencia[1]) {

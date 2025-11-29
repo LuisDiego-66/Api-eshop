@@ -7,11 +7,9 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateOutfitDto, UpdateOutfitDto } from './dto';
 
 import { Auth } from 'src/auth/decorators';
@@ -42,8 +40,8 @@ export class OutfitsController {
   //? ---------------------------------------------------------------------------------------------- */
 
   @Get()
-  findAll(@Query() pagination: PaginationDto) {
-    return this.outfitsService.findAll(pagination);
+  findAll() {
+    return this.outfitsService.findAll();
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -52,7 +50,7 @@ export class OutfitsController {
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.outfitsService.findOne(id);
+    return this.outfitsService.findOneWithStock(id);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

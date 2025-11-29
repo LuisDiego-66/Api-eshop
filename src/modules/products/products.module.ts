@@ -10,8 +10,10 @@ import { Search } from './entities/search.entity';
 import { SearchsController } from './searchs.controller';
 import { SearchsService } from './searchs.service';
 
+import { VariantsModule } from '../variants/variants.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Search])],
+  imports: [TypeOrmModule.forFeature([Product, Search]), VariantsModule],
   controllers: [ProductsController, SearchsController],
   providers: [ProductsService, SearchsService],
   exports: [TypeOrmModule, ProductsService],

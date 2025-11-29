@@ -12,6 +12,7 @@ import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
 import { GenderType } from '../categories/enums/gender-type.enum';
 
+import { VariantsService } from '../variants/variants.service';
 import { SearchsService } from './searchs.service';
 
 import { Discount } from '../discounts/entities/discount.entity';
@@ -24,6 +25,8 @@ export class ProductsService {
     private readonly productRepository: Repository<Product>,
 
     private readonly searchsService: SearchsService,
+
+    private readonly variantsService: VariantsService,
 
     private dataSource: DataSource,
   ) {}
@@ -182,6 +185,33 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+    return product;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOneWithStock(id: number) {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: {
+        productColors: { variants: { size: true }, color: true },
+        subcategory: true,
+      },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // --------------------------------------------------------------------------
+    // 1. Agregar stock a las variantes
+    // --------------------------------------------------------------------------
+
+    const productWithStock = await this.variantsService.addStock(
+      product.productColors,
+    );
+
+    product.productColors = productWithStock;
+
     return product;
   }
 
