@@ -125,36 +125,6 @@ export class ProductsService {
     }
   }
 
-  /*async findAllForCategoriesAndSubCategories(pagination: PaginationDto) {
-    // --------------------------------------------------------------------------
-    // 1. Busqueda avanzada (por relaciones) de category y subcategory
-    // --------------------------------------------------------------------------
-    const products = await paginateAdvanced(
-      this.productRepository,
-      pagination,
-      ['name', 'subcategory.name', 'subcategory.category.name'],
-      ['subcategory', 'subcategory.category'],
-      { id: 'DESC' },
-    );
-    const names = new Set<string>();
-    // --------------------------------------------------------------------------
-    // 2. Obtiene los nombres de las categories o subcategories
-    // --------------------------------------------------------------------------
-    for (const product of products.data) {
-      //if (product.name) names.add(product.name);
-      if (product.subcategory?.name) names.add(product.subcategory.name);
-      if (product.subcategory?.category?.name)
-        names.add(product.subcategory.category.name);
-    }
-    // --------------------------------------------------------------------------
-    // 3. Guarda o incrementa cada término
-    // --------------------------------------------------------------------------
-    for (const name of names) {
-      await this.searchsService.create(name.toLowerCase());
-    }
-    return products;
-  }*/
-
   //? ---------------------------------------------------------------------------------------------- */
   //?                       FindOne_Product_Variants                                                 */
   //? ---------------------------------------------------------------------------------------------- */

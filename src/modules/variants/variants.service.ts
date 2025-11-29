@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { DataSource, In, QueryRunner, Repository } from 'typeorm';
 
 import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
@@ -23,6 +23,9 @@ export class VariantsService {
   constructor(
     @InjectRepository(Variant)
     private readonly variantRepository: Repository<Variant>,
+
+    @InjectRepository(Transaction)
+    private readonly transactionRepository: Repository<Transaction>,
 
     @InjectRepository(ProductColor)
     private readonly productColorRepository: Repository<ProductColor>,
@@ -119,10 +122,10 @@ export class VariantsService {
     const paginated = await paginateAdvanced(
       this.productColorRepository,
       paginationDto,
-      ['product.name'], //! campos buscables (en relaciones)
-      ['variants.size', 'color', 'product'], //! relaciones
-      { id: 'ASC' }, //! orden
-      true, //! caseInsensitive
+      ['product.name'], //* campos buscables (en relaciones)
+      ['variants.size', 'color', 'product'], //* relaciones
+      { id: 'ASC' }, //* orden
+      true, //* caseInsensitive
     );
 
     // --------------------------------------------------------------------------
@@ -285,6 +288,90 @@ export class VariantsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                              Get_Best_Sellers                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async getBestSellers() {
+    // --------------------------------------------------------------------------
+    // 1. Se obtienen las variants mas vendidas y su stock vendido
+    // --------------------------------------------------------------------------
+
+    const result = await this.transactionRepository
+      .createQueryBuilder('t')
+      .select('t.variantId', 'variantId')
+      .addSelect('ABS(SUM(t.quantity))', 'sales')
+
+      .innerJoin('t.variant', 'v')
+      .innerJoin('t.order', 'o')
+
+      .where('t.quantity < 0')
+
+      .groupBy('t.variantId')
+      .addGroupBy('v.id')
+      .orderBy('sales', 'DESC')
+      .take(10)
+      .getRawMany();
+
+    // --------------------------------------------------------------------------
+    // 2. Se obtienen las variants completas
+    // --------------------------------------------------------------------------
+
+    const topVariantIds = result.map((r) => r.variantId);
+    const variants = await this.variantRepository.find({
+      where: { id: In(topVariantIds) },
+      relations: { productColor: { product: true } },
+    });
+
+    // --------------------------------------------------------------------------
+    // 3. Se inserta el stock vendido y se devuelve ordenado
+    // --------------------------------------------------------------------------
+    return topVariantIds.map((id) => {
+      const v = variants.find((v) => v.id === id);
+      const stockEntry = result.find((r) => r.variantId === id);
+      return {
+        ...v,
+        sale: stockEntry ? Number(stockEntry.sales) : 0,
+      };
+    });
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                 Get_low_stock                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async getLowStock() {
+    const result = await this.transactionRepository
+      .createQueryBuilder('t')
+      .select('t.variantId', 'variantId')
+      .addSelect('SUM(t.quantity)', 'stock') // stock actual
+      .innerJoin('t.variant', 'v')
+      .where('t.deletedAt IS NULL')
+      .groupBy('t.variantId')
+      .orderBy('stock', 'ASC') // de menor a mayor
+      .take(10)
+      .getRawMany();
+
+    //return result;
+
+    const topVariantIds = result.map((r) => r.variantId);
+
+    const variants = await this.variantRepository.find({
+      where: { id: In(topVariantIds) },
+      relations: { productColor: { product: true } },
+    });
+
+    // Fusionar stock calculado
+    return topVariantIds.map((id) => {
+      const v = variants.find((v) => v.id === id);
+      const stockEntry = result.find((r) => r.variantId === id);
+      return {
+        ...v,
+        stock: stockEntry ? Number(stockEntry.stock) : 0,
+      };
+    });
   }
 
   //* ---------------------------------------------------------------------------------------------- */

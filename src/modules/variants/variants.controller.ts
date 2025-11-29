@@ -23,11 +23,6 @@ import { Roles } from 'src/auth/enums';
 import { TransactionsService } from './transaction.service';
 import { VariantsService } from './variants.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @ApiTags('Variants')
 @Controller('variants')
 export class VariantsController {
@@ -41,6 +36,10 @@ export class VariantsController {
   //?                           Create_ProdcutColor                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post()
   create(@Body() createVariantsDto: CreateVariantsDto) {
     return this.variantsService.createProductColor(createVariantsDto);
@@ -50,6 +49,10 @@ export class VariantsController {
   //?                          FindAll_ProductColors                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
@@ -62,6 +65,10 @@ export class VariantsController {
   //?                           FindOne_ProductColor                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.variantsService.findOneProductColorWithStock(id);
@@ -71,6 +78,10 @@ export class VariantsController {
   //?                           Update_ProductColor                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -83,6 +94,10 @@ export class VariantsController {
   //?                                       getStock                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get('stock/:id')
   getStock(@Param('id', ParseIntPipe) id: number) {
     return this.variantsService.getAvailableStock(id);
@@ -92,8 +107,37 @@ export class VariantsController {
   //?                                       AddStock                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post('addstock')
   addStock(@Body() createTransactionDto: CreateTransactionDto) {
     return this.transactionsService.create(createTransactionDto);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                              Get_Best_Sellers                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Get('dashboard/bestsellers')
+  getBestSellers() {
+    return this.variantsService.getBestSellers();
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                 Get_low_stock                                                  */
+  //? ---------------------------------------------------------------------------------------------- */
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Get('dashboard/lowStock')
+  getLowStock() {
+    return this.variantsService.getLowStock();
   }
 }
