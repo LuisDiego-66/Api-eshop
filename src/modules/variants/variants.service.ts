@@ -346,6 +346,40 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async getLowStock() {
+    const result = await this.transactionRepository
+      .createQueryBuilder('t')
+      .select('t.variantId', 'variantId')
+      .addSelect('SUM(t.quantity)', 'stock')
+      .innerJoin('t.variant', 'v')
+      .where('t.deletedAt IS NULL')
+      .groupBy('t.variantId')
+      .orderBy('stock', 'ASC')
+      .take(10)
+      .getRawMany();
+
+    const topVariantIds = result.map((r) => r.variantId);
+
+    // Traer todas las variantes de una sola query
+    const variants = await this.variantRepository
+      .createQueryBuilder('v')
+      .leftJoinAndSelect('v.productColor', 'pc')
+      .leftJoinAndSelect('pc.product', 'p')
+      .whereInIds(topVariantIds)
+      .getMany();
+
+    // Mapear stock con las variantes respetando el orden de topVariantIds
+    return topVariantIds
+      .map((id) => {
+        const v = variants.find((v) => v.id === id);
+        const stockEntry = result.find((r) => r.variantId === id);
+        return v
+          ? { ...v, stock: stockEntry ? Number(stockEntry.stock) : 0 }
+          : null;
+      })
+      .filter(Boolean); // elimina null por si alguna variante no existe
+  }
+
+  /* async getLowStock() {
     // --------------------------------------------------------------------------
     // 1. Se obtienen las variants con menor stock actual
     // --------------------------------------------------------------------------
@@ -388,7 +422,7 @@ export class VariantsService {
         stock: stockEntry ? Number(stockEntry.stock) : 0,
       };
     });
-  }
+  } */
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
