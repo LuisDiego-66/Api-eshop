@@ -50,10 +50,6 @@ export class OutfitsController {
   //?                                        FindOne                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  //!
-  @Auth(Roles.ADMIN)
-  @ApiBearerAuth('access-token')
-  //!
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.outfitsService.findOne(id);

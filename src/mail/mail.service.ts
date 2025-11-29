@@ -29,7 +29,7 @@ export class MailService {
       subject: sendMailDto.subject,
       templateId: sendMailDto.templateId,
       dynamicTemplateData: {
-        name: sendMailDto.name, // variabes usadas en el template {{name}} y {{body}}
+        //name: sendMailDto.name, // variabes usadas en el template {{name}} y {{body}}
         body: sendMailDto.body,
       },
     };

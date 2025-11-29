@@ -64,7 +64,7 @@ export class OutfitsService {
   async findOne(id: number) {
     const outfit = await this.outfitRepository.findOne({
       where: { id },
-      relations: { productColors: true },
+      relations: { productColors: { product: { discount: true } } },
     });
 
     if (!outfit) {

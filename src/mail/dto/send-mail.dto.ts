@@ -1,27 +1,19 @@
-import {
-  IsArray,
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-import { TemplatesIds } from '../enums/templates.enum';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class SendMailDto {
   @ApiProperty({
-    example: ['luisdiegoborja8@gmail.com'],
+    example: 'luisdiegoborja8@gmail.com', //['luisdiegoborja8@gmail.com'],
   })
-  @IsArray()
-  @IsEmail({}, { each: true })
-  to: string[];
+  //@IsArray()
+  @IsEmail(/* {}, { each: true } */)
+  to: string /* [] */;
 
-  @ApiProperty({
+  /*   @ApiProperty({
     example: 'name of the receiver',
   })
   @IsString()
-  name: string;
+  name: string; */
 
   @ApiProperty({
     example: 'Subject of the email',
