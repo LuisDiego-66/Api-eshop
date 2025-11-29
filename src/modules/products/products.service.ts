@@ -97,6 +97,7 @@ export class ProductsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
 
   async createSearch(products: any) {
     const results = new Map<string, GenderType>();
@@ -189,6 +190,7 @@ export class ProductsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
 
   async findOneWithStock(id: number) {
     const product = await this.productRepository.findOne({
@@ -206,7 +208,7 @@ export class ProductsService {
     // 1. Agregar stock a las variantes
     // --------------------------------------------------------------------------
 
-    const productWithStock = await this.variantsService.addStock(
+    const productWithStock = await this.variantsService.addStockToProductColors(
       product.productColors,
     );
 

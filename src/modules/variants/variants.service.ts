@@ -103,22 +103,22 @@ export class VariantsService {
   //?                          FindAll_ProductColors                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAllProductColors(pagination: PaginationDto) {
+  async findAllProductColors(paginationDto: PaginationDto) {
     // --------------------------------------------------------------------------
     // 1. Busca por <qr>idProduct</qr>
     // --------------------------------------------------------------------------
 
-    if (pagination.search) {
-      const productId = this.getIdProducto(pagination.search);
+    if (paginationDto.search) {
+      const variantId = this.getIdProductoByQr(paginationDto.search);
 
-      if (productId) {
-        return await this.findProductColorsForProduct(pagination, productId);
+      if (variantId) {
+        return await this.findProductColorsForVariant(paginationDto, variantId);
       }
     }
 
     const paginated = await paginateAdvanced(
       this.productColorRepository,
-      pagination,
+      paginationDto,
       ['product.name'], //! campos buscables (en relaciones)
       ['variants.size', 'color', 'product'], //! relaciones
       { id: 'ASC' }, //! orden
@@ -129,7 +129,7 @@ export class VariantsService {
     // 2. Calcula el stock solo para los resultados paginados
     // --------------------------------------------------------------------------
 
-    const dataWithStock = await this.addStock(paginated.data);
+    const dataWithStock = await this.addStockToProductColors(paginated.data);
 
     // --------------------------------------------------------------------------
     // 3. Devuelve los resultados paginados con la meta
@@ -138,94 +138,6 @@ export class VariantsService {
     return {
       data: dataWithStock,
       meta: paginated.meta,
-    };
-  }
-
-  //? ---------------------------------------------------------------------------------------------- */
-
-  // --------------------------------------------------------------------------
-  // 1. Calcula el stock solo para los resultados paginados
-  // --------------------------------------------------------------------------
-
-  async addStock(producColors: ProductColor[]) {
-    const dataWithStock = await Promise.all(
-      producColors.map(async (productColor) => {
-        const variantsWithStock = await Promise.all(
-          productColor.variants.map(async (variant) => {
-            const availableStock = await this.getAvailableStock(variant.id);
-            return { ...variant, availableStock };
-          }),
-        );
-
-        return { ...productColor, variants: variantsWithStock };
-      }),
-    );
-    return dataWithStock;
-  }
-
-  //? ---------------------------------------------------------------------------------------------- */
-
-  // --------------------------------------------------------------------------
-  // 1. se Obtiene el id de <qr>idProduct</qr>
-  // --------------------------------------------------------------------------
-
-  private getIdProducto(texto: string): number | null {
-    const regex = /^<qr>(\d+)<\/qr>$/;
-    const coincidencia = texto.match(regex);
-    if (coincidencia && coincidencia[1]) {
-      return parseInt(coincidencia[1], 10);
-    }
-    return null;
-  }
-
-  //? ---------------------------------------------------------------------------------------------- */
-
-  private async findProductColorsForProduct(
-    pagination: PaginationDto,
-    productId: number,
-  ) {
-    // --------------------------------------------------------------------------
-    // 1. paginacion normal
-    // --------------------------------------------------------------------------
-
-    const productColors = await paginate(
-      this.productColorRepository,
-      {
-        //where: { product: { id: productId } },
-        where: {
-          variants: { id: productId },
-        },
-        relations: { variants: { size: true }, product: true, color: true },
-      },
-      pagination,
-    );
-
-    // --------------------------------------------------------------------------
-    // 2. Mapea las variantes para añadir el stock disponible
-    // --------------------------------------------------------------------------
-
-    const productColorsWithStock = await Promise.all(
-      productColors.data.map(async (pc) => {
-        const variantsWithStock = await Promise.all(
-          pc.variants.map(async (variant) => {
-            const availableStock = await this.getAvailableStock(variant.id);
-            return {
-              ...variant,
-              availableStock,
-            };
-          }),
-        );
-
-        return {
-          ...pc,
-          variants: variantsWithStock,
-        };
-      }),
-    );
-
-    return {
-      data: productColorsWithStock,
-      meta: productColors.meta,
     };
   }
 
@@ -257,6 +169,21 @@ export class VariantsService {
     if (!productColor) {
       throw new NotFoundException('Product-Color not found: ' + id);
     }
+    return productColor;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async findOneProductColorWithStock(id: number) {
+    const productColor = await this.productColorRepository.findOne({
+      where: { id },
+      relations: { variants: { size: true }, product: true, color: true },
+    });
+
+    if (!productColor) {
+      throw new NotFoundException('Product-Color not found: ' + id);
+    }
 
     // --------------------------------------------------------------------------
     // 1. Mapea las variantes para añadir el stock disponible
@@ -271,10 +198,6 @@ export class VariantsService {
         };
       }),
     );
-
-    // --------------------------------------------------------------------------
-    // 2. Devuelve el producto con las variantes actualizadas
-    // --------------------------------------------------------------------------
 
     return {
       ...productColor,
@@ -364,40 +287,6 @@ export class VariantsService {
     }
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Delete                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  /* async removeProductColor(id: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    const productColorEntity = await this.findOneProductColor(id);
-
-    try {
-      //! se borran físicamente los archivos
-      if (productColorEntity.multimedia) {
-        await this.filesService.deletedFiles(productColorEntity.multimedia);
-        productColorEntity.multimedia = [];
-        await queryRunner.manager.save(ProductColor, productColorEntity);
-      }
-
-      await queryRunner.manager.softRemove(ProductColor, productColorEntity);
-      await queryRunner.commitTransaction();
-
-      return {
-        message: 'Product-Color and Variants deleted successfully',
-        deleted: productColorEntity, //! devuelve sin multimedias
-      };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      handleDBExceptions(error);
-    } finally {
-      await queryRunner.release();
-    }
-  } */
-
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
   //* ---------------------------------------------------------------------------------------------- */
@@ -429,6 +318,7 @@ export class VariantsService {
     return Number(result[0]?.available_stock ?? 0);
   }
 
+  //? ---------------------------------------------------------------------------------------------- */
   //? ---------------------------------------------------------------------------------------------- */
 
   async getAvailableStockWithLock(
@@ -473,5 +363,73 @@ export class VariantsService {
       [variantId, ReservationStatus.PENDING],
     );
     return Number(result[0]?.available_stock ?? 0);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  private getIdProductoByQr(texto: string): number | null {
+    const regex = /^<qr>(\d+)<\/qr>$/;
+    const coincidencia = texto.match(regex);
+    if (coincidencia && coincidencia[1]) {
+      return parseInt(coincidencia[1], 10);
+    }
+    return null;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  private async findProductColorsForVariant(
+    pagination: PaginationDto,
+    variantId: number,
+  ) {
+    // --------------------------------------------------------------------------
+    // 1. paginacion normal
+    // --------------------------------------------------------------------------
+
+    const productColors = await paginate(
+      this.productColorRepository,
+      {
+        //where: { product: { id: productId } },
+        where: {
+          variants: { id: variantId },
+        },
+        relations: { variants: { size: true }, product: true, color: true },
+      },
+      pagination,
+    );
+
+    // --------------------------------------------------------------------------
+    // 2. Mapea las variantes para añadir el stock disponible
+    // --------------------------------------------------------------------------
+
+    const productColorsWithStock = await this.addStockToProductColors(
+      productColors.data,
+    );
+
+    return {
+      data: productColorsWithStock,
+      meta: productColors.meta,
+    };
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async addStockToProductColors(producColors: ProductColor[]) {
+    const dataWithStock = await Promise.all(
+      producColors.map(async (productColor) => {
+        const variantsWithStock = await Promise.all(
+          productColor.variants.map(async (variant) => {
+            const availableStock = await this.getAvailableStock(variant.id);
+            return { ...variant, availableStock };
+          }),
+        );
+
+        return { ...productColor, variants: variantsWithStock };
+      }),
+    );
+    return dataWithStock;
   }
 }

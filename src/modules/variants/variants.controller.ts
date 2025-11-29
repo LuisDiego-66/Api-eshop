@@ -64,7 +64,7 @@ export class VariantsController {
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.variantsService.findOneProductColor(id);
+    return this.variantsService.findOneProductColorWithStock(id);
   }
 
   //? ---------------------------------------------------------------------------------------------- */

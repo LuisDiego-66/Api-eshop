@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateOutfitDto, UpdateOutfitDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
@@ -79,6 +78,7 @@ export class OutfitsService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
 
   async findOneWithStock(id: number) {
     const outfit = await this.outfitRepository.findOne({
@@ -96,7 +96,7 @@ export class OutfitsService {
     // 1. Agregar stock a las variantes
     // --------------------------------------------------------------------------
 
-    const outfitWithStock = await this.variantsService.addStock(
+    const outfitWithStock = await this.variantsService.addStockToProductColors(
       outfit.productColors,
     );
 
