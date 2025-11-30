@@ -355,8 +355,11 @@ export class VariantsService {
       .createQueryBuilder('t')
       .select('t.variantId', 'variantId')
       .addSelect('SUM(t.quantity)', 'stock') // stock actual
+
       .innerJoin('t.variant', 'v')
+
       .where('t.deletedAt IS NULL')
+
       .groupBy('t.variantId')
       .orderBy('stock', 'ASC') // de menor a mayor
       .limit(limit)

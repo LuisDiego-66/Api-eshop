@@ -75,6 +75,7 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
 
   private async createOrderBase({
     dto,
@@ -149,6 +150,7 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
+  //? ---------------------------------------------------------------------------------------------- */
 
   private async handleItemCreationWithLock(
     queryRunner: QueryRunner,
@@ -180,10 +182,11 @@ export class OrdersService {
     // 2. Obtener la variante con lock
     // --------------------------------------------------------------------------
 
-    const variant = await queryRunner.manager.findOne(Variant, {
-      where: { id: item.variantId },
-      lock: { mode: 'pessimistic_write' },
-    });
+    const variant = await queryRunner.manager
+      .createQueryBuilder(Variant, 'v')
+      .setLock('pessimistic_write')
+      .where('v.id = :id', { id: item.variantId })
+      .getOne();
 
     if (!variant) {
       throw new NotFoundException(`Variant ID ${item.variantId} not found`);
@@ -232,11 +235,17 @@ export class OrdersService {
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write') //! solo bloquea "order"
+
         .innerJoinAndSelect('order.items', 'items') //* Items
         .innerJoinAndSelect('items.variant', 'variant') //* Variants
         .where('order.id = :id', { id: orderId })
-        .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //! la orden debe estar pendiente
-        .andWhere('order.type = :type', { type: OrderType.IN_STORE })
+
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //! debe estar pendiente
+        .andWhere('order.payment_type IN (:...payments)', {
+          payments: [PaymentType.CASH, PaymentType.CARD], //! no debe ser qr
+        })
+        .andWhere('order.type = :type', { type: OrderType.IN_STORE }) //! debe ser in-store
+
         .andWhere('order.expiresAt > NOW()')
         .getOne();
 
