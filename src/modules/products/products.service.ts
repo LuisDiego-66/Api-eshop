@@ -167,6 +167,7 @@ export class ProductsService {
       where: { id },
       relations: {
         productColors: { variants: { size: true }, color: true },
+        discount: true,
         subcategory: true,
       },
     });
