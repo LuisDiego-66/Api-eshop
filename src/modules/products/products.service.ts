@@ -83,7 +83,13 @@ export class ProductsService {
       this.productRepository,
       pagination,
       ['name', 'subcategory.name', 'subcategory.category.name'],
-      ['subcategory', 'subcategory.category'],
+      [
+        'subcategory',
+        'subcategory.category',
+        'discount',
+        'productColors',
+        'productColors.color',
+      ],
       { id: 'DESC' },
     );
 
