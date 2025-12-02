@@ -48,9 +48,9 @@ export class VariantsService {
       const { variants, multimedia, productId, pdfs, ...data } =
         createVariantsDto;
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 1. Se crea el color (si no existe)
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const color = await this.colorService.create(
         {
@@ -60,9 +60,9 @@ export class VariantsService {
         queryRunner.manager,
       );
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 2. Se crea el product-color
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const productColor = queryRunner.manager.create(ProductColor, {
         product: { id: productId },
@@ -70,9 +70,9 @@ export class VariantsService {
         multimedia,
         pdfs,
 
-        // --------------------------------------------------------------------------
+        // --------------------------------------------
         // 3. Se crean las variants
-        // --------------------------------------------------------------------------
+        // --------------------------------------------
 
         variants: await Promise.all(
           variants.map(async (size) => {
@@ -107,9 +107,9 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAllProductColors(paginationDto: PaginationDto) {
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 1. Busca por <qr>idProduct</qr>
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     if (paginationDto.search) {
       const variantId = this.getIdProductoByQr(paginationDto.search);
@@ -128,15 +128,15 @@ export class VariantsService {
       true, //* caseInsensitive
     );
 
-    // --------------------------------------------------------------------------
-    // 2. Calcula el stock solo para los resultados paginados
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 2. Calcula el stock para los resultados
+    // --------------------------------------------
 
     const dataWithStock = await this.addStockToProductColors(paginated.data);
 
-    // --------------------------------------------------------------------------
-    // 3. Devuelve los resultados paginados con la meta
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 3. Devuelve los resultados paginados
+    // --------------------------------------------
 
     return {
       data: dataWithStock,
@@ -188,9 +188,9 @@ export class VariantsService {
       throw new NotFoundException('Product-Color not found: ' + id);
     }
 
-    // --------------------------------------------------------------------------
-    // 1. Mapea las variantes para añadir el stock disponible
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 1. Mapea las variantes para añadir el stock
+    // --------------------------------------------
 
     const variantsWithStock = await Promise.all(
       productColor.variants.map(async (variant) => {
@@ -220,15 +220,15 @@ export class VariantsService {
     try {
       const { multimedia, variants, pdfs, ...data } = updateVariantDto;
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 1. Obtener el ProductColor
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const productColorEntity = await this.findOneProductColor(id);
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 2. Se crea el color (si no existe)
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       if (data.colorCode && data.colorName) {
         const color = await this.colorService.create(
@@ -250,9 +250,9 @@ export class VariantsService {
         productColorEntity,
       );
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 3. Crear nuevas variantes si se envían
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       if (variants && variants.length > 0) {
         const variantEntities = await Promise.all(
@@ -274,9 +274,9 @@ export class VariantsService {
 
       await queryRunner.commitTransaction();
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 4. Se retorna el entity actualizado
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       return await queryRunner.manager.findOne(ProductColor, {
         where: { id },
@@ -295,9 +295,9 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async getBestSellers() {
-    // --------------------------------------------------------------------------
-    // 1. Se obtienen las variants mas vendidas y su stock vendido
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 1. Se obtienen variants mas vendidas con stock
+    // --------------------------------------------
     const limit = 10;
 
     const result = await this.transactionRepository
@@ -316,9 +316,9 @@ export class VariantsService {
       .limit(limit)
       .getRawMany();
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 2. Se obtienen las variants completas
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const topVariantIds = result.map((r) => r.variantId);
     const variants = await this.variantRepository.find({
@@ -326,9 +326,9 @@ export class VariantsService {
       relations: { productColor: { product: true } },
     });
 
-    // --------------------------------------------------------------------------
-    // 3. Se inserta el stock vendido y se devuelve ordenado
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 3. Se inserta el stock vendido (ordenado)
+    // --------------------------------------------
 
     return topVariantIds.map((id) => {
       const v = variants.find((v) => v.id === id);
@@ -345,29 +345,29 @@ export class VariantsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async getLowStock() {
-    // --------------------------------------------------------------------------
-    // 1. Se obtienen las variants con menor stock actual
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 1. Se obtienen las variants con menor stock
+    // --------------------------------------------
 
     const limit = 10;
 
     const result = await this.transactionRepository
       .createQueryBuilder('t')
       .select('t.variantId', 'variantId')
-      .addSelect('SUM(t.quantity)', 'stock') // stock actual
+      .addSelect('SUM(t.quantity)', 'stock') //* stock actual
 
       .innerJoin('t.variant', 'v')
 
       .where('t.deletedAt IS NULL')
 
       .groupBy('t.variantId')
-      .orderBy('stock', 'ASC') // de menor a mayor
+      .orderBy('stock', 'ASC') //* de menor a mayor
       .limit(limit)
       .getRawMany();
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 2. Se obtienen las variants completas
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const topVariantIds = result.map((r) => r.variantId);
     const variants = await this.variantRepository.find({
@@ -375,9 +375,9 @@ export class VariantsService {
       relations: { productColor: { product: true } },
     });
 
-    // --------------------------------------------------------------------------
-    // 3. Se inserta el stock vendido y se devuelve ordenado
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 3. Se inserta el stock vendido (ordenado)
+    // --------------------------------------------
 
     return topVariantIds.map((id) => {
       const v = variants.find((v) => v.id === id);
@@ -427,9 +427,9 @@ export class VariantsService {
     queryRunner: QueryRunner,
     variantId: number,
   ): Promise<number> {
-    // --------------------------------------------------------------------------
-    // 1. Bloquear las reservas existentes para esta variante
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 1. Bloquear las reservas para la variante
+    // --------------------------------------------
 
     await queryRunner.manager.query(
       `
@@ -443,9 +443,9 @@ export class VariantsService {
       [variantId, ReservationStatus.PENDING],
     );
 
-    // --------------------------------------------------------------------------
-    // 2. Calcular stock disponible (sin FOR UPDATE en agregaciones)
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 2. Calcular stock disponible
+    // --------------------------------------------
 
     const result = await queryRunner.manager.query(
       `
@@ -486,9 +486,9 @@ export class VariantsService {
     pagination: PaginationDto,
     variantId: number,
   ) {
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 1. paginacion normal
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const productColors = await paginate(
       this.productColorRepository,
@@ -502,9 +502,9 @@ export class VariantsService {
       pagination,
     );
 
-    // --------------------------------------------------------------------------
-    // 2. Mapea las variantes para añadir el stock disponible
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 2. Mapea las variantes para añadir el stock
+    // --------------------------------------------
 
     const productColorsWithStock = await this.addStockToProductColors(
       productColors.data,

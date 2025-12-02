@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { paginate } from 'src/common/pagination/paginate';
-import { UpdateCustomerDto, CustomerPaginationDto } from './dto';
+import { UpdateCustomerDto } from './dto';
+import { CustomerPaginationDto } from './pagination/customer-pagination.dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 

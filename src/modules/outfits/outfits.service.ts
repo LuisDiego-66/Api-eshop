@@ -92,9 +92,9 @@ export class OutfitsService {
       throw new NotFoundException('Outfit not found: ' + id);
     }
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 1. Agregar stock a las variantes
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const outfitWithStock = await this.variantsService.addStockToProductColors(
       outfit.productColors,

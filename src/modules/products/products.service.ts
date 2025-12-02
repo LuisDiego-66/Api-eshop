@@ -1,10 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
+import {
+  DataSource,
+  FindManyOptions,
+  In,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
+import { ProductPaginationDto } from './pagination/product-pagination.dto';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
 
@@ -55,16 +62,36 @@ export class ProductsService {
   //?                                        FindAll                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll(pagination: PaginationDto) {
+  async findAll(pagination: ProductPaginationDto) {
+    const { days } = pagination;
+
+    const options = {
+      where: {},
+    };
+
+    if (days) {
+      const dateFrom = new Date();
+      dateFrom.setDate(dateFrom.getDate() - days);
+
+      options.where = {
+        createdAt: MoreThanOrEqual(dateFrom),
+        deletedAt: null, //* se excluyen eliminados
+      };
+    }
+
     return paginate(
       this.productRepository,
+
       {
+        ...options,
+
         relations: {
           subcategory: { category: true },
           discount: true,
           productColors: true,
         },
       },
+
       pagination,
       ['name'], //! busqueda por:
     );
@@ -75,14 +102,20 @@ export class ProductsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAllForCategoriesAndSubCategories(pagination: PaginationDto) {
-    // --------------------------------------------------------------------------
-    // 1. Busqueda de productos (por relaciones category y subcategory)
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
+    // 1. Busqueda (por relaciones)
+    // --------------------------------------------
 
     const products = await paginateAdvanced(
       this.productRepository,
       pagination,
+
+      //* ------- SEARCHS -------
+
       ['name', 'subcategory.name', 'subcategory.category.name'],
+
+      //* ------- RELATIONS -------
+
       [
         'subcategory',
         'subcategory.category',
@@ -93,9 +126,9 @@ export class ProductsService {
       { id: 'DESC' },
     );
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 2. Se Almacena el nombre + gender
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     await this.createSearch(products);
 
@@ -181,9 +214,9 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 1. Agregar stock a las variantes
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const productWithStock = await this.variantsService.addStockToProductColors(
       product.productColors,
@@ -220,9 +253,9 @@ export class ProductsService {
     await queryRunner.startTransaction();
 
     try {
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 1. Verificar que el descuento exista
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const discountEntity = await queryRunner.manager.findOne(Discount, {
         where: { id: discountId },
@@ -230,9 +263,9 @@ export class ProductsService {
       if (!discountEntity)
         throw new NotFoundException(`Discount with ID ${discountId} not found`);
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 2. Buscar los productos
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const products = await queryRunner.manager.find(Product, {
         where: { id: In(productsIds) },
@@ -240,9 +273,9 @@ export class ProductsService {
       if (products.length === 0)
         throw new NotFoundException('No products found with given IDs');
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 3. Verificar que existan todos los IDs
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const foundIds = products.map((p) => p.id);
       const missingIds = productsIds.filter((id) => !foundIds.includes(id));
@@ -251,9 +284,9 @@ export class ProductsService {
           `Products not found: [${missingIds.join(', ')}]`,
         );
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 4. Actualización masiva con un solo UPDATE
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       await queryRunner.manager
         .createQueryBuilder()

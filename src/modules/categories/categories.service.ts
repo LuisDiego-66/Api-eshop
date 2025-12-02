@@ -102,7 +102,9 @@ export class CategoriesService {
     if (oldOrder === newOrder) return category;
 
     if (newOrder > oldOrder) {
-      // mover hacia abajo → desplazar los de en medio hacia arriba
+      // --------------------------------------------
+      // 1. Mover hacia abajo → desplazar los de en medio hacia arriba
+      // --------------------------------------------
       await this.categoryRepository
         .createQueryBuilder()
         .update(Category)
@@ -112,7 +114,10 @@ export class CategoriesService {
         .andWhere('"displayOrder" <= :newOrder', { newOrder })
         .execute();
     } else {
-      // mover hacia arriba → desplazar los de en medio hacia abajo
+      // --------------------------------------------
+      // 2. Mover hacia arriba → desplazar los de en medio hacia abajo
+      // --------------------------------------------
+
       await this.categoryRepository
         .createQueryBuilder()
         .update(Category)

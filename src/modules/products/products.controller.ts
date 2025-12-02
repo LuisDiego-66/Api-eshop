@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import { ProductPaginationDto } from './pagination/product-pagination.dto';
 import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
 import { Auth } from 'src/auth/decorators';
@@ -46,7 +46,12 @@ export class ProductsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  findAll(@Query() pagination: PaginationDto) {
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    type: Number,
+  })
+  findAll(@Query() pagination: ProductPaginationDto) {
     return this.productsService.findAll(pagination);
   }
 

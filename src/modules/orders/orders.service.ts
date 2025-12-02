@@ -97,9 +97,9 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 1. Se crea la order Base
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const orderData: Partial<Order> = {
         type,
@@ -115,9 +115,9 @@ export class OrdersService {
         });
       }
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 2. Se agrega el tipo de pago (QR, CASH, CARD)
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const newOrder = queryRunner.manager.create(Order, {
         ...orderData,
@@ -125,17 +125,17 @@ export class OrdersService {
       });
       await queryRunner.manager.save(newOrder);
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 3. Se crea los items y las reservas de stock
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       for (const item of rePricing.items /* success */) {
         await this.handleItemCreationWithLock(queryRunner, newOrder, item);
       }
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 4. Commit Transaction
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       await queryRunner.commitTransaction();
 
@@ -163,9 +163,9 @@ export class OrdersService {
       totalPrice: string;
     },
   ) {
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 1. Verificar stock disponible
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const available = await this.variantsService.getAvailableStockWithLock(
       queryRunner,
@@ -178,9 +178,9 @@ export class OrdersService {
       );
     }
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 2. Obtener la variante con lock
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const variant = await queryRunner.manager
       .createQueryBuilder(Variant, 'v')
@@ -192,9 +192,9 @@ export class OrdersService {
       throw new NotFoundException(`Variant ID ${item.variantId} not found`);
     }
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 3. Crear el item de la order
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     const orderItem = queryRunner.manager.create(Item, {
       order: { id: order.id },
@@ -206,9 +206,9 @@ export class OrdersService {
     });
     await queryRunner.manager.save(orderItem);
 
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
     // 4. Crear la reserva de stock
-    // --------------------------------------------------------------------------
+    // --------------------------------------------
 
     await this.stockReservationsService.createReservation(
       queryRunner.manager,
@@ -228,9 +228,9 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 1. Obtener la orden con lock
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
@@ -255,16 +255,16 @@ export class OrdersService {
         );
       }
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 2. Actualizar la orden a SENT
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       order.status = OrderStatus.SENT;
       await queryRunner.manager.save(order);
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 3. Actualizar las reservas de stock a PAID
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       await queryRunner.manager
         .createQueryBuilder()
@@ -275,9 +275,9 @@ export class OrdersService {
         .andWhere('expiresAt > NOW()') //! condición de no expirada
         .execute();
 
-      // --------------------------------------------------------------------------
-      // 4. Se crea las transacciones negativas en el stock
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
+      // 4. Se crean transacciones negativas
+      // --------------------------------------------
 
       const transactions = order.items.map((item) =>
         queryRunner.manager.create(Transaction, {
@@ -320,9 +320,9 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 1. Obtener la orden con lock
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       const orderEntity = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
@@ -340,9 +340,9 @@ export class OrdersService {
         );
       }
 
-      // --------------------------------------------------------------------------
-      // 2. Actualizar la orden a CANCELLED o deletedAt si PENDING
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
+      // 2. Actualizar a CANCELLED o deletedAt si PENDING
+      // --------------------------------------------
 
       orderEntity.status =
         orderEntity.status === OrderStatus.PAID ||
@@ -357,9 +357,9 @@ export class OrdersService {
 
       const order = await queryRunner.manager.save(Order, orderEntity);
 
-      // --------------------------------------------------------------------------
-      // 3. Actualizar las reservas de stock a CANCELLED
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
+      // 3. Actualizar las reservas a CANCELLED
+      // --------------------------------------------
 
       await queryRunner.manager
         .createQueryBuilder()
@@ -370,9 +370,9 @@ export class OrdersService {
         .andWhere('expiresAt > NOW()') //! condición de no expirada
         .execute();
 
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
       // 4. Se eliminan las transacciones de la orden
-      // --------------------------------------------------------------------------
+      // --------------------------------------------
 
       await queryRunner.manager
         .createQueryBuilder()

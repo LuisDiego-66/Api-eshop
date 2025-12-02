@@ -10,7 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { UpdateCustomerDto, CustomerPaginationDto } from './dto';
+import { UpdateCustomerDto } from './dto';
+import { CustomerPaginationDto } from './pagination/customer-pagination.dto';
 
 import { CustomersService } from './customers.service';
 
