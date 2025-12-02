@@ -14,9 +14,9 @@ export class Advertisement {
   @Column('text')
   text: string;
 
+  @Column('boolean', { default: true })
+  enabled: boolean;
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
-
-  @DeleteDateColumn({ nullable: true, select: false })
-  deletedAt?: Date;
 }

@@ -4,14 +4,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, LessThan, QueryRunner, Repository } from 'typeorm';
+import {
+  DataSource,
+  LessThan,
+  MoreThanOrEqual,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 
 import { paginate } from 'src/common/pagination/paginate';
-import {
-  CreateOrderInStoreDto,
-  CreateOrderOnlineDto,
-  OrderPaginationDto,
-} from './dto';
+import { OrderPaginationDto } from './pagination/order-pagination.dto';
+import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
 
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 import { OrderStatus, OrderType, PaymentType } from './enums';
@@ -402,6 +405,15 @@ export class OrdersService {
 
     if (pagination.type) {
       options.where.type = pagination.type;
+    }
+    if (pagination.days) {
+      const dateFrom = new Date();
+      dateFrom.setDate(dateFrom.getDate() - pagination.days);
+
+      options.where = {
+        ...options.where,
+        createdAt: MoreThanOrEqual(dateFrom),
+      };
     }
 
     return paginate(

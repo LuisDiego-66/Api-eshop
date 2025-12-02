@@ -9,11 +9,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import {
-  CreateOrderInStoreDto,
-  CreateOrderOnlineDto,
-  OrderPaginationDto,
-} from './dto';
+import { OrderPaginationDto } from './pagination/order-pagination.dto';
+import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
 
 import { Auth, GetCustomer } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums';
@@ -99,6 +96,11 @@ export class OrdersController {
     name: 'type',
     required: false,
     enum: OrderType,
+  })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    type: Number,
   })
   @Get()
   findAll(@Query() pagination: OrderPaginationDto) {

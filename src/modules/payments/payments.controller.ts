@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 
 @Controller('payments')
@@ -9,4 +9,9 @@ export class PaymentsController {
   generateQr() {
     return this.paymentsService.generateQr();
   } */
+
+  @Post('qr/callback')
+  generateQr() {
+    return 'QR callback';
+  }
 }

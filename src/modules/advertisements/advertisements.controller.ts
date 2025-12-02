@@ -47,10 +47,10 @@ export class AdvertisementsController {
   //?                                       FindOne                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  @Get(':id')
+  /* @Get(':id')
   findOne(@Param('id') id: number) {
     return this.advertisementsService.findOne(id);
-  }
+  } */
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Update                                                  */
@@ -72,12 +72,12 @@ export class AdvertisementsController {
   //?                                        Delete                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  //!
+  /*   //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
   //!
   @Delete(':id')
   remove(@Param('id') id: number) {
     return this.advertisementsService.remove(id);
-  }
+  } */
 }

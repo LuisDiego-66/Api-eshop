@@ -5,5 +5,3 @@ export { CreateOrderOnlineDto } from './create-order-online.dto';
 export { CreateItemDto } from './create-item.dto';
 
 export { AddressData } from './address-data.dto';
-
-export { OrderPaginationDto } from './order-pagination.dto';
