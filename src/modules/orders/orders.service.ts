@@ -1,48 +1,34 @@
 import {
   Injectable,
-  BadRequestException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  DataSource,
-  LessThan,
-  MoreThanOrEqual,
-  QueryRunner,
-  Repository,
-} from 'typeorm';
+import { DataSource, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
+
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { paginate } from 'src/common/pagination/paginate';
 import { OrderPaginationDto } from './pagination/order-pagination.dto';
 import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
 
-import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 import { OrderStatus, OrderType, PaymentType } from './enums';
+import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
-import { StockReservationsService } from '../stock-reservations/stock-reservations.service';
-import { VariantsService } from '../variants/variants.service';
-import { PricingService } from './pricing.service';
+import { CreateOrder } from './services/create.service';
 
-import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
-
-import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
-import { Transaction } from '../variants/entities/transaction.entity';
-import { Customer } from '../customers/entities/customer.entity';
-
-import { Variant } from '../variants/entities/variant.entity';
 import { Order } from './entities/order.entity';
-import { Item } from './entities/item.entity';
+import { Customer } from '../customers/entities/customer.entity';
+import { Transaction } from '../variants/entities/transaction.entity';
+import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
-
     private readonly dataSource: DataSource,
-    private readonly pricingService: PricingService,
-    private readonly variantsService: VariantsService,
-    private readonly stockReservationsService: StockReservationsService,
+    private readonly createOrder: CreateOrder,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -54,7 +40,7 @@ export class OrdersService {
       throw new Error('Invalid payment type');
     }
 
-    return this.createOrderBase({
+    return this.createOrder.createOrderBase({
       dto,
       type: OrderType.IN_STORE,
       payment_type: dto.payment_type,
@@ -69,156 +55,12 @@ export class OrdersService {
     if (!(buyer instanceof Customer)) {
       throw new BadRequestException('Only customers can create online orders');
     }
-    return this.createOrderBase({
+    return this.createOrder.createOrderBase({
       dto,
       buyer,
       type: OrderType.ONLINE,
       payment_type: PaymentType.QR,
     });
-  }
-
-  //? ---------------------------------------------------------------------------------------------- */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  private async createOrderBase({
-    dto,
-    buyer,
-    type,
-    payment_type,
-  }: {
-    dto: CreateOrderInStoreDto | CreateOrderOnlineDto;
-    buyer?: Customer;
-    type: OrderType;
-    payment_type: PaymentType;
-  }) {
-    const { items: token } = dto;
-
-    const rePricing = await this.pricingService.rePrice(token);
-
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // --------------------------------------------
-      // 1. Se crea la order Base
-      // --------------------------------------------
-
-      const orderData: Partial<Order> = {
-        type,
-        totalPrice: rePricing.total,
-      };
-
-      if (type === OrderType.ONLINE && buyer) {
-        const { shipment, address } = dto as CreateOrderOnlineDto;
-        Object.assign(orderData, {
-          customer: { id: buyer.id },
-          shipment: { id: shipment },
-          address: { id: address },
-        });
-      }
-
-      // --------------------------------------------
-      // 2. Se agrega el tipo de pago (QR, CASH, CARD)
-      // --------------------------------------------
-
-      const newOrder = queryRunner.manager.create(Order, {
-        ...orderData,
-        payment_type,
-      });
-      await queryRunner.manager.save(newOrder);
-
-      // --------------------------------------------
-      // 3. Se crea los items y las reservas de stock
-      // --------------------------------------------
-
-      for (const item of rePricing.items /* success */) {
-        await this.handleItemCreationWithLock(queryRunner, newOrder, item);
-      }
-
-      // --------------------------------------------
-      // 4. Commit Transaction
-      // --------------------------------------------
-
-      await queryRunner.commitTransaction();
-
-      //! Retornar la orden creada
-      return await this.findOne(newOrder.id);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      handleDBExceptions(error);
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  //? ---------------------------------------------------------------------------------------------- */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  private async handleItemCreationWithLock(
-    queryRunner: QueryRunner,
-    order: Order,
-    item: {
-      variantId: number;
-      quantity: number;
-      unit_price: number;
-      discountValue: number;
-      totalPrice: string;
-    },
-  ) {
-    // --------------------------------------------
-    // 1. Verificar stock disponible
-    // --------------------------------------------
-
-    const available = await this.variantsService.getAvailableStockWithLock(
-      queryRunner,
-      item.variantId,
-    );
-
-    if (available < item.quantity) {
-      throw new BadRequestException(
-        `Insufficient stock for variant ID: ${item.variantId}`,
-      );
-    }
-
-    // --------------------------------------------
-    // 2. Obtener la variante con lock
-    // --------------------------------------------
-
-    const variant = await queryRunner.manager
-      .createQueryBuilder(Variant, 'v')
-      .setLock('pessimistic_write')
-      .where('v.id = :id', { id: item.variantId })
-      .getOne();
-
-    if (!variant) {
-      throw new NotFoundException(`Variant ID ${item.variantId} not found`);
-    }
-
-    // --------------------------------------------
-    // 3. Crear el item de la order
-    // --------------------------------------------
-
-    const orderItem = queryRunner.manager.create(Item, {
-      order: { id: order.id },
-      variant: { id: variant.id },
-      quantity: item.quantity,
-      unit_price: item.unit_price.toString(),
-      discountValue: item.discountValue,
-      totalPrice: item.totalPrice,
-    });
-    await queryRunner.manager.save(orderItem);
-
-    // --------------------------------------------
-    // 4. Crear la reserva de stock
-    // --------------------------------------------
-
-    await this.stockReservationsService.createReservation(
-      queryRunner.manager,
-      variant.id,
-      order.id,
-      item.quantity,
-    );
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -344,7 +186,7 @@ export class OrdersService {
       }
 
       // --------------------------------------------
-      // 2. Actualizar a CANCELLED o deletedAt si PENDING
+      // 2. CANCELLED o deletedAt si PENDING
       // --------------------------------------------
 
       orderEntity.status =
@@ -374,7 +216,7 @@ export class OrdersService {
         .execute();
 
       // --------------------------------------------
-      // 4. Se eliminan las transacciones de la orden
+      // 4. Se eliminan las transacciones
       // --------------------------------------------
 
       await queryRunner.manager

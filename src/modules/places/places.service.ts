@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreatePlaceDto, UpdatePlaceDto } from './dto';
-
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { CreatePlaceDto, UpdatePlaceDto } from './dto';
 
 import { Place } from './entities/place.entity';
 

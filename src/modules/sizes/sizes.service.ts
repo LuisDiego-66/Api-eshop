@@ -2,10 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateSizeDto, UpdateSizeDto } from './dto';
-
-import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Size } from './entities/size.entity';
 
@@ -19,26 +19,6 @@ export class SizesService {
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Create                                                  */
   //? ---------------------------------------------------------------------------------------------- */
-
-  /*   async create(createSizeDto: CreateSizeDto) {
-    let { name } = createSizeDto;
-    name = name.toUpperCase().trim();
-
-    try {
-      const sizeExists = await this.sizeRepository.findOne({
-        where: { name },
-      });
-
-      if (!sizeExists) {
-        const newSize = this.sizeRepository.create(createSizeDto);
-        return await this.sizeRepository.save(newSize);
-      }
-
-      return sizeExists;
-    } catch (error) {
-      handleDBExceptions(error);
-    }
-  } */
 
   async create(createSizeDto: CreateSizeDto, manager?: EntityManager) {
     const repo = manager ? manager.getRepository(Size) : this.sizeRepository;

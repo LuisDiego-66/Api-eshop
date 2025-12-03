@@ -2,11 +2,11 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, LessThan, Repository } from 'typeorm';
 
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
 import { ReservationStatus } from './enum/reservation-status.enum';
 
 import { VariantsService } from '../variants/variants.service';
-
-import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { StockReservation } from './entities/stock-reservation.entity';
 

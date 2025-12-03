@@ -2,28 +2,32 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DataSource,
-  FindManyOptions,
   In,
+  IsNull,
   MoreThanOrEqual,
+  Not,
   Repository,
 } from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { paginateAdvanced } from 'src/common/pagination/paginate-advanced';
-import { ProductPaginationDto } from './pagination/product-pagination.dto';
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { paginate } from 'src/common/pagination/paginate';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import {
+  ProductPaginationDto,
+  DiscountFilter,
+} from './pagination/product-pagination.dto';
 
 import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
 import { GenderType } from '../categories/enums/gender-type.enum';
 
-import { VariantsService } from '../variants/variants.service';
 import { SearchsService } from './searchs.service';
+import { VariantsService } from '../variants/variants.service';
 
-import { Discount } from '../discounts/entities/discount.entity';
 import { Product } from './entities/product.entity';
+import { Discount } from '../discounts/entities/discount.entity';
 
 @Injectable()
 export class ProductsService {
@@ -63,27 +67,37 @@ export class ProductsService {
   //? ---------------------------------------------------------------------------------------------- */
 
   async findAll(pagination: ProductPaginationDto) {
-    const { days } = pagination;
+    const { days, discounts } = pagination;
 
-    const options = {
-      where: {},
-    };
+    const where: any = {};
 
+    // --------------------------------------------
+    // 1. Busqueda por Dias
+    // --------------------------------------------
     if (days) {
       const dateFrom = new Date();
       dateFrom.setDate(dateFrom.getDate() - days);
 
-      options.where = {
-        createdAt: MoreThanOrEqual(dateFrom),
-        deletedAt: null, //* se excluyen eliminados
-      };
+      where.createdAt = MoreThanOrEqual(dateFrom);
+    }
+
+    // --------------------------------------------
+    // 1. Busqueda descuentos (true-false)
+    // --------------------------------------------
+
+    if (discounts !== undefined) {
+      if (discounts === DiscountFilter.true) {
+        where.discount = Not(IsNull());
+      } else {
+        where.discount = IsNull();
+      }
     }
 
     return paginate(
       this.productRepository,
 
       {
-        ...options,
+        where,
 
         relations: {
           subcategory: { category: true },
@@ -93,7 +107,7 @@ export class ProductsService {
       },
 
       pagination,
-      ['name'], //! busqueda por:
+      ['name'], //* busqueda por:
     );
   }
 
@@ -206,8 +220,8 @@ export class ProductsService {
       where: { id },
       relations: {
         productColors: { variants: { size: true }, color: true },
+        subcategory: { category: true },
         discount: true,
-        subcategory: true,
       },
     });
     if (!product) {

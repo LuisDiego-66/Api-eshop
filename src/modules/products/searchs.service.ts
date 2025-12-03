@@ -4,8 +4,9 @@ import { EntityManager, Repository } from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
-import { Search } from './entities/search.entity';
 import { GenderType } from '../categories/enums/gender-type.enum';
+
+import { Search } from './entities/search.entity';
 
 @Injectable()
 export class SearchsService {

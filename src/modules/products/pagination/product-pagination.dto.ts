@@ -1,6 +1,12 @@
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { IsNumber, IsOptional, IsPositive } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsPositive } from 'class-validator';
 import { Type } from 'class-transformer';
+
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
+
+export enum DiscountFilter {
+  true = 'true',
+  false = 'false',
+}
 
 export class ProductPaginationDto extends PaginationDto {
   @IsOptional()
@@ -8,4 +14,8 @@ export class ProductPaginationDto extends PaginationDto {
   @Type(() => Number)
   @IsNumber()
   days?: number;
+
+  @IsOptional()
+  @IsEnum(DiscountFilter)
+  discounts?: DiscountFilter;
 }

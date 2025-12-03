@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
   CreateSeasonalDiscountDto,
@@ -11,8 +13,6 @@ import {
 } from './dto';
 
 import { DiscountType } from './enums/discount-type.enum';
-
-import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Discount } from './entities/discount.entity';
 

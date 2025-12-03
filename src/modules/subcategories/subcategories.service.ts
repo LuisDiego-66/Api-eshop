@@ -2,10 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateSubcategoryDto, UpdateSubcategoryDto } from './dto';
-
-import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { Subcategory } from './entities/subcategory.entity';
 

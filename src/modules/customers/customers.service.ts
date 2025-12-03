@@ -2,11 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { paginate } from 'src/common/pagination/paginate';
-import { UpdateCustomerDto } from './dto';
-import { CustomerPaginationDto } from './pagination/customer-pagination.dto';
-
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { paginate } from 'src/common/pagination/paginate';
+import { CustomerPaginationDto } from './pagination/customer-pagination.dto';
+import { UpdateCustomerDto } from './dto';
 
 import { Customer } from './entities/customer.entity';
 

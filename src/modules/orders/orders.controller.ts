@@ -1,11 +1,11 @@
 import {
-  Controller,
   Get,
   Post,
   Body,
   Param,
-  ParseIntPipe,
   Query,
+  Controller,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
@@ -13,11 +13,12 @@ import { OrderPaginationDto } from './pagination/order-pagination.dto';
 import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
 
 import { Auth, GetCustomer } from 'src/auth/decorators';
-import { Roles } from 'src/auth/enums';
-import { OrderType } from './enums';
 
-import { PricingService } from './pricing.service';
+import { OrderType } from './enums';
+import { Roles } from 'src/auth/enums';
+
 import { OrdersService } from './orders.service';
+import { PricingService } from './pricing.service';
 
 import { Customer } from '../customers/entities/customer.entity';
 

@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreateShipmentDto, UpdateShipmentDto } from './dto';
-
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { CreateShipmentDto, UpdateShipmentDto } from './dto';
 
 import { Shipment } from './entities/shipment.entity';
 

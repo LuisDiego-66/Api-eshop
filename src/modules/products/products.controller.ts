@@ -12,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { ProductPaginationDto } from './pagination/product-pagination.dto';
+import {
+  DiscountFilter,
+  ProductPaginationDto,
+} from './pagination/product-pagination.dto';
 import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
 
 import { Auth } from 'src/auth/decorators';
@@ -50,6 +53,11 @@ export class ProductsController {
     name: 'days',
     required: false,
     type: Number,
+  })
+  @ApiQuery({
+    name: 'discounts',
+    required: false,
+    enum: DiscountFilter,
   })
   findAll(@Query() pagination: ProductPaginationDto) {
     return this.productsService.findAll(pagination);

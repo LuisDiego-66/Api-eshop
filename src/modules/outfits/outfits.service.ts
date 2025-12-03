@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { CreateOutfitDto, UpdateOutfitDto } from './dto';
-
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
+
+import { CreateOutfitDto, UpdateOutfitDto } from './dto';
 
 import { VariantsService } from '../variants/variants.service';
 

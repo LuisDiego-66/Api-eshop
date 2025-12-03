@@ -10,6 +10,8 @@ import { StatusChangerCronJob } from './cronjobs/status-changer.cron';
 
 import { StockReservationsModule } from '../stock-reservations/stock-reservations.module';
 import { VariantsModule } from '../variants/variants.module';
+
+import { CreateOrder } from './services/create.service';
 import { PricingService } from './pricing.service';
 
 @Module({
@@ -19,7 +21,7 @@ import { PricingService } from './pricing.service';
     StockReservationsModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, PricingService, StatusChangerCronJob],
+  providers: [OrdersService, PricingService, StatusChangerCronJob, CreateOrder],
   exports: [TypeOrmModule, OrdersService],
 })
 export class OrdersModule {}

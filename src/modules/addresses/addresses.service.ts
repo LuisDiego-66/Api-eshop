@@ -6,12 +6,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreateAddressDto, UpdateAddressDto } from './dto';
-
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
-import { Customer } from '../customers/entities/customer.entity';
+import { CreateAddressDto, UpdateAddressDto } from './dto';
+
 import { Address } from './entities/address.entity';
+import { Customer } from '../customers/entities/customer.entity';
 
 @Injectable()
 export class AddressesService {
