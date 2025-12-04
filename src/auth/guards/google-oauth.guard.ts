@@ -18,6 +18,7 @@ export class GoogleOauthGuard extends AuthGuard('google') {
     const allowed = [
       'https://www.moneroget.com/auth/callback',
       'https://moneroget.com/auth/callback',
+      'http://localhost:3000/auth/callback',
     ];
 
     if (!allowed.includes(redirectUrl)) {
