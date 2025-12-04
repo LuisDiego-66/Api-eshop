@@ -18,6 +18,9 @@ export class Transaction {
   @Column('integer', { default: 0 }) //! default 0
   quantity: number;
 
+  @Column('text', { nullable: true })
+  reason?: string;
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
 

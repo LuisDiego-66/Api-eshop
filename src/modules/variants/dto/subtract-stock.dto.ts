@@ -1,13 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNumber, IsPositive } from 'class-validator';
+import {
+  IsInt,
+  IsNegative,
+  IsNumber,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 
-export class CreateTransactionDto {
+export class SubtractStockDto {
   @ApiProperty({
     example: 50,
   })
   @IsInt()
-  @IsPositive()
+  @IsNegative()
   quantity: number;
+
+  @ApiProperty({
+    example: 'reason of stock subtraction',
+  })
+  @IsString()
+  reason: string;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */

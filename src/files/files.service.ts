@@ -10,58 +10,30 @@ import { readdir } from 'fs/promises';
 export class FilesService {
   private uploadPath = path.resolve('./static/uploads/');
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                        Upload                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   getSecureUrl(files: Express.Multer.File[]): string[] {
     const hostApi = envs.HOST;
     return files.map(
       (file) => `${hostApi}/api/multimedia/upload/${file.filename}`,
     );
-
-    /* const hostApi = envs.HOST;
-    return files.map((file) => {
-      // Detecta la carpeta según el mimetype
-      let folder = 'others';
-      if (file.mimetype.startsWith('image')) {
-        folder = 'images';
-      } else if (file.mimetype === 'application/pdf') {
-        folder = 'pdfs';
-      }
-
-      return `${hostApi}/upload/${folder}/${file.filename}`;
-    }); */
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                      GetFile                                                   */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   getFile(fileName: string) {
-    //const pathFile = path.join(__dirname, '../../static/uploads', fileName);}
     const pathFile = path.resolve('./static/uploads', fileName);
     if (!existsSync(pathFile)) throw new BadRequestException('File not found');
     return pathFile;
-
-    /*     const folders = ['images', 'pdfs', 'others'];
-    let pathFile = '';
-
-    for (const folder of folders) {
-      const tempPath = path.resolve(`./static/uploads/${folder}`, fileName);
-      if (existsSync(tempPath)) {
-        pathFile = tempPath;
-        break;
-      }
-    }
-
-    if (!pathFile) throw new BadRequestException('File not found');
-    return pathFile; */
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                 DeletedFiles                                                   */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async deletedFiles(multimediaFiles: string[] | undefined) {
     if (!multimediaFiles || multimediaFiles.length === 0) return;
@@ -81,9 +53,9 @@ export class FilesService {
     }
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                  GetAllFiles                                                   */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async getAllFiles(): Promise<string[]> {
     try {

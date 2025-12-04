@@ -7,10 +7,11 @@ export class GoogleOauthGuard extends AuthGuard('google') {
   ): IAuthModuleOptions | undefined {
     const req = context.switchToHttp().getRequest();
 
+    //* callback dinámico desde el query param
     const dynamicCallback = req.query.callback;
 
     return {
-      scope: ['email', 'profile'],
+      //scope: ['email', 'profile'],
       callbackURL: dynamicCallback, // callback dinámico
       session: false,
     };

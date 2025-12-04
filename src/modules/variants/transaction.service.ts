@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
-import { CreateTransactionDto } from './dto';
+import { AddStockDto, SubtractStockDto } from './dto';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
@@ -17,16 +17,34 @@ export class TransactionsService {
     private dataSource: DataSource,
   ) {}
 
-  //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Create                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
+  //?                                     Add_Stock                                                  */
+  //? ============================================================================================== */
 
-  async create(createTransactionDto: CreateTransactionDto) {
-    const { variantId } = createTransactionDto;
+  async addStock(addStockDto: AddStockDto) {
+    const { variantId } = addStockDto;
 
     try {
       const newTransaction = this.transactionsRepository.create({
-        ...createTransactionDto,
+        ...addStockDto,
+        variant: { id: variantId },
+      });
+      return await this.transactionsRepository.save(newTransaction);
+    } catch (error) {
+      handleDBExceptions(error);
+    }
+  }
+
+  //? ============================================================================================== */
+  //?                                Subtract_Stock                                                  */
+  //? ============================================================================================== */
+
+  async SubtractStock(subtractStockDto: SubtractStockDto) {
+    const { variantId } = subtractStockDto;
+
+    try {
+      const newTransaction = this.transactionsRepository.create({
+        ...subtractStockDto,
         variant: { id: variantId },
       });
       return await this.transactionsRepository.save(newTransaction);
