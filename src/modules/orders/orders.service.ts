@@ -17,6 +17,7 @@ import {
 } from './dto';
 
 import { OrderStatus, OrderType, PaymentType } from './enums';
+import { AddressType } from '../addresses/enums/address-type.enum';
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
 import { CreateOrder } from './services/create.service';
@@ -27,7 +28,6 @@ import { Order } from './entities/order.entity';
 import { Customer } from '../customers/entities/customer.entity';
 import { Transaction } from '../variants/entities/transaction.entity';
 import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
-import { AddressType } from '../addresses/enums/address-type.enum';
 
 @Injectable()
 export class OrdersService {
@@ -40,9 +40,9 @@ export class OrdersService {
     private readonly updateOrder: UpdateOrder,
   ) {}
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                         Create_Order_In_Store                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async createOrderInStore(dto: CreateOrderInStoreDto) {
     if (!Object.values(PaymentType).includes(dto.payment_type)) {
@@ -56,9 +56,9 @@ export class OrdersService {
     });
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                           Create_Order_Online                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async createOrderOnline(dto: CreateOrderOnlineDto, buyer: Customer) {
     if (!(buyer instanceof Customer)) {
@@ -72,9 +72,9 @@ export class OrdersService {
     });
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                          Confirm_Order_Manual                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async confirmOrderManual(orderId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -83,24 +83,27 @@ export class OrdersService {
 
     try {
       // --------------------------------------------
-      // 1. Obtener la orden con lock
+      // 1. Obtener orden PENDING con bloqueo
       // --------------------------------------------
 
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
-        .setLock('pessimistic_write') //! solo bloquea "order"
+        .setLock('pessimistic_write')
 
-        .innerJoinAndSelect('order.items', 'items') //* Items
-        .innerJoinAndSelect('items.variant', 'variant') //* Variants
+        .innerJoinAndSelect('order.items', 'items') //* ITEMS
+        .innerJoinAndSelect('items.variant', 'variant') //* VARIANTS
+
         .where('order.id = :id', { id: orderId })
-
-        .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //! debe estar pendiente
+        //* DEBE ESTAR PENDING
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+        //* NO QR
         .andWhere('order.payment_type IN (:...payments)', {
-          payments: [PaymentType.CASH, PaymentType.CARD], //! no debe ser qr
+          payments: [PaymentType.CASH, PaymentType.CARD],
         })
-        .andWhere('order.type = :type', { type: OrderType.IN_STORE }) //! debe ser in-store
-
+        //* DEBE SER IN_STORE
+        .andWhere('order.type = :type', { type: OrderType.IN_STORE })
         .andWhere('order.expiresAt > NOW()')
+
         .getOne();
 
       if (!order) {
@@ -110,14 +113,14 @@ export class OrdersService {
       }
 
       // --------------------------------------------
-      // 2. Actualizar la orden a SENT
+      // 2. Actualizar orden a SENT
       // --------------------------------------------
 
       order.status = OrderStatus.SENT;
       await queryRunner.manager.save(order);
 
       // --------------------------------------------
-      // 3. Actualizar las reservas de stock a PAID
+      // 3. Actualizar reservas de stock a PAID
       // --------------------------------------------
 
       await queryRunner.manager
@@ -152,15 +155,15 @@ export class OrdersService {
     }
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                               Confirm_Order_QR                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   //async confirmOrderQr(qrDataInterface: any) {}
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                        FindAll                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async findAll(pagination: OrderPaginationDto) {
     const options: any = {
@@ -195,9 +198,9 @@ export class OrdersService {
     );
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                        FindOne                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async findOne(id: number) {
     const order = await this.orderRepository.findOne({
@@ -215,83 +218,96 @@ export class OrdersService {
     return order;
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                         Update                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async update(orderId: number, items: string) {
     return this.updateOrder.update(orderId, items);
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                   Cancel_Order                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async cancel(orderId: number) {
     return this.cancelOrder.cancel(orderId);
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                  Change_Status                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
+
   async changeStatus(id: number, changeStatus: ChangeStatusDto) {
     const queryRunner = this.dataSource.createQueryRunner();
-    /*     await queryRunner.connect();
+    await queryRunner.connect();
     await queryRunner.startTransaction();
+
     try {
       // --------------------------------------------
-      // 1. Obtener la orden pagada
+      // 1. Obtener orden PAID con bloqueo
       // --------------------------------------------
 
-      const order = await queryRunner.manager
+      const orderEntity = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write')
-
-        .innerJoinAndSelect('order.addres', 'address')
-
+        .innerJoinAndSelect('order.address', 'address')
         .where('order.id = :id', { id })
-        .andWhere('order.status IN (:...statuses)', {
-          statuses: [OrderStatus.PAID],
-        })
+        .andWhere('order.status = :status', { status: OrderStatus.PAID })
         .andWhere('order.expiresAt > NOW()')
         .getOne();
 
-      if (!order) {
-        throw new NotFoundException(`Order ${order} not found or not paid`);
+      if (!orderEntity) {
+        throw new NotFoundException(`Order ${id} not found or not paid`);
       }
+
       // --------------------------------------------
-      // 2. cambiar el estado
+      // 2. Validaciones
       // --------------------------------------------
-      if (
-        order.type === OrderType.ONLINE &&
-        order.address?.type === AddressType.INTERNATIONAL
-      ) {
-        if (changeStatus.dhl_code) {
-          order.dhl_code = changeStatus.dhl_code;
-          order.status = OrderStatus.SENT;
-        } else {
-          throw new BadRequestException(
-            'DHL code is required for international orders',
-          );
-        }
-      } else if()
 
+      const isOnline = orderEntity.type === OrderType.ONLINE;
+      const isInternational =
+        orderEntity.address?.type === AddressType.INTERNATIONAL;
+      const isNational = orderEntity.address?.type === AddressType.NATIONAL;
 
+      if (isOnline && isInternational && !changeStatus.dhl_code) {
+        throw new BadRequestException(
+          'DHL code is required for international orders',
+        );
+      }
 
+      // --------------------------------------------
+      // 3. Cambio de status
+      // --------------------------------------------
 
+      if (isOnline && isInternational) {
+        orderEntity.dhl_code = changeStatus.dhl_code!;
+        orderEntity.status = OrderStatus.SENT;
+      }
 
+      if (isOnline && isNational) {
+        orderEntity.status = OrderStatus.SENT;
+      }
 
+      // --------------------------------------------
+      // 4. Guardar cambios
+      // --------------------------------------------
+
+      const updatedOrder = await queryRunner.manager.save(orderEntity);
+      await queryRunner.commitTransaction();
+
+      return updatedOrder;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleDBExceptions(error);
     } finally {
       await queryRunner.release();
-    } */
+    }
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
   //?                                       Expired                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   async expireOrders() {
     await this.orderRepository.update(
