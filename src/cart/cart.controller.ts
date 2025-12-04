@@ -6,8 +6,8 @@ import { CreateCartDto } from './dto/createCart.dto';
 
 import { Auth } from 'src/auth/decorators';
 
-@Auth()
-@ApiBearerAuth('access-token')
+//@Auth()
+//@ApiBearerAuth('access-token')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
