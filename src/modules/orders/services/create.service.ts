@@ -32,26 +32,34 @@ export class CreateOrder {
   //? ---------------------------------------------------------------------------------------------- */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async createOrderBase({
-    dto,
-    buyer,
-    type,
-    payment_type,
-  }: {
-    dto: CreateOrderInStoreDto | CreateOrderOnlineDto;
-    buyer?: Customer;
-    type: OrderType;
-    payment_type: PaymentType;
-  }) {
-    const { items: token } = dto;
+  async createOrderBase(
+    {
+      dto,
+      buyer,
+      type,
+      payment_type,
+    }: {
+      dto: CreateOrderInStoreDto | CreateOrderOnlineDto;
+      buyer?: Customer;
+      type: OrderType;
+      payment_type: PaymentType;
+    },
 
-    const rePricing = await this.pricingService.rePrice(token);
+    externalQueryRunner?: QueryRunner,
+  ) {
+    const isExternal = !!externalQueryRunner;
+    const queryRunner =
+      externalQueryRunner ?? this.dataSource.createQueryRunner();
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    if (!isExternal) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+    }
 
     try {
+      const { items: token } = dto;
+      const rePricing = await this.pricingService.rePrice(token);
+
       // --------------------------------------------
       // 1. Se crea la order Base
       // --------------------------------------------
@@ -92,7 +100,7 @@ export class CreateOrder {
       // 4. Retornar la orden creada
       // --------------------------------------------
 
-      await queryRunner.commitTransaction();
+      if (!isExternal) await queryRunner.commitTransaction();
 
       return await queryRunner.manager.findOne(Order, {
         where: { id: newOrder.id },
@@ -104,10 +112,10 @@ export class CreateOrder {
         },
       });
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (!isExternal) await queryRunner.rollbackTransaction();
       handleDBExceptions(error);
     } finally {
-      await queryRunner.release();
+      if (!isExternal) await queryRunner.release();
     }
   }
 

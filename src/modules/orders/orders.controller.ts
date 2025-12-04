@@ -6,11 +6,18 @@ import {
   Query,
   Controller,
   ParseIntPipe,
+  Patch,
+  Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { OrderPaginationDto } from './pagination/order-pagination.dto';
-import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
+import {
+  ChangeStatusDto,
+  CreateOrderInStoreDto,
+  CreateOrderOnlineDto,
+  UpdateOrderDto,
+} from './dto';
 
 import { Auth, GetCustomer } from 'src/auth/decorators';
 
@@ -58,7 +65,7 @@ export class OrdersController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                   ConfirmOrder                                                 */
+  //?                                  Confirm_Order                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   //!
@@ -71,7 +78,7 @@ export class OrdersController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                    CancelOrder                                                 */
+  //?                                   Cancel_Order                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   //!
@@ -80,7 +87,7 @@ export class OrdersController {
   //!
   @Post('cancel/:id')
   cancel(@Param('id') id: number) {
-    return this.ordersService.cancelOrder(id);
+    return this.ordersService.cancel(id);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -122,24 +129,40 @@ export class OrdersController {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        FindOne                                                 */
+  //?                                        Reprice                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  //!
-  @Auth()
-  @ApiBearerAuth('access-token')
-  //!
   @Post('reprice/:token')
   reprice(@Param('token') token: string) {
     return this.pricingService.rePrice(token);
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Delete                                                  */
+  //?                                         Update                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
-  /*  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.ordersService.remove(id);
-  } */
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Patch(':id')
+  update(@Param('id') id: number, @Body() updateOrderDto: UpdateOrderDto) {
+    return this.ordersService.update(id, updateOrderDto.items);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                  Change_Status                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Put(':id')
+  changeStatus(
+    @Param('id') id: number,
+    @Body() changeStatusDto: ChangeStatusDto,
+  ) {
+    return this.ordersService.changeStatus(id, changeStatusDto);
+  }
 }

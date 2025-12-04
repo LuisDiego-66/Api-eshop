@@ -10,17 +10,24 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { paginate } from 'src/common/pagination/paginate';
 import { OrderPaginationDto } from './pagination/order-pagination.dto';
-import { CreateOrderInStoreDto, CreateOrderOnlineDto } from './dto';
+import {
+  ChangeStatusDto,
+  CreateOrderInStoreDto,
+  CreateOrderOnlineDto,
+} from './dto';
 
 import { OrderStatus, OrderType, PaymentType } from './enums';
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
 import { CreateOrder } from './services/create.service';
+import { CancelOrder } from './services/cancel.service';
+import { UpdateOrder } from './services/update.service';
 
 import { Order } from './entities/order.entity';
 import { Customer } from '../customers/entities/customer.entity';
 import { Transaction } from '../variants/entities/transaction.entity';
 import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
+import { AddressType } from '../addresses/enums/address-type.enum';
 
 @Injectable()
 export class OrdersService {
@@ -29,6 +36,8 @@ export class OrdersService {
     private readonly orderRepository: Repository<Order>,
     private readonly dataSource: DataSource,
     private readonly createOrder: CreateOrder,
+    private readonly cancelOrder: CancelOrder,
+    private readonly updateOrder: UpdateOrder,
   ) {}
 
   //? ---------------------------------------------------------------------------------------------- */
@@ -144,97 +153,10 @@ export class OrdersService {
   }
 
   //? ---------------------------------------------------------------------------------------------- */
-  //?                                    Generate_Qr                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  //generateQr() {}
-
-  //? ---------------------------------------------------------------------------------------------- */
   //?                               Confirm_Order_QR                                                 */
   //? ---------------------------------------------------------------------------------------------- */
 
   //async confirmOrderQr(qrDataInterface: any) {}
-
-  //? ---------------------------------------------------------------------------------------------- */
-  //?                                   Cancel_Order                                                 */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  async cancelOrder(orderId: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // --------------------------------------------
-      // 1. Obtener la orden con lock
-      // --------------------------------------------
-
-      const orderEntity = await queryRunner.manager
-        .createQueryBuilder(Order, 'order')
-        .setLock('pessimistic_write') //! solo bloquea "order"
-        .where('order.id = :id', { id: orderId })
-        .andWhere('order.status IN (:...statuses)', {
-          statuses: [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SENT],
-        })
-        .andWhere('order.expiresAt > NOW()')
-        .getOne();
-
-      if (!orderEntity) {
-        throw new NotFoundException(
-          `Order ${orderId} not found or not pending / paid`,
-        );
-      }
-
-      // --------------------------------------------
-      // 2. CANCELLED o deletedAt si PENDING
-      // --------------------------------------------
-
-      orderEntity.status =
-        orderEntity.status === OrderStatus.PAID ||
-        orderEntity.status === OrderStatus.SENT
-          ? OrderStatus.CANCELLED
-          : orderEntity.status;
-
-      orderEntity.deletedAt =
-        orderEntity.status === OrderStatus.PENDING
-          ? new Date()
-          : orderEntity.deletedAt;
-
-      const order = await queryRunner.manager.save(Order, orderEntity);
-
-      // --------------------------------------------
-      // 3. Actualizar las reservas a CANCELLED
-      // --------------------------------------------
-
-      await queryRunner.manager
-        .createQueryBuilder()
-        .update(StockReservation)
-        .set({ status: ReservationStatus.CANCELLED })
-        .where('orderId = :orderId', { orderId })
-        .andWhere('status = :status', { status: ReservationStatus.PENDING })
-        .andWhere('expiresAt > NOW()') //! condición de no expirada
-        .execute();
-
-      // --------------------------------------------
-      // 4. Se eliminan las transacciones
-      // --------------------------------------------
-
-      await queryRunner.manager
-        .createQueryBuilder()
-        .update(Transaction)
-        .set({ deletedAt: new Date() })
-        .where('orderId = :orderId', { orderId })
-        .execute();
-
-      await queryRunner.commitTransaction();
-      return order;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      handleDBExceptions(error);
-    } finally {
-      await queryRunner.release();
-    }
-  }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        FindAll                                                 */
@@ -291,6 +213,80 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
     return order;
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                         Update                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async update(orderId: number, items: string) {
+    return this.updateOrder.update(orderId, items);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                   Cancel_Order                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+
+  async cancel(orderId: number) {
+    return this.cancelOrder.cancel(orderId);
+  }
+
+  //? ---------------------------------------------------------------------------------------------- */
+  //?                                  Change_Status                                                 */
+  //? ---------------------------------------------------------------------------------------------- */
+  async changeStatus(id: number, changeStatus: ChangeStatusDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    /*     await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      // --------------------------------------------
+      // 1. Obtener la orden pagada
+      // --------------------------------------------
+
+      const order = await queryRunner.manager
+        .createQueryBuilder(Order, 'order')
+        .setLock('pessimistic_write')
+
+        .innerJoinAndSelect('order.addres', 'address')
+
+        .where('order.id = :id', { id })
+        .andWhere('order.status IN (:...statuses)', {
+          statuses: [OrderStatus.PAID],
+        })
+        .andWhere('order.expiresAt > NOW()')
+        .getOne();
+
+      if (!order) {
+        throw new NotFoundException(`Order ${order} not found or not paid`);
+      }
+      // --------------------------------------------
+      // 2. cambiar el estado
+      // --------------------------------------------
+      if (
+        order.type === OrderType.ONLINE &&
+        order.address?.type === AddressType.INTERNATIONAL
+      ) {
+        if (changeStatus.dhl_code) {
+          order.dhl_code = changeStatus.dhl_code;
+          order.status = OrderStatus.SENT;
+        } else {
+          throw new BadRequestException(
+            'DHL code is required for international orders',
+          );
+        }
+      } else if()
+
+
+
+
+
+
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
+    } */
   }
 
   //? ---------------------------------------------------------------------------------------------- */

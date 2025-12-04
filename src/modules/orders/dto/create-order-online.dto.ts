@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString } from 'class-validator';
 
-export abstract class CreateOrderOnlineDto {
+export /* abstract */ class CreateOrderOnlineDto {
   @ApiProperty({
     description: 'Token items',
     example:

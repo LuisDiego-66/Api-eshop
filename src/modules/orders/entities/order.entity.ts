@@ -48,6 +48,9 @@ export class Order {
   @Column('json', { nullable: true })
   address_data?: AddressData;
 
+  @Column({ type: 'text', nullable: true })
+  dhl_code?: string;
+
   @CreateDateColumn({ select: false })
   createdAt: Date;
 

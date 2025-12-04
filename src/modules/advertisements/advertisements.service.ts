@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -34,51 +34,21 @@ export class AdvertisementsService {
   //?                                       FindAll                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async findAll() {
+  async findOne() {
     const advertisements = await this.advertisementRepository.find();
-    return advertisements;
-  }
-
-  //? ---------------------------------------------------------------------------------------------- */
-  //?                                       FindOne                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  async findOne(id: number) {
-    const advertisement = await this.advertisementRepository.findOne({
-      where: { id },
-    });
-    if (!advertisement) {
-      throw new NotFoundException('Advertisement not found');
-    }
-    return advertisement;
+    return advertisements[0];
   }
 
   //? ---------------------------------------------------------------------------------------------- */
   //?                                        Update                                                  */
   //? ---------------------------------------------------------------------------------------------- */
 
-  async update(id: number, updateAdvertisementDto: UpdateAdvertisementDto) {
-    const advertisement = await this.findOne(id);
+  async update(updateAdvertisementDto: UpdateAdvertisementDto) {
+    const advertisement = await this.findOne();
+
     try {
       Object.assign(advertisement, updateAdvertisementDto);
       return await this.advertisementRepository.save(advertisement);
-    } catch (error) {
-      handleDBExceptions(error);
-    }
-  }
-
-  //? ---------------------------------------------------------------------------------------------- */
-  //?                                        Delete                                                  */
-  //? ---------------------------------------------------------------------------------------------- */
-
-  async remove(id: number) {
-    const advertisement = await this.findOne(id);
-    try {
-      await this.advertisementRepository.softRemove(advertisement);
-      return {
-        message: 'Advertisement deleted successfully',
-        deleted: advertisement,
-      };
     } catch (error) {
       handleDBExceptions(error);
     }
