@@ -14,10 +14,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: envs.GOOGLE_SECRET_KEY,
       callbackURL: envs.GOOGLE_CALLBACK,
       scope: ['email', 'profile'],
+      passReqToCallback: true,
     });
   }
 
   validate(
+    req: any,
     _accessToken: string,
     _refreshToken: string,
     profile: any,
@@ -30,6 +32,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       idProvider: id,
       email: email,
       name: `${name.givenName} ${name.familyName}`,
+
+      //! Pasar el redirectUrl original desde el state por si es necesario
+      redirectUrl: req.query.state || req.state,
     };
 
     return customer;

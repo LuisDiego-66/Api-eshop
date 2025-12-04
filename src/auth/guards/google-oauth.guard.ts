@@ -29,7 +29,7 @@ export class GoogleOauthGuard extends AuthGuard('google') {
       //scope: ['email', 'profile'],
       callbackURL: redirectUrl, // callback dinámico
       session: false,
-      state: redirectUrl,
+      state: redirectUrl, // Pasamos el redirectUrl como state para usarlo después
     };
   }
 }

@@ -5,6 +5,7 @@ import { GoogleOauthGuard } from './guards';
 
 import { CreateSubscriberDto, LoginUserDto } from './dto';
 import { AuthService } from './auth.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -48,10 +49,8 @@ export class AuthController {
   //! se ejecuta cuando el front me llama con los datos de google
   @Post('google/exchange')
   @UseGuards(GoogleOauthGuard)
-  async googleAuthCallback(@Req() req /*  @Res() res: Response */) {
-    const customer = req.user; //!  (en passport siempre en req.user)
-
-    // genera el token JWT y registra el usuario si no existe
+  async googleAuthCallback(@Req() req) {
+    const customer = req.user;
     return this.authService.signIn(customer);
   }
 }
