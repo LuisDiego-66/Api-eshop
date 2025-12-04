@@ -8,7 +8,7 @@ export class GoogleOauthGuard extends AuthGuard('google') {
     const req = context.switchToHttp().getRequest();
 
     //* callback dinámico desde el query param
-    const redirectUrl = req.query.redirectUrl;
+    const redirectUrl = req.query.callback;
 
     if (!redirectUrl) {
       throw new BadRequestException('redirectUrl is required');
