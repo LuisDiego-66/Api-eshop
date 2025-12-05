@@ -29,9 +29,6 @@ export class CreateOrder {
     private readonly stockReservationsService: StockReservationsService,
   ) {}
 
-  //? ---------------------------------------------------------------------------------------------- */
-  //? ---------------------------------------------------------------------------------------------- */
-
   async createOrderBase(
     {
       dto,
@@ -86,14 +83,14 @@ export class CreateOrder {
         ...orderData,
         payment_type,
       });
-      await queryRunner.manager.save(newOrder);
+      const orderEntity = await queryRunner.manager.save(newOrder);
 
       // --------------------------------------------
       // 3. Se crea los items y las reservas
       // --------------------------------------------
 
-      for (const item of rePricing.items /* success */) {
-        await this.handleItemCreationWithLock(queryRunner, newOrder, item);
+      for (const item of rePricing.items) {
+        await this.handleItemCreationWithLock(queryRunner, orderEntity, item);
       }
 
       // --------------------------------------------
@@ -119,8 +116,7 @@ export class CreateOrder {
     }
   }
 
-  //? ---------------------------------------------------------------------------------------------- */
-  //? ---------------------------------------------------------------------------------------------- */
+  //? ============================================================================================== */
 
   private async handleItemCreationWithLock(
     queryRunner: QueryRunner,
@@ -163,7 +159,19 @@ export class CreateOrder {
     }
 
     // --------------------------------------------
-    // 3. Crear el item de la order
+    // 3. Se agrega el ShipmentPrice si existiera
+    // --------------------------------------------
+
+    let shipment_price: number = 0;
+
+    if (order.shipment) {
+      let total = Number(item.totalPrice);
+      shipment_price = Number(order.shipment.price);
+      item.totalPrice = (total + shipment_price).toFixed(2);
+    }
+
+    // --------------------------------------------
+    // 4. Crear el item de la order
     // --------------------------------------------
 
     const orderItem = queryRunner.manager.create(Item, {
@@ -172,12 +180,13 @@ export class CreateOrder {
       quantity: item.quantity,
       unit_price: item.unit_price.toString(),
       discountValue: item.discountValue,
+      shipment_price,
       totalPrice: item.totalPrice,
     });
     await queryRunner.manager.save(orderItem);
 
     // --------------------------------------------
-    // 4. Crear la reserva de stock
+    // 5. Crear la reserva de stock
     // --------------------------------------------
 
     await this.stockReservationsService.createReservation(

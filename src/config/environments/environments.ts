@@ -28,6 +28,7 @@ interface IEnvironmentVariables {
 
   //CONSTANTS
   RESERVATION_EXPIRE_MINUTES: number;
+  EXPIRE_MINUTES_QR: number;
 }
 
 const environmentsSchema = joi
@@ -70,4 +71,5 @@ export const envs = {
   URL_BASE_BNB: envVariables.URL_BASE_BNB,
   //CONSTANTS
   RESERVATION_EXPIRE_MINUTES: envVariables.RESERVATION_EXPIRE_MINUTES,
+  EXPIRE_MINUTES_QR: envVariables.EXPIRE_MINUTES_QR,
 };
