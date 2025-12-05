@@ -85,27 +85,19 @@ export class CreateOrder {
       });
       let orderEntity = await queryRunner.manager.save(newOrder);
 
-      console.log('control 1');
-
       // --------------------------------------------
       // 3. Se calcula si tiene shipmen_price
       // --------------------------------------------
 
-      if (orderEntity.shipment) {
+      /* if (orderEntity.shipment) {
         orderEntity.shipment_price = Number(orderEntity.shipment.price);
-
-        console.log('control 2');
 
         orderEntity.totalPrice = (
           Number(orderEntity.totalPrice) + orderEntity.shipment_price
         ).toFixed(2);
 
-        console.log('control 3');
-
         orderEntity = await queryRunner.manager.save(orderEntity);
-      }
-
-      console.log('control 4');
+      }*/
 
       // --------------------------------------------
       // 4. Se crea los items y las reservas
@@ -115,7 +107,6 @@ export class CreateOrder {
         await this.handleItemCreationWithLock(queryRunner, orderEntity, item);
       }
 
-      console.log('control 5');
       // --------------------------------------------
       // 5. Retornar la orden creada
       // --------------------------------------------
