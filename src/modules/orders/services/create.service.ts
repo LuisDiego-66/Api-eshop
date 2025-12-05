@@ -94,6 +94,8 @@ export class CreateOrder {
       if (orderEntity.shipment) {
         orderEntity.shipment_price = Number(orderEntity.shipment.price);
 
+        console.log('control 2');
+
         orderEntity.totalPrice = (
           Number(orderEntity.totalPrice) + orderEntity.shipment_price
         ).toFixed(2);
@@ -105,7 +107,8 @@ export class CreateOrder {
       // 4. Se crea los items y las reservas
       // --------------------------------------------
 
-      console.log('control 2');
+      console.log('control 3');
+
       for (const item of rePricing.items) {
         await this.handleItemCreationWithLock(queryRunner, orderEntity, item);
       }
@@ -116,7 +119,7 @@ export class CreateOrder {
 
       if (!isExternal) await queryRunner.commitTransaction();
 
-      console.log('control 3');
+      console.log('control 4');
 
       return await queryRunner.manager.findOne(Order, {
         where: { id: newOrder.id },
