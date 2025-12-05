@@ -5,12 +5,6 @@ import { AddressType } from '../enums/address-type.enum';
 
 export class CreateAddressDto {
   @ApiProperty({
-    example: 'Name of the address',
-  })
-  @IsString()
-  name: string;
-
-  @ApiProperty({
     example: '123 Main St, Apt 4B, Springfield, IL 62704',
   })
   @IsString()

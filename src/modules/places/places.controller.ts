@@ -16,11 +16,6 @@ import { Roles } from 'src/auth/enums';
 
 import { PlacesService } from './places.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @Controller('places')
 export class PlacesController {
   constructor(private readonly placesService: PlacesService) {}
@@ -29,6 +24,10 @@ export class PlacesController {
   //?                                        Create                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post()
   create(@Body() createPlaceDto: CreatePlaceDto) {
     return this.placesService.create(createPlaceDto);
@@ -56,6 +55,10 @@ export class PlacesController {
   //?                                        Update                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceDto) {
     return this.placesService.update(+id, updatePlaceDto);
@@ -65,6 +68,10 @@ export class PlacesController {
   //?                                        Delete                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.placesService.remove(+id);

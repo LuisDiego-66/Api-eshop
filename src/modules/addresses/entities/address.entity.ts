@@ -23,9 +23,6 @@ export class Address {
   id: number;
 
   @Column('text')
-  name: string;
-
-  @Column('text')
   address: string;
 
   @Column('text')

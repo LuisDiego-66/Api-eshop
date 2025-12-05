@@ -19,7 +19,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.register({
       global: true,
       secret: envs.JWT_SECRET,
-      signOptions: { expiresIn: envs.SIGN_OPTIONS },
+      signOptions: { expiresIn: '365d' /* envs.SIGN_OPTIONS */ },
     }),
 
     CustomersModule,
