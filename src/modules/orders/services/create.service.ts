@@ -85,6 +85,8 @@ export class CreateOrder {
       });
       let orderEntity = await queryRunner.manager.save(newOrder);
 
+      console.log('control 1');
+
       // --------------------------------------------
       // 3. Se calcula si tiene shipmen_price
       // --------------------------------------------
@@ -103,6 +105,7 @@ export class CreateOrder {
       // 4. Se crea los items y las reservas
       // --------------------------------------------
 
+      console.log('control 2');
       for (const item of rePricing.items) {
         await this.handleItemCreationWithLock(queryRunner, orderEntity, item);
       }
@@ -112,6 +115,8 @@ export class CreateOrder {
       // --------------------------------------------
 
       if (!isExternal) await queryRunner.commitTransaction();
+
+      console.log('control 3');
 
       return await queryRunner.manager.findOne(Order, {
         where: { id: newOrder.id },
