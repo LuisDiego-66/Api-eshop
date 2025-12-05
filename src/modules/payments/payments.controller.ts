@@ -5,13 +5,13 @@ import { PaymentsService } from './payments.service';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  /*   @Post('generate-qr')
+  @Post('generate-qr')
   generateQr() {
     return this.paymentsService.generateQr();
-  } */
+  }
 
   @Post('qr/callback')
-  generateQr() {
+  qrCallback() {
     return 'QR callback';
   }
 }
