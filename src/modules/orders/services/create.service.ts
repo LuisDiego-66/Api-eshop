@@ -49,52 +49,55 @@ export class CreateOrder {
     const queryRunner =
       externalQueryRunner ?? this.dataSource.createQueryRunner();
 
-    if (!isExternal) {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-    }
-
     try {
-      const { items: token } = dto;
-      const rePricing = await this.pricingService.rePrice(token);
+      if (!isExternal) {
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+      }
+      const rePricing = await this.pricingService.rePrice(dto.items);
 
       // --------------------------------------------
       // 1. Se crea la order Base
       // --------------------------------------------
 
+      //* Se inicializa el objeto de Order
       const orderData: Partial<Order> = {
         type,
         totalPrice: rePricing.total,
       };
 
       if (type === OrderType.ONLINE && buyer) {
-        const { shipment, address } = dto as CreateOrderOnlineDto;
+        const dtoOnline = dto as CreateOrderOnlineDto;
 
         // --------------------------------------------
-        // 3. Se calcula el precio final Shipment + total
+        // 3. Se rellenan los datos de la Order Online
         // --------------------------------------------
 
+        //* validar y obtener el shipment completo
         const shipmentEntity = await queryRunner.manager.findOne(Shipment, {
-          where: { id: shipment },
+          where: { id: dtoOnline.shipment },
         });
         if (!shipmentEntity)
-          throw new NotFoundException(`Shipment ID ${shipment} not found`);
+          throw new NotFoundException(
+            `Shipment ID ${dtoOnline.shipment} not found`,
+          );
 
+        //* Asignar el precio del shipment y calcula precio final
         orderData.shipment_price = Number(shipmentEntity.price);
-
         orderData.totalPrice = (
           Number(orderData.totalPrice) + orderData.shipment_price
         ).toFixed(2);
 
+        //* Asignar relaciones a Order online
         Object.assign(orderData, {
           customer: { id: buyer.id },
-          shipment: { id: shipment },
-          address: { id: address },
+          shipment: { id: dtoOnline.shipment },
+          address: { id: dtoOnline.address },
         });
       }
 
       // --------------------------------------------
-      // 2. Se agrega (QR, CASH, CARD)
+      // 2. Se Crea la Order
       // --------------------------------------------
 
       const newOrder = queryRunner.manager.create(Order, {
@@ -111,11 +114,11 @@ export class CreateOrder {
         await this.handleItemCreationWithLock(queryRunner, order, item);
       }
 
+      if (!isExternal) await queryRunner.commitTransaction();
+
       // --------------------------------------------
       // 5. Retornar la orden creada
       // --------------------------------------------
-
-      if (!isExternal) await queryRunner.commitTransaction();
 
       return await queryRunner.manager.findOne(Order, {
         where: { id: newOrder.id },

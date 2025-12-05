@@ -9,6 +9,7 @@ import { Item } from './entities/item.entity';
 import { StatusChangerCronJob } from './cronjobs/status-changer.cron';
 
 import { VariantsModule } from '../variants/variants.module';
+import { CustomersModule } from '../customers/customers.module';
 import { StockReservationsModule } from '../stock-reservations/stock-reservations.module';
 
 import { PricingService } from './pricing.service';
@@ -21,6 +22,7 @@ import { UpdateOrder } from './services/update.service';
     TypeOrmModule.forFeature([Order, Item]),
     VariantsModule,
     StockReservationsModule,
+    CustomersModule,
   ],
   controllers: [OrdersController],
   providers: [

@@ -32,6 +32,9 @@ export class PricingService {
     // 2. Recalcular precios y descuentos
     // --------------------------------------------
 
+    //! errors
+    let errorsStock: Number[] = [];
+
     const cartRepriced = await Promise.all(
       cart.map(async (item) => {
         // --------------------------------------------
@@ -69,14 +72,11 @@ export class PricingService {
         // 6. Verificar stock disponible
         // --------------------------------------------
 
+        //! errors
         const available = await this.variantsService.getAvailableStock(
           item.variantId,
         );
-        if (available < item.quantity) {
-          throw new BadRequestException(
-            `Insufficient stock for variant ${variant.id}`,
-          );
-        }
+        if (available < item.quantity) errorsStock.push(item.variantId);
 
         // --------------------------------------------
         // 7. Calcular subtotal, descuento y total
@@ -98,8 +98,6 @@ export class PricingService {
           total = Math.floor(total);
         }
         const totalPrice = total.toFixed(2);
-
-        //const totalPrice = (subtotal - discountAmount).toFixed(2); // antiguo
 
         // --------------------------------------------
         // 8. Retornar el item revaluado
@@ -124,9 +122,16 @@ export class PricingService {
       0,
     );
 
+    if (errorsStock.length > 0) {
+      throw new BadRequestException(
+        `Insufficient stock for variants: [${errorsStock}]`,
+      );
+    }
+
     return {
       items: cartRepriced,
       total: total.toFixed(2),
+      errorsStock,
     };
   }
 

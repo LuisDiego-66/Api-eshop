@@ -23,6 +23,7 @@ import { ReservationStatus } from '../stock-reservations/enum/reservation-status
 import { CreateOrder } from './services/create.service';
 import { CancelOrder } from './services/cancel.service';
 import { UpdateOrder } from './services/update.service';
+import { CustomersService } from '../customers/customers.service';
 
 import { Order } from './entities/order.entity';
 import { Customer } from '../customers/entities/customer.entity';
@@ -38,6 +39,8 @@ export class OrdersService {
     private readonly createOrder: CreateOrder,
     private readonly cancelOrder: CancelOrder,
     private readonly updateOrder: UpdateOrder,
+
+    private readonly customerService: CustomersService,
   ) {}
 
   //? ============================================================================================== */
@@ -49,6 +52,7 @@ export class OrdersService {
       throw new Error('Invalid payment type');
     }
 
+    //* Crear orden
     return this.createOrder.createOrderBase({
       dto,
       type: OrderType.IN_STORE,
@@ -64,6 +68,13 @@ export class OrdersService {
     if (!(buyer instanceof Customer)) {
       throw new BadRequestException('Only customers can create online orders');
     }
+    //* Actualizar datos del cliente
+    await this.customerService.update(buyer.id, {
+      phone: dto.phone,
+      name: dto.name,
+    });
+
+    //* Crear orden
     return this.createOrder.createOrderBase({
       dto,
       buyer,

@@ -1,4 +1,8 @@
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 
 import { AuthProviders } from 'src/auth/enums/providers.enum';
@@ -23,7 +27,7 @@ export class CreateCustomerDto {
   @IsString()
   idProvider: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 78926281,
   })
   @IsOptional()

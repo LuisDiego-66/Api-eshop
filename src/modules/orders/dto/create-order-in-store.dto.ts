@@ -3,7 +3,7 @@ import { IsEnum, IsString } from 'class-validator';
 
 import { PaymentType } from '../enums';
 
-export /* abstract */ class CreateOrderInStoreDto {
+export class CreateOrderInStoreDto {
   @ApiProperty({
     description: 'Token items',
     example:
