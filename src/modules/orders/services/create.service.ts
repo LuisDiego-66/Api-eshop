@@ -80,8 +80,10 @@ export class CreateOrder {
         if (!shipmentEntity)
           throw new NotFoundException(`Shipment ID ${shipment} not found`);
 
+        orderData.shipment_price = Number(shipmentEntity.price);
+
         orderData.totalPrice = (
-          Number(orderData.totalPrice) + Number(shipmentEntity.price)
+          Number(orderData.totalPrice) + orderData.shipment_price
         ).toFixed(2);
 
         Object.assign(orderData, {
