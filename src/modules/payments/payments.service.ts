@@ -24,7 +24,7 @@ export class PaymentsService {
         amount: 12,
         singleUse: true,
         expirationDate: '2025-09-22',
-        additionalData: 'datita',
+        additionalData: generateQrDto.order.toString(),
         destinationAccountId: 1,
       })
       .then((res) => res.data)
