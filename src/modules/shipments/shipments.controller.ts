@@ -5,6 +5,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Get,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -14,11 +15,6 @@ import { Auth } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums';
 
 import { ShipmentsService } from './shipments.service';
-
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
 
 @ApiTags('Shipments')
 @Controller('shipments')
@@ -38,10 +34,10 @@ export class ShipmentsController {
   //?                                        FindAll                                                 */
   //? ============================================================================================== */
 
-  /* @Get()
+  @Get()
   findAll() {
     return this.shipmentsService.findAll();
-  } */
+  }
 
   //? ============================================================================================== */
   //?                                        FindOne                                                 */
@@ -56,6 +52,10 @@ export class ShipmentsController {
   //?                                        Update                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -68,6 +68,10 @@ export class ShipmentsController {
   //?                                        Delete                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.shipmentsService.remove(id);
