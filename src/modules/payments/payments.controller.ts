@@ -1,4 +1,7 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+
+import { GenerateQRDto } from './dto/generate-qr.dto';
+
 import { PaymentsService } from './payments.service';
 
 @Controller('payments')
@@ -6,8 +9,8 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('generate-qr')
-  generateQr() {
-    return this.paymentsService.generateQr();
+  generateQr(@Body() generateQrDto: GenerateQRDto) {
+    return this.paymentsService.generateQr(generateQrDto);
   }
 
   @Post('qr/callback')

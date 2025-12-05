@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { GenerateQRDto } from './dto/generate-qr.dto';
+
 import { HttpService } from './http/http.service';
 
 @Injectable()
@@ -10,7 +12,10 @@ export class PaymentsService {
   //?                                   Generate QR                                                  */
   //? ============================================================================================== */
 
-  async generateQr(data?: { additionalData: string; amount: number }) {
+  async generateQr(
+    generateQrDto: GenerateQRDto,
+    data?: { additionalData: string; amount: number },
+  ) {
     const { message: token } = await this.authentication();
 
     return await this.httpService
