@@ -2,7 +2,7 @@ import { BadRequestException, ExecutionContext } from '@nestjs/common';
 import { AuthGuard, IAuthModuleOptions } from '@nestjs/passport';
 
 export class GoogleOauthGuard extends AuthGuard('google') {
-  getAuthenticateOptions(
+  /*   getAuthenticateOptions(
     context: ExecutionContext,
   ): IAuthModuleOptions | undefined {
     const req = context.switchToHttp().getRequest();
@@ -28,8 +28,8 @@ export class GoogleOauthGuard extends AuthGuard('google') {
     return {
       //scope: ['email', 'profile'],
       callbackURL: redirectUrl, // callback dinámico
-      session: false,
-      state: redirectUrl, // Pasamos el redirectUrl como state para usarlo después
+      //session: false,
+      //state: redirectUrl, // Pasamos el redirectUrl como state para usarlo después
     };
-  }
+  } */
 }
