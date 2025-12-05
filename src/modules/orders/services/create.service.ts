@@ -19,6 +19,7 @@ import { Item } from '../entities/item.entity';
 import { Order } from '../entities/order.entity';
 import { Variant } from '../../variants/entities/variant.entity';
 import { Customer } from '../../customers/entities/customer.entity';
+import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
 
 @Injectable()
 export class CreateOrder {
@@ -68,6 +69,21 @@ export class CreateOrder {
 
       if (type === OrderType.ONLINE && buyer) {
         const { shipment, address } = dto as CreateOrderOnlineDto;
+
+        // --------------------------------------------
+        // 3. Se calcula el precio final Shipment + total
+        // --------------------------------------------
+
+        const shipmentEntity = await queryRunner.manager.findOne(Shipment, {
+          where: { id: shipment },
+        });
+        if (!shipmentEntity)
+          throw new NotFoundException(`Shipment ID ${shipment} not found`);
+
+        orderData.totalPrice = (
+          Number(orderData.totalPrice) + Number(shipmentEntity.price)
+        ).toFixed(2);
+
         Object.assign(orderData, {
           customer: { id: buyer.id },
           shipment: { id: shipment },
@@ -83,28 +99,14 @@ export class CreateOrder {
         ...orderData,
         payment_type,
       });
-      let orderEntity = await queryRunner.manager.save(newOrder);
-
-      // --------------------------------------------
-      // 3. Se calcula si tiene shipmen_price
-      // --------------------------------------------
-
-      /* if (orderEntity.shipment) {
-        orderEntity.shipment_price = Number(orderEntity.shipment.price);
-
-        orderEntity.totalPrice = (
-          Number(orderEntity.totalPrice) + orderEntity.shipment_price
-        ).toFixed(2);
-
-        orderEntity = await queryRunner.manager.save(orderEntity);
-      }*/
+      let order = await queryRunner.manager.save(newOrder);
 
       // --------------------------------------------
       // 4. Se crea los items y las reservas
       // --------------------------------------------
 
       for (const item of rePricing.items) {
-        await this.handleItemCreationWithLock(queryRunner, orderEntity, item);
+        await this.handleItemCreationWithLock(queryRunner, order, item);
       }
 
       // --------------------------------------------

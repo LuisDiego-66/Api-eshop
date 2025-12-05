@@ -8,8 +8,8 @@ import { Item } from './entities/item.entity';
 
 import { StatusChangerCronJob } from './cronjobs/status-changer.cron';
 
-import { StockReservationsModule } from '../stock-reservations/stock-reservations.module';
 import { VariantsModule } from '../variants/variants.module';
+import { StockReservationsModule } from '../stock-reservations/stock-reservations.module';
 
 import { PricingService } from './pricing.service';
 import { CreateOrder } from './services/create.service';
