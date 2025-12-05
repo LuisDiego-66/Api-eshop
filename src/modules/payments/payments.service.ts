@@ -17,7 +17,6 @@ export class PaymentsService {
     data?: { additionalData: string; amount: number },
   ) {
     const { message: token } = await this.authentication();
-
     return await this.httpService
       .GenerateQr(token, {
         currency: 'BOB',

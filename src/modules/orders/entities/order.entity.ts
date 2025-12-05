@@ -42,6 +42,9 @@ export class Order {
   @Column('boolean', { default: true })
   enabled: boolean;
 
+  @Column({ type: 'int', default: 0 })
+  shipment_price: number;
+
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalPrice: string;
 

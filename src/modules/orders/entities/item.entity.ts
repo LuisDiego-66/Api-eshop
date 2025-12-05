@@ -24,9 +24,6 @@ export class Item {
   @Column({ type: 'int' })
   discountValue: number;
 
-  @Column({ type: 'int', default: 0 })
-  shipment_price: number;
-
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalPrice: string; // 	quantity * unit_price - discountValue
 
