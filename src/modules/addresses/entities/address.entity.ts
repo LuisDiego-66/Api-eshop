@@ -62,10 +62,9 @@ export class Address {
   @OneToMany(() => Order, (order) => order.address)
   orders: Order[];
 
-  @OneToOne(() => Place, (place) => place.address, {
+  @ManyToOne(() => Place, (place) => place.address, {
     cascade: true,
     nullable: true, //! null cuando la direccion es extranjera
   })
-  @JoinColumn()
   place?: Place;
 }

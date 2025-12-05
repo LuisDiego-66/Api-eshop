@@ -30,7 +30,7 @@ export class Place {
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */
 
-  @OneToOne(() => Address, (address) => address.place)
+  @OneToMany(() => Address, (address) => address.place)
   address: Address;
 
   @OneToMany(() => Shipment, (shipment) => shipment.place, { cascade: true })
