@@ -23,7 +23,7 @@ export class PaymentsService {
         gloss: 'Test de QR',
         amount: 12,
         singleUse: true,
-        expirationDate: '2025-09-22',
+        expirationDate: '2026-10-22',
         additionalData: generateQrDto.order.toString(),
         destinationAccountId: 1,
       })
