@@ -8,10 +8,10 @@ import { PaymentsService } from './payments.service';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post('generate-qr')
+  /* @Post('generate-qr')
   generateQr(@Body() generateQrDto: GenerateQRDto) {
     return this.paymentsService.generateQr(generateQrDto);
-  }
+  } */
 
   @Post('qr/callback')
   qrCallback() {

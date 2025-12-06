@@ -17,8 +17,9 @@ export class CreateOrderOnlineDto {
   name?: string;
 
   @ApiProperty({
-    example: 78926281,
+    example: '78926281',
   })
+  @IsString()
   phone?: string;
 
   @ApiProperty({

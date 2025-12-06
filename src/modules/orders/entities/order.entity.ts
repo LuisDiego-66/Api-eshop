@@ -54,7 +54,7 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   dhl_code?: string;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn(/* { select: false } */)
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

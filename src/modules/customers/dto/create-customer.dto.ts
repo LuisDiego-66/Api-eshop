@@ -28,7 +28,7 @@ export class CreateCustomerDto {
   idProvider: string;
 
   @ApiPropertyOptional({
-    example: 78926281,
+    example: '78926281',
   })
   @IsOptional()
   phone?: string;
