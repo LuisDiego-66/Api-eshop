@@ -62,6 +62,22 @@ export class CustomersController {
   }
 
   //? ============================================================================================== */
+  //?                                  FindOne_Order                                                 */
+  //? ============================================================================================== */
+
+  //!
+  @Auth()
+  @ApiBearerAuth('access-token')
+  //!
+  @Get('order/:id')
+  async findOneOrder(
+    @Param('id', ParseIntPipe) idOrder: number,
+    @GetCustomer() customer: Customer,
+  ) {
+    return this.customersService.findOneOrder(idOrder, customer); //! GetCustomer
+  }
+
+  //? ============================================================================================== */
   //?                                        FindOne                                                 */
   //? ============================================================================================== */
 

@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
@@ -40,7 +42,8 @@ export class OrdersService {
     private readonly cancelOrder: CancelOrder,
     private readonly updateOrder: UpdateOrder,
 
-    private readonly customerService: CustomersService,
+    @Inject(forwardRef(() => CustomersService))
+    private readonly customersService: CustomersService,
   ) {}
 
   //? ============================================================================================== */
@@ -69,7 +72,7 @@ export class OrdersService {
       throw new BadRequestException('Only customers can create online orders');
     }
     //* Actualizar datos del cliente
-    await this.customerService.update(buyer.id, {
+    await this.customersService.update(buyer.id, {
       phone: dto.phone,
       name: dto.name,
     });
@@ -213,11 +216,17 @@ export class OrdersService {
   //?                                        FindOne                                                 */
   //? ============================================================================================== */
 
-  async findOne(id: number) {
+  async findOne(id: number, customer?: Customer) {
+    let where: any = { id };
+
+    if (customer) {
+      where = { ...where, customer: { id: customer.id } };
+    }
+
     const order = await this.orderRepository.findOne({
-      where: { id },
+      where,
       relations: {
-        items: { variant: true },
+        items: { variant: { productColor: true } },
         customer: true,
         shipment: true,
         address: true,

@@ -8,6 +8,8 @@ import { paginate } from 'src/common/pagination/paginate';
 import { CustomerPaginationDto } from './pagination/customer-pagination.dto';
 import { UpdateCustomerDto } from './dto';
 
+import { OrdersService } from '../orders/orders.service';
+
 import { Customer } from './entities/customer.entity';
 
 @Injectable()
@@ -15,6 +17,8 @@ export class CustomersService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
+
+    private readonly ordersService: OrdersService,
   ) {}
 
   //? ============================================================================================== */
@@ -100,5 +104,13 @@ export class CustomersService {
       where: { id: customer.id },
       relations: { address: { place: true }, orders: true },
     });
+  }
+
+  //? ============================================================================================== */
+  //?                                 FindOne_Order                                                  */
+  //? ============================================================================================== */
+
+  async findOneOrder(idOrder: number, customer: Customer) {
+    return await this.ordersService.findOne(idOrder, customer);
   }
 }
