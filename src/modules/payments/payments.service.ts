@@ -18,7 +18,7 @@ export class PaymentsService {
       .GenerateQr(token, {
         currency: 'BOB',
         gloss: 'Test de QR',
-        amount: 0.01,
+        amount: 0.1,
         singleUse: true,
         expirationDate: '2026-10-22',
         additionalData: generateQrDto.order.toString(),
