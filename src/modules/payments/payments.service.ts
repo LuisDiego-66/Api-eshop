@@ -12,16 +12,13 @@ export class PaymentsService {
   //?                                   Generate QR                                                  */
   //? ============================================================================================== */
 
-  async generateQr(
-    generateQrDto: GenerateQRDto,
-    data?: { additionalData: string; amount: number },
-  ) {
+  async generateQr(generateQrDto: GenerateQRDto) {
     const { message: token } = await this.authentication();
     return await this.httpService
       .GenerateQr(token, {
         currency: 'BOB',
         gloss: 'Test de QR',
-        amount: 12,
+        amount: 0.01,
         singleUse: true,
         expirationDate: '2026-10-22',
         additionalData: generateQrDto.order.toString(),
