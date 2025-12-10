@@ -1,4 +1,12 @@
-import { Body, Controller, Get, HttpStatus, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Res,
+} from '@nestjs/common';
 
 import { GenerateQRDto } from './dto/generate-qr.dto';
 
@@ -16,10 +24,14 @@ export class PaymentsController {
   }
 
   @Post('qr/callback')
-  qrCallback(@Body() body: any, @Res() res: Response) {
+  @HttpCode(200)
+  qrCallback(@Body() body: any) {
     console.log('QR Callback received:', body);
 
-    return res.status(HttpStatus.OK).json({ success: true, message: 'OK' });
+    return {
+      success: true,
+      message: 'OK',
+    };
   }
 }
 
