@@ -27,7 +27,6 @@ export class PaymentsService {
       .then((res) => res.data)
       .catch((err) => {
         const axiosResp = err.response;
-
         return {
           status: axiosResp?.status,
           data: axiosResp?.data,
@@ -45,7 +44,14 @@ export class PaymentsService {
     return await this.httpService
       .QrStatus(token, idQr)
       .then((res) => res.data)
-      .catch((err) => err.response);
+      .catch((err) => {
+        const axiosResp = err.response;
+        return {
+          status: axiosResp?.status,
+          data: axiosResp?.data,
+          message: axiosResp?.data?.message || 'Error in BCP QR API',
+        };
+      });
   }
 
   //? ============================================================================================== */
@@ -56,6 +62,13 @@ export class PaymentsService {
     return await this.httpService
       .Authentication()
       .then((res) => res.data)
-      .catch((err) => err.response);
+      .catch((err) => {
+        const axiosResp = err.response;
+        return {
+          status: axiosResp?.status,
+          data: axiosResp?.data,
+          message: axiosResp?.data?.message || 'Error in BCP QR API',
+        };
+      });
   }
 }
