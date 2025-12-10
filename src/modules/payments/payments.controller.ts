@@ -1,32 +1,31 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 
 import { GenerateQRDto } from './dto/generate-qr.dto';
 
-import { Response } from 'express';
-
 import { PaymentsService } from './payments.service';
+import { BNBPayload } from './interfaces/bnb-payload.interface';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
+
+  //? ============================================================================================== */
+  //?                                   Generate_QR                                                  */
+  //? ============================================================================================== */
 
   @Post('generate-qr')
   generateQr(@Body() generateQrDto: GenerateQRDto) {
     return this.paymentsService.generateQr(generateQrDto);
   }
 
+  //? ============================================================================================== */
+  //?                                      CallBack                                                  */
+  //? ============================================================================================== */
+
   @Post('qr/callback')
   @HttpCode(200)
-  qrCallback(@Body() body: any) {
-    console.log('QR Callback received:', body);
+  qrCallback(@Body() body: BNBPayload) {
+    this.paymentsService.confirmOrder(body);
 
     return {
       success: true,
@@ -37,13 +36,13 @@ export class PaymentsController {
 
 /* 
 QR Callback received: {
-QRId: '23973669',
-Gloss: 'Test de QR',
+QRId: '24020824',
+Gloss: 'Prueba QR',
 sourceBankId: 16,
 originName: 'LUIS',
 VoucherId: '0',
-TransactionDateTime: '09/12/2025 16:00:54',
-additionalData: '1',
+TransactionDateTime: '10/12/2025 15:14:59',
+additionalData: 'prueba',
 amount: 0.1,
 currencyId: 1
 }

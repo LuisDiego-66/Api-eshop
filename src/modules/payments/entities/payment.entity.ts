@@ -16,16 +16,16 @@ export class Payment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text', { nullable: true }) //! NULL
+  @Column('text')
   qrId: string;
 
-  @Column('text', { nullable: true }) //! NULL
+  @Column('text')
   sourceBankId: string;
 
-  @Column('text', { nullable: true }) //! NULL
-  saver: string;
+  //@Column('text')
+  //saver: string;
 
-  @Column({ type: 'enum', enum: PaymentMethod })
+  @Column({ type: 'text', default: PaymentMethod.QR_CODE })
   method: PaymentMethod;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

@@ -11,5 +11,5 @@ export class GenerateQRDto {
     example: 1,
   })
   @IsNumber()
-  order: number;
+  orderId: number;
 }

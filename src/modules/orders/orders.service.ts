@@ -18,6 +18,8 @@ import {
   CreateOrderOnlineDto,
 } from './dto';
 
+import { BNBPayload } from '../payments/interfaces/bnb-payload.interface';
+
 import { OrderStatus, OrderType, PaymentType } from './enums';
 import { AddressType } from '../addresses/enums/address-type.enum';
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
@@ -28,6 +30,7 @@ import { UpdateOrder } from './services/update.service';
 import { CustomersService } from '../customers/customers.service';
 
 import { Order } from './entities/order.entity';
+import { Payment } from '../payments/entities/payment.entity';
 import { Customer } from '../customers/entities/customer.entity';
 import { Transaction } from '../variants/entities/transaction.entity';
 import { StockReservation } from '../stock-reservations/entities/stock-reservation.entity';
@@ -37,13 +40,14 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+
+    @Inject(forwardRef(() => CustomersService))
+    private readonly customersService: CustomersService,
+
     private readonly dataSource: DataSource,
     private readonly createOrder: CreateOrder,
     private readonly cancelOrder: CancelOrder,
     private readonly updateOrder: UpdateOrder,
-
-    @Inject(forwardRef(() => CustomersService))
-    private readonly customersService: CustomersService,
   ) {}
 
   //? ============================================================================================== */
@@ -108,14 +112,11 @@ export class OrdersService {
         .innerJoinAndSelect('items.variant', 'variant') //* VARIANTS
 
         .where('order.id = :id', { id: orderId })
-        //* DEBE ESTAR PENDING
-        .andWhere('order.status = :status', { status: OrderStatus.PENDING })
-        //* NO QR
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //* DEBE ESTAR PENDING
         .andWhere('order.payment_type IN (:...payments)', {
-          payments: [PaymentType.CASH, PaymentType.CARD],
+          payments: [PaymentType.CASH, PaymentType.CARD], //* NO QR
         })
-        //* DEBE SER IN_STORE
-        .andWhere('order.type = :type', { type: OrderType.IN_STORE })
+        .andWhere('order.type = :type', { type: OrderType.IN_STORE }) //* DEBE SER IN_STORE
         .andWhere('order.expiresAt > NOW()')
 
         .getOne();
@@ -173,7 +174,99 @@ export class OrdersService {
   //?                               Confirm_Order_QR                                                 */
   //? ============================================================================================== */
 
-  //async confirmOrderQr(qrDataInterface: any) {}
+  async confirmOrderQr(body: BNBPayload) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const { additionalData: orderId, ...data } = body;
+
+      // --------------------------------------------
+      // 1. Orden PENDING, tipo QR, no expirada
+      // --------------------------------------------
+
+      const order = await queryRunner.manager
+        .createQueryBuilder(Order, 'order')
+
+        .where('order.id = :id', { id: orderId })
+        .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //* DEBE ESTAR PENDING
+        .andWhere('order.payment_type IN (:...payments)', {
+          payments: [PaymentType.QR], //* DEBE SER QR
+        })
+        .andWhere('order.expiresAt > NOW()')
+
+        .getOne();
+
+      if (!order) {
+        throw new NotFoundException(
+          `Order ${orderId} not found, not pending or not type QR`,
+        );
+      }
+
+      // --------------------------------------------
+      // 2. Actualizar orden a SENT o PAID
+      // --------------------------------------------
+
+      if (order.type === OrderType.IN_STORE) {
+        //*------SENT si es IN_STORE
+        order.status = OrderStatus.SENT;
+        await queryRunner.manager.save(Order, order);
+      } else {
+        //*------PAID si es ONLINE
+        order.status = OrderStatus.PAID;
+        await queryRunner.manager.save(Order, order);
+      }
+
+      // --------------------------------------------
+      // 3. Actualizar reservas de stock a PAID
+      // --------------------------------------------
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(StockReservation)
+        .set({ status: ReservationStatus.PAID })
+        .where('orderId = :orderId', { orderId })
+        .andWhere('status = :status', { status: ReservationStatus.PENDING })
+        .andWhere('expiresAt > NOW()') //! condición de no expirada
+        .execute();
+
+      // --------------------------------------------
+      // 4. Se crean transacciones negativas
+      // --------------------------------------------
+
+      const transactions = order.items.map((item) =>
+        queryRunner.manager.create(Transaction, {
+          quantity: item.quantity * -1,
+          variant: { id: item.variant.id },
+          order: order, //! se asigna la order a la transaccion negativa
+        }),
+      );
+      await queryRunner.manager.save(Transaction, transactions);
+
+      // --------------------------------------------
+      // 5. Se crea el Payment
+      // --------------------------------------------
+
+      const payment = queryRunner.manager.create(Payment, {
+        qrId: data.QRId,
+        sourceBankId: data.sourceBankId.toString(),
+        //saver: data.originName,
+        amount: data.amount.toString(),
+        gloss: data.Gloss,
+        order: order,
+      });
+      await queryRunner.manager.save(Payment, payment);
+
+      await queryRunner.commitTransaction();
+      return order;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
+    }
+  }
 
   //? ============================================================================================== */
   //?                                        FindAll                                                 */

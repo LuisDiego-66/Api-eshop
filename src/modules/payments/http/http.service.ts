@@ -33,7 +33,13 @@ export class HttpService {
     return this.axios.post(
       '/QRSimple.API/api/v1/main/getQRWithImageAsync',
 
-      payload,
+      {
+        currency: 'BOB',
+        singleUse: true,
+        expirationDate: '2026-10-22',
+        destinationAccountId: 1,
+        ...payload,
+      },
 
       {
         headers: {
