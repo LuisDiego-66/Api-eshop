@@ -25,7 +25,15 @@ export class PaymentsService {
         destinationAccountId: 1,
       })
       .then((res) => res.data)
-      .catch((err) => err.response);
+      .catch((err) => {
+        const axiosResp = err.response;
+
+        return {
+          status: axiosResp?.status,
+          data: axiosResp?.data,
+          message: axiosResp?.data?.message || 'Error in BCP QR API',
+        };
+      });
   }
 
   //? ============================================================================================== */

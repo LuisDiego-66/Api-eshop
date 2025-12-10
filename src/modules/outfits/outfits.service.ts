@@ -7,6 +7,7 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 import { CreateOutfitDto, UpdateOutfitDto } from './dto';
 
 import { VariantsService } from '../variants/variants.service';
+import { ProductsService } from '../products/products.service';
 
 import { Outfit } from './entities/outfit.entity';
 import { ProductColor } from '../variants/entities/product-color.entity';
@@ -19,6 +20,8 @@ export class OutfitsService {
 
     @InjectRepository(ProductColor)
     private readonly productColorRepository: Repository<ProductColor>,
+
+    private readonly productsService: ProductsService,
 
     private readonly variantsService: VariantsService,
 
@@ -100,6 +103,17 @@ export class OutfitsService {
     );
 
     outfit.productColors = outfitWithStock;
+
+    // --------------------------------------------
+    // 2. Se elimina el descuento si ha caducado
+    // --------------------------------------------
+
+    for (const productColor of outfit.productColors) {
+      const product = this.productsService.removeExpiredDicounts(
+        productColor.product,
+      );
+      productColor.product = product;
+    }
 
     return outfit;
   }

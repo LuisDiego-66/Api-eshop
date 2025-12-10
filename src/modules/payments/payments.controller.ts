@@ -47,8 +47,4 @@ additionalData: '1',
 amount: 0.1,
 currencyId: 1
 }
-
-
-
-
 */

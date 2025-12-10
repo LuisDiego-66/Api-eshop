@@ -6,6 +6,8 @@ import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
+import { ProductsService } from '../products/products.service';
+
 import { Category } from './entities/category.entity';
 
 @Injectable()
@@ -13,6 +15,8 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+
+    private readonly productsService: ProductsService,
   ) {}
 
   //? ============================================================================================== */
@@ -23,7 +27,10 @@ export class CategoriesService {
     try {
       const { gender } = createCategoryDto;
 
-      //! Obtener el valor máximo actual de displayOrder para la categoría dada
+      // --------------------------------------------
+      // 1. Se obtiene el mayor displayOrder
+      // --------------------------------------------
+
       const maxOrder = await this.categoryRepository
         .createQueryBuilder('c')
         .select('COALESCE(MAX(c.displayOrder), 0)', 'max')
@@ -68,6 +75,19 @@ export class CategoriesService {
     if (!category) {
       throw new NotFoundException('Category not found');
     }
+
+    // --------------------------------------------
+    // 1. Se elimina el descuento si ha caducado
+    // --------------------------------------------
+
+    for (const subcategory of category.subcategories) {
+      for (const product of subcategory.products) {
+        const updatedProduct =
+          this.productsService.removeExpiredDicounts(product);
+        product.discount = updatedProduct.discount;
+      }
+    }
+
     return category;
   }
 

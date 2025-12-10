@@ -214,7 +214,7 @@ export class ProductsService {
   //? ============================================================================================== */
 
   async findOneWithStock(id: number) {
-    const product = await this.productRepository.findOne({
+    let product = await this.productRepository.findOne({
       where: { id },
       relations: {
         productColors: { variants: { size: true }, color: true },
@@ -235,6 +235,12 @@ export class ProductsService {
     );
 
     product.productColors = productWithStock;
+
+    // --------------------------------------------
+    // 2. Eliminar descuento si ha caducado
+    // --------------------------------------------
+
+    product = this.removeExpiredDicounts(product);
 
     return product;
   }
@@ -337,5 +343,26 @@ export class ProductsService {
     } catch (error) {
       handleDBExceptions(error);
     }
+  }
+
+  //* ============================================================================================== */
+  //*                                     Functions                                                  */
+  //* ============================================================================================== */
+
+  removeExpiredDicounts(product: Product): Product {
+    // --------------------------------------------
+    // 1. Se elimina el descuento si ha caducado
+    // --------------------------------------------
+
+    if (product.discount && product.discount.endDate) {
+      const currentDate = new Date();
+      const discountEndDate = new Date(product.discount.endDate);
+
+      if (currentDate > discountEndDate) {
+        product.discount = null;
+      }
+    }
+
+    return product;
   }
 }
