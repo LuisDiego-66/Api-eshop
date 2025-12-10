@@ -19,10 +19,7 @@ export class PaymentsController {
   qrCallback(@Body() body: any, @Res() res: Response) {
     console.log('QR Callback received:', body);
 
-    return res.status(HttpStatus.OK).json({
-      success: true,
-      message: 'Payment completed successfully',
-    });
+    return res.status(HttpStatus.OK).json({ success: true, message: 'OK' });
   }
 }
 
