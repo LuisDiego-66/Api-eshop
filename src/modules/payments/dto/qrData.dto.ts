@@ -1,9 +1,9 @@
 export class QrDataDto {
-  //currency: string;
+  currency: string;
   gloss: string;
   amount: number;
-  //singleUse: boolean;
-  //expirationDate: string;
+  singleUse: boolean;
+  expirationDate: string;
   additionalData: string;
   destinationAccountId: number;
 }
