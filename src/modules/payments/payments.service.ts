@@ -16,11 +16,8 @@ export class PaymentsService {
     const { message: token } = await this.authentication();
     return await this.httpService
       .GenerateQr(token, {
-        currency: 'BOB',
         gloss: 'Test de QR',
         amount: 0.1,
-        singleUse: true,
-        expirationDate: '2026-10-22',
         additionalData: generateQrDto.order.toString(),
         destinationAccountId: 1,
       })

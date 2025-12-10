@@ -32,7 +32,12 @@ export class HttpService {
   GenerateQr = (token: string, payload: QrDataDto) => {
     return this.axios.post(
       '/QRSimple.API/api/v1/main/getQRWithImageAsync',
-      payload,
+      {
+        currency: 'BOB',
+        singleUse: true,
+        expirationDate: '2026-10-22',
+        ...payload,
+      },
       {
         headers: {
           Authorization: `Bearer ${token}`,
