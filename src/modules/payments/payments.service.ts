@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Repository } from 'typeorm';
+import { IsNull, MoreThan, Not, Repository } from 'typeorm';
 
 import { GenerateQRDto } from './dto/generate-qr.dto';
 
 import { BNBPayload } from './interfaces/bnb-payload.interface';
 
-import { OrderStatus, PaymentType } from '../orders/enums';
+import { OrderStatus, OrderType, PaymentType } from '../orders/enums';
 
 import { HttpService } from './http/http.service';
 import { OrdersService } from '../orders/orders.service';
@@ -78,6 +78,31 @@ export class PaymentsService {
 
   async confirmOrder(body: BNBPayload) {
     await this.ordersService.confirmOrderQr(body);
+  }
+
+  //? ============================================================================================== */
+  //?                                Verify_Payment                                                  */
+  //? ============================================================================================== */
+
+  async verifyPayment(orderId: number) {
+    const order = await this.orderRepository.findOne({
+      where: {
+        id: orderId,
+        status: Not(OrderStatus.CANCELLED),
+        payment_type: PaymentType.QR,
+        expiresAt: IsNull(),
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found or not type QR`);
+    }
+
+    if (order.type === OrderType.IN_STORE) {
+      return order.status === OrderStatus.SENT;
+    } else if (order.type === OrderType.ONLINE) {
+      return order.status === OrderStatus.PAID;
+    }
   }
 
   //? ============================================================================================== */

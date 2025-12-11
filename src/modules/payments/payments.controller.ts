@@ -1,10 +1,21 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 
 import { GenerateQRDto } from './dto/generate-qr.dto';
 
-import { PaymentsService } from './payments.service';
 import { BNBPayload } from './interfaces/bnb-payload.interface';
 
+import { PaymentsService } from './payments.service';
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Payments')
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
@@ -31,6 +42,15 @@ export class PaymentsController {
       success: true,
       message: 'OK',
     };
+  }
+
+  //? ============================================================================================== */
+  //?                                Verify_payment                                                  */
+  //? ============================================================================================== */
+
+  @Get('vefify-payment/:id')
+  verifyPayment(@Param('id', ParseIntPipe) orderId: number) {
+    return this.paymentsService.verifyPayment(orderId);
   }
 }
 

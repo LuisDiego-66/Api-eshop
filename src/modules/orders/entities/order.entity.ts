@@ -60,8 +60,8 @@ export class Order {
   @DeleteDateColumn({ nullable: true, select: false })
   deletedAt?: Date;
 
-  @Column({ type: 'timestamptz' })
-  expiresAt: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  expiresAt: Date | null;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */

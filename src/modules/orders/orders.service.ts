@@ -131,6 +131,9 @@ export class OrdersService {
       // 2. Actualizar orden a SENT
       // --------------------------------------------
 
+      //! cambia a null
+      order.expiresAt = null;
+
       order.status = OrderStatus.SENT;
       await queryRunner.manager.save(order);
 
@@ -207,6 +210,8 @@ export class OrdersService {
         );
       }
 
+      //! cambia a null
+      order.expiresAt = null;
       // --------------------------------------------
       // 2. Actualizar orden a SENT o PAID
       // --------------------------------------------
