@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, MoreThan, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MoreThan, Repository } from 'typeorm';
 
 import { GenerateQRDto } from './dto/generate-qr.dto';
 
@@ -11,7 +12,6 @@ import { HttpService } from './http/http.service';
 import { OrdersService } from '../orders/orders.service';
 
 import { Order } from '../orders/entities/order.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class PaymentsService {
@@ -58,7 +58,7 @@ export class PaymentsService {
     return await this.httpService
       .GenerateQr(token, {
         amount: 0.1, //Number(order.totalPrice),
-        gloss: 'Order #' + order.id,
+        gloss: 'Order ' + order.id,
         additionalData: order.id.toString(),
       })
       .then((res) => res.data)

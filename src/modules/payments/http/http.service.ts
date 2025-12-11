@@ -35,10 +35,12 @@ export class HttpService {
 
       {
         currency: 'BOB',
+        gloss: payload.gloss,
+        amount: payload.amount,
         singleUse: true,
-        expirationDate: '2026-10-22',
+        expirationDate: '2026-06-15',
+        additionalData: payload.additionalData,
         destinationAccountId: 1,
-        ...payload,
       },
 
       {
