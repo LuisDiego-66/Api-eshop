@@ -189,6 +189,9 @@ export class OrdersService {
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
 
+        .innerJoinAndSelect('order.items', 'items') //* ITEMS
+        .innerJoinAndSelect('items.variant', 'variant') //* VARIANTS
+
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status = :status', { status: OrderStatus.PENDING }) //* DEBE ESTAR PENDING
         .andWhere('order.payment_type IN (:...payments)', {
