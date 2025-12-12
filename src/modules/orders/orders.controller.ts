@@ -106,9 +106,14 @@ export class OrdersController {
     enum: OrderType,
   })
   @ApiQuery({
-    name: 'days',
+    name: 'startDate',
     required: false,
-    type: Number,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
   })
   @Get()
   findAll(@Query() pagination: OrderPaginationDto) {

@@ -1,4 +1,10 @@
-import { IsEnum, IsNumber, IsOptional, IsPositive } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
@@ -11,8 +17,10 @@ export class OrderPaginationDto extends PaginationDto {
   type?: OrderType;
 
   @IsOptional()
-  @IsPositive()
-  @Type(() => Number)
-  @IsNumber()
-  days?: number;
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
 }

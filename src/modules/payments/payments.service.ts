@@ -50,26 +50,30 @@ export class PaymentsService {
       );
     }
 
+    const { message: token } = await this.authentication();
+
     // --------------------------------------------
     // 2. Generar QR
     // --------------------------------------------
 
-    const { message: token } = await this.authentication();
     return await this.httpService
       .GenerateQr(token, {
-        amount: 0.1, //Number(order.totalPrice),
-        gloss: gloss ? gloss : 'PAGO TIENDA MONERO',
+        amount: 0.1,
+        gloss: gloss ?? 'PAGO TIENDA MONERO',
         additionalData: order.id.toString(),
       })
       .then((res) => {
+        const data = res.data as Record<string, any>;
+
         return {
-          ...(res.data || {}),
-          gloss: gloss,
+          ...data,
+          gloss,
           orderId: order.id,
         };
       })
       .catch((err) => {
         const axiosResp = err.response;
+
         return {
           status: axiosResp?.status,
           data: axiosResp?.data,

@@ -6,7 +6,13 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
+import {
+  Between,
+  DataSource,
+  LessThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
@@ -281,27 +287,30 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async findAll(pagination: OrderPaginationDto) {
+    const { type, startDate, endDate } = pagination;
+
     const options: any = {
       where: {},
     };
 
-    if (pagination.type) {
-      options.where.type = pagination.type;
+    if (type) {
+      options.where.type = type;
     }
-    if (pagination.days) {
-      const dateFrom = new Date();
-      dateFrom.setDate(dateFrom.getDate() - pagination.days);
 
-      options.where = {
-        ...options.where,
-        createdAt: MoreThanOrEqual(dateFrom),
-      };
+    //* FILTRO: entre dos fechas
+    if (startDate && endDate) {
+      const from = new Date(startDate);
+      const to = new Date(endDate);
+
+      to.setHours(23, 59, 59, 999);
+      options.where.createdAt = Between(from, to);
     }
 
     return paginate(
       this.orderRepository,
       {
         ...options,
+        order: { createdAt: 'DESC' },
         relations: {
           items: { variant: { productColor: { product: true } } },
           customer: true,
