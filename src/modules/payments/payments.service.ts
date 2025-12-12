@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, MoreThan, Not, Repository } from 'typeorm';
+import { IsNull, MoreThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
 
 import { GenerateQRDto } from './dto/generate-qr.dto';
 
@@ -85,12 +85,14 @@ export class PaymentsService {
   //? ============================================================================================== */
 
   async verifyPayment(orderId: number) {
+    const now = new Date();
+
     const order = await this.orderRepository.findOne({
       where: {
         id: orderId,
         status: Not(OrderStatus.CANCELLED),
         payment_type: PaymentType.QR,
-        expiresAt: IsNull(),
+        expiresAt: MoreThanOrEqual(now),
       },
     });
 
