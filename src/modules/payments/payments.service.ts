@@ -61,7 +61,13 @@ export class PaymentsService {
         gloss: gloss ? gloss : 'PAGO TIENDA MONERO',
         additionalData: order.id.toString(),
       })
-      .then((res) => res.data)
+      .then((res) => {
+        return {
+          ...(res.data || {}),
+          gloss: gloss,
+          orderId: order.id,
+        };
+      })
       .catch((err) => {
         const axiosResp = err.response;
         return {
