@@ -88,12 +88,20 @@ export class PaymentsService {
     const now = new Date();
 
     const order = await this.orderRepository.findOne({
-      where: {
-        id: orderId,
-        status: Not(OrderStatus.CANCELLED),
-        payment_type: PaymentType.QR,
-        expiresAt: MoreThanOrEqual(now),
-      },
+      where: [
+        {
+          id: orderId,
+          status: Not(OrderStatus.CANCELLED),
+          payment_type: PaymentType.QR,
+          expiresAt: MoreThanOrEqual(now),
+        },
+        {
+          id: orderId,
+          status: Not(OrderStatus.CANCELLED),
+          payment_type: PaymentType.QR,
+          expiresAt: IsNull(),
+        },
+      ],
     });
 
     if (!order) {
