@@ -48,7 +48,7 @@ export class PaymentsController {
   //?                                Verify_payment                                                  */
   //? ============================================================================================== */
 
-  @Get('vefify-payment/:id')
+  @Get('verify/:id')
   verifyPayment(@Param('id', ParseIntPipe) orderId: number) {
     return this.paymentsService.verifyPayment(orderId);
   }
