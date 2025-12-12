@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class GenerateQRDto {
   //* ---------------------------------------------------------------------------------------------- */
@@ -12,4 +12,12 @@ export class GenerateQRDto {
   })
   @IsNumber()
   orderId: number;
+
+  @ApiPropertyOptional({
+    description: 'gloss',
+    example: 'PAGO TIENDA MONERO',
+  })
+  @IsString()
+  @IsOptional()
+  gloss?: string;
 }

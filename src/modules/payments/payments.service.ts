@@ -29,7 +29,7 @@ export class PaymentsService {
   //? ============================================================================================== */
 
   async generateQr(generateQrDto: GenerateQRDto) {
-    const { orderId } = generateQrDto;
+    const { orderId, gloss } = generateQrDto;
 
     // --------------------------------------------
     // 1. Orden PENDING, tipo QR, no expirada
@@ -58,7 +58,7 @@ export class PaymentsService {
     return await this.httpService
       .GenerateQr(token, {
         amount: 0.1, //Number(order.totalPrice),
-        gloss: 'Order ' + order.id,
+        gloss: gloss ? gloss : 'PAGO TIENDA MONERO',
         additionalData: order.id.toString(),
       })
       .then((res) => res.data)
