@@ -153,7 +153,7 @@ export class AuthService {
     const { password: _, ...entityWithoutPassword } = user;
 
     return {
-      email: entityWithoutPassword.email,
+      email: email,
       token: this.generateJwt({
         id: entityWithoutPassword.id,
         email: entityWithoutPassword.email,
