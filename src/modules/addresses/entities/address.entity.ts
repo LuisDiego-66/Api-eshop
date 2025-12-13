@@ -63,7 +63,7 @@ export class Address {
   orders: Order[];
 
   @ManyToOne(() => Place, (place) => place.address, {
-    cascade: true,
+    //cascade: true,
     nullable: true, //! null cuando la direccion es extranjera
   })
   place?: Place;
