@@ -49,6 +49,7 @@ export class AuthService {
     }
 
     return {
+      email: customerEntity.email,
       token: this.generateJwt({
         id: customerEntity.id,
         email: customerEntity.email,
