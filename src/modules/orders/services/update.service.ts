@@ -20,6 +20,8 @@ export class UpdateOrder {
   ) {}
 
   async update(orderId: number, items: string) {
+    //! deshabilitar si es del dia
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -35,6 +37,9 @@ export class UpdateOrder {
       // 2. Se crea una nueva orden
       // --------------------------------------------
 
+      //! tipo de pago efectivo
+
+      //!fecha de creacion la misa
       let newOrder: any;
 
       //* ------- IN_STORE -------

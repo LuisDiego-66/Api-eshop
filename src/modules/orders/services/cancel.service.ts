@@ -33,6 +33,7 @@ export class CancelOrder {
       // 2. Obtener la orden con lock
       // --------------------------------------------
 
+      //! revisar
       const orderEntity = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write')
@@ -46,7 +47,7 @@ export class CancelOrder {
 
       if (!orderEntity) {
         throw new NotFoundException(
-          `Order ${orderId} not found or not pending / paid`,
+          `Order ${orderId} not found or not pending / paid / sent`,
         );
       }
 
