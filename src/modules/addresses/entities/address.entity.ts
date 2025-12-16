@@ -41,7 +41,9 @@ export class Address {
   })
   type: AddressType;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @UpdateDateColumn({ select: false })
