@@ -54,7 +54,9 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   dhl_code?: string;
 
-  @CreateDateColumn(/* { select: false } */)
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
@@ -62,6 +64,9 @@ export class Order {
 
   @Column({ type: 'timestamptz', nullable: true })
   expiresAt: Date | null;
+
+  @Column('boolean', { default: false })
+  edited: boolean;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
@@ -85,10 +90,7 @@ export class Order {
   @OneToOne(() => Payment, (payment) => payment.order, { cascade: true })
   payment: Payment;
 
-  @OneToMany(
-    () => Transaction,
-    (transaction) => transaction.order /* { cascade: true } */,
-  )
+  @OneToMany(() => Transaction, (transaction) => transaction.order)
   transactions: Transaction[];
 
   //* ---------------------------------------------------------------------------------------------- */
@@ -113,3 +115,12 @@ export class Order {
     this.expiresAt = expires;
   }
 }
+
+/* 
+
+ALTER TABLE colors  
+ALTER COLUMN "createdAt"
+TYPE timestamptz
+USING "createdAt" AT TIME ZONE 'UTC';
+
+*/
