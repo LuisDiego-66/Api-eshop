@@ -43,6 +43,8 @@ export class CreateOrder {
       payment_type: PaymentType;
     },
 
+    createdAt?: Date,
+
     externalQueryRunner?: QueryRunner,
   ) {
     const isExternal = !!externalQueryRunner;
@@ -105,6 +107,11 @@ export class CreateOrder {
         payment_type,
       });
       let order = await queryRunner.manager.save(newOrder);
+
+      if (createdAt) {
+        order.createdAt = createdAt;
+        order = await queryRunner.manager.save(order);
+      }
 
       // --------------------------------------------
       // 4. Se crea los items y las reservas

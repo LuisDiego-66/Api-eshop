@@ -20,7 +20,9 @@ export class Color {
   @Column('text', { unique: true }) //! unique
   code: string;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

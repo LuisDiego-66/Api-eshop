@@ -25,7 +25,9 @@ export class Subcategory {
   @Column('text', { array: true, default: [] })
   videos: string[];
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ select: false, nullable: true })

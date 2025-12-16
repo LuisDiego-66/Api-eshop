@@ -20,7 +20,9 @@ export class Variant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

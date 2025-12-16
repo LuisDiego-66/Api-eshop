@@ -20,7 +20,9 @@ export class Brand {
   @Column('text', { nullable: true })
   description?: string;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

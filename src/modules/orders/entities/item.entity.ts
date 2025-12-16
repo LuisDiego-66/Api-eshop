@@ -27,7 +27,9 @@ export class Item {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalPrice: string; // 	quantity * unit_price - discountValue
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

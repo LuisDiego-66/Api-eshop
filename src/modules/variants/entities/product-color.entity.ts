@@ -27,7 +27,9 @@ export class ProductColor {
   @Column('text', { array: true, default: [] })
   pdfs: string[];
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

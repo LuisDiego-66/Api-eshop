@@ -42,7 +42,21 @@ export class CancelOrder {
         .andWhere('order.status IN (:...statuses)', {
           statuses: [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SENT],
         })
-        .andWhere('order.expiresAt > NOW()')
+        //.andWhere('order.expiresAt > NOW()')
+
+        .andWhere(
+          `(
+            order.expiresAt > NOW()
+            OR (
+              order.expiresAt IS NULL
+              AND order.status IN (:...confirmedStatuses)
+            )
+          )`,
+          {
+            confirmedStatuses: [OrderStatus.PAID, OrderStatus.SENT],
+          },
+        )
+
         .getOne();
 
       if (!orderEntity) {

@@ -21,7 +21,9 @@ export class Transaction {
   @Column('text', { nullable: true })
   reason?: string;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

@@ -21,7 +21,7 @@ import {
 
 import { Auth, GetCustomer } from 'src/auth/decorators';
 
-import { OrderType } from './enums';
+import { OrderType, PaymentType } from './enums';
 import { Roles } from 'src/auth/enums';
 
 import { OrdersService } from './orders.service';
@@ -104,6 +104,11 @@ export class OrdersController {
     name: 'type',
     required: false,
     enum: OrderType,
+  })
+  @ApiQuery({
+    name: 'paymentType',
+    required: false,
+    enum: PaymentType,
   })
   @ApiQuery({
     name: 'startDate',

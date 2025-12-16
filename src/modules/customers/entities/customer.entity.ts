@@ -43,7 +43,9 @@ export class Customer {
   @Column('boolean', { default: true }) //! default true
   enabled: boolean;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

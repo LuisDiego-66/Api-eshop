@@ -39,7 +39,9 @@ export class Discount {
   @Column({ type: 'int' })
   value: number;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ select: false, nullable: true })

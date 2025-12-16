@@ -32,7 +32,9 @@ export class Slider {
   @Column({ type: 'enum', enum: GenderType })
   gender: GenderType;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

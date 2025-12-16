@@ -30,7 +30,9 @@ export class Product {
   @Column('boolean', { default: true })
   enabled: boolean;
 
-  @CreateDateColumn(/* { select: false } */)
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

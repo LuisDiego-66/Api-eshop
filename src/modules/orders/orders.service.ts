@@ -6,13 +6,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Between,
-  DataSource,
-  LessThan,
-  MoreThanOrEqual,
-  Repository,
-} from 'typeorm';
+import { Between, DataSource, LessThan, Not, Repository } from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
@@ -287,17 +281,37 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async findAll(pagination: OrderPaginationDto) {
-    const { type, startDate, endDate } = pagination;
+    const { type, paymentType, startDate, endDate } = pagination;
 
     const options: any = {
       where: {},
     };
 
+    // --------------------------------------------
+    // 1. Filtros
+    // --------------------------------------------
+
+    //! tipo de orden (inStore, online)
     if (type) {
       options.where.type = type;
     }
 
-    //* FILTRO: entre dos fechas
+    //! tipo de pago (qr, cash, card)
+    if (paymentType) {
+      options.where.payment_type = paymentType;
+    }
+
+    //! Por dia
+    if (startDate && !endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(startDate);
+      end.setHours(23, 59, 59, 999);
+      options.where.createdAt = Between(start, end);
+    }
+
+    //! Entre dos fechas
     if (startDate && endDate) {
       const from = new Date(startDate);
       const to = new Date(endDate);
@@ -306,7 +320,14 @@ export class OrdersService {
       options.where.createdAt = Between(from, to);
     }
 
-    return paginate(
+    //! status no expirado
+    options.where.status = Not(OrderStatus.EXPIRED);
+
+    // --------------------------------------------
+    // 2. Paginación y relaciones
+    // --------------------------------------------
+
+    const orders = await paginate(
       this.orderRepository,
       {
         ...options,
@@ -320,6 +341,19 @@ export class OrdersService {
       },
       pagination,
     );
+
+    // --------------------------------------------
+    // 3. Total
+    // --------------------------------------------
+
+    const totalAmount = orders.data
+      .filter((order) => order.status !== OrderStatus.CANCELLED)
+      .reduce((sum, order) => sum + Number(order.totalPrice), 0);
+
+    return {
+      ...orders,
+      totalAmount: Number(totalAmount.toFixed(2)),
+    };
   }
 
   //? ============================================================================================== */

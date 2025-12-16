@@ -31,7 +31,12 @@ export class Category {
   @Column('text', { nullable: true })
   image: string;
 
-  @CreateDateColumn({ select: false })
+  //@CreateDateColumn(/* { select: false } */)
+  //createdAt: Date;
+
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ select: false, nullable: true })
@@ -46,3 +51,6 @@ export class Category {
   })
   subcategories: Subcategory[];
 }
+
+// 2025-12-11 14:42:37.051
+// 2025-12-11 10:42:37.051

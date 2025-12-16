@@ -30,7 +30,9 @@ export class User {
   @Column({ type: 'enum', enum: Roles, default: Roles.ADMIN })
   rol: Roles;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })

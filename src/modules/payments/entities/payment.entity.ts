@@ -34,7 +34,9 @@ export class Payment {
   @Column('text')
   gloss: string;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   //* ---------------------------------------------------------------------------------------------- */

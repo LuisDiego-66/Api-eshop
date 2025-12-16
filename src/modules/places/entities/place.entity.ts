@@ -20,7 +20,9 @@ export class Place {
   @Column({ type: 'enum', enum: PlacesEnum, unique: true })
   place: PlacesEnum;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
