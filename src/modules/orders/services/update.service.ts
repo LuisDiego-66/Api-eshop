@@ -7,18 +7,18 @@ import { CreateOrderInStoreDto } from '../dto';
 
 import { OrderType, PaymentType } from '../enums';
 
-import { CreateOrder } from './create.service';
-import { CancelOrder } from './cancel.service';
+import { CreateService } from './create.service';
+import { CancelService } from './cancel.service';
+
 import { Order } from '../entities/order.entity';
-import { create } from 'axios';
 
 @Injectable()
-export class UpdateOrder {
+export class UpdateService {
   constructor(
     private readonly dataSource: DataSource,
 
-    private readonly cancelOrder: CancelOrder,
-    private readonly createOrder: CreateOrder,
+    private readonly cancelService: CancelService,
+    private readonly createService: CreateService,
   ) {}
 
   async update(orderId: number, items: string) {
@@ -33,7 +33,7 @@ export class UpdateOrder {
       // 1. Se cancela la orden
       // --------------------------------------------
 
-      const orderCanceled: Order = await this.cancelOrder.cancel(
+      const orderCanceled: Order = await this.cancelService.cancel(
         orderId,
         queryRunner,
       );
@@ -48,7 +48,7 @@ export class UpdateOrder {
 
       //* ------- IN_STORE -------
       if (orderCanceled.type === OrderType.IN_STORE) {
-        newOrder = await this.createOrder.createOrderBase(
+        newOrder = await this.createService.createOrderBase(
           {
             dto: { items } as CreateOrderInStoreDto,
             type: OrderType.IN_STORE,
@@ -65,7 +65,7 @@ export class UpdateOrder {
         orderCanceled.customer &&
         orderCanceled.shipment
       ) {
-        newOrder = await this.createOrder.createOrderBase(
+        newOrder = await this.createService.createOrderBase(
           {
             dto: {
               items,

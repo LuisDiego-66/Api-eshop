@@ -2,9 +2,13 @@ import { IsDateString, IsEnum, IsOptional } from 'class-validator';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
-import { OrderType, PaymentType } from '../enums';
+import { OrderStatus, OrderType, PaymentType } from '../enums';
 
 export class OrderPaginationDto extends PaginationDto {
+  @IsOptional()
+  @IsEnum(OrderStatus)
+  status?: OrderStatus;
+
   @IsOptional()
   @IsEnum(OrderType)
   type?: OrderType;

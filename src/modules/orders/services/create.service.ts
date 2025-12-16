@@ -22,7 +22,7 @@ import { Customer } from '../../customers/entities/customer.entity';
 import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
 
 @Injectable()
-export class CreateOrder {
+export class CreateService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly pricingService: PricingService,

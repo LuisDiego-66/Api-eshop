@@ -54,7 +54,7 @@ export class PricingService {
         // --------------------------------------------
         // 5. Verificar descuento activo y válido
         // --------------------------------------------
-        //! revisar
+
         let discountValue = 0;
         const discount = variant.productColor.product.discount;
         if (discount && discount.isActive) {

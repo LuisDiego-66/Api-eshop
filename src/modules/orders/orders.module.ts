@@ -8,14 +8,15 @@ import { Item } from './entities/item.entity';
 
 import { StatusChangerCronJob } from './cronjobs/status-changer.cron';
 
+import { ExelModule } from 'src/exel/exel.module';
 import { VariantsModule } from '../variants/variants.module';
 import { CustomersModule } from '../customers/customers.module';
 import { StockReservationsModule } from '../stock-reservations/stock-reservations.module';
 
 import { PricingService } from './pricing.service';
-import { CreateOrder } from './services/create.service';
-import { CancelOrder } from './services/cancel.service';
-import { UpdateOrder } from './services/update.service';
+import { CreateService } from './services/create.service';
+import { CancelService } from './services/cancel.service';
+import { UpdateService } from './services/update.service';
 
 @Module({
   imports: [
@@ -23,15 +24,16 @@ import { UpdateOrder } from './services/update.service';
     VariantsModule,
     StockReservationsModule,
     forwardRef(() => CustomersModule),
+    ExelModule,
   ],
   controllers: [OrdersController],
   providers: [
     OrdersService,
     PricingService,
     StatusChangerCronJob,
-    CreateOrder,
-    CancelOrder,
-    UpdateOrder,
+    CreateService,
+    CancelService,
+    UpdateService,
   ],
   exports: [TypeOrmModule, OrdersService],
 })

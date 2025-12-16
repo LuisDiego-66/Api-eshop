@@ -24,9 +24,9 @@ import { OrderStatus, OrderType, PaymentType } from './enums';
 import { AddressType } from '../addresses/enums/address-type.enum';
 import { ReservationStatus } from '../stock-reservations/enum/reservation-status.enum';
 
-import { CreateOrder } from './services/create.service';
-import { CancelOrder } from './services/cancel.service';
-import { UpdateOrder } from './services/update.service';
+import { CreateService } from './services/create.service';
+import { CancelService } from './services/cancel.service';
+import { UpdateService } from './services/update.service';
 import { CustomersService } from '../customers/customers.service';
 
 import { Order } from './entities/order.entity';
@@ -45,9 +45,9 @@ export class OrdersService {
     private readonly customersService: CustomersService,
 
     private readonly dataSource: DataSource,
-    private readonly createOrder: CreateOrder,
-    private readonly cancelOrder: CancelOrder,
-    private readonly updateOrder: UpdateOrder,
+    private readonly createService: CreateService,
+    private readonly cancelService: CancelService,
+    private readonly updateService: UpdateService,
   ) {}
 
   //? ============================================================================================== */
@@ -60,7 +60,7 @@ export class OrdersService {
     }
 
     //* Crear orden
-    return this.createOrder.createOrderBase({
+    return this.createService.createOrderBase({
       dto,
       type: OrderType.IN_STORE,
       payment_type: dto.payment_type,
@@ -82,7 +82,7 @@ export class OrdersService {
     });
 
     //* Crear orden
-    return this.createOrder.createOrderBase({
+    return this.createService.createOrderBase({
       dto,
       buyer,
       type: OrderType.ONLINE,
@@ -281,7 +281,7 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async findAll(pagination: OrderPaginationDto) {
-    const { type, paymentType, startDate, endDate } = pagination;
+    const { status, type, paymentType, startDate, endDate } = pagination;
 
     const options: any = {
       where: {},
@@ -291,37 +291,29 @@ export class OrdersService {
     // 1. Filtros
     // --------------------------------------------
 
+    //! Estado de la orden
+    if (status) options.where.status = status;
+    else options.where.status = Not(OrderStatus.EXPIRED);
+
     //! tipo de orden (inStore, online)
-    if (type) {
-      options.where.type = type;
-    }
+    if (type) options.where.type = type;
 
     //! tipo de pago (qr, cash, card)
-    if (paymentType) {
-      options.where.payment_type = paymentType;
-    }
+    if (paymentType) options.where.payment_type = paymentType;
 
     //! Por dia
     if (startDate && !endDate) {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-
-      const end = new Date(startDate);
-      end.setHours(23, 59, 59, 999);
+      const start = new Date(`${startDate}T00:00:00-04:00`);
+      const end = new Date(`${startDate}T23:59:59.999-04:00`);
       options.where.createdAt = Between(start, end);
     }
 
     //! Entre dos fechas
     if (startDate && endDate) {
-      const from = new Date(startDate);
-      const to = new Date(endDate);
-
-      to.setHours(23, 59, 59, 999);
+      const from = new Date(`${startDate}T00:00:00-04:00`);
+      const to = new Date(`${endDate}T23:59:59.999-04:00`);
       options.where.createdAt = Between(from, to);
     }
-
-    //! status no expirado
-    options.where.status = Not(OrderStatus.EXPIRED);
 
     // --------------------------------------------
     // 2. Paginación y relaciones
@@ -348,6 +340,7 @@ export class OrdersService {
 
     const totalAmount = orders.data
       .filter((order) => order.status !== OrderStatus.CANCELLED)
+      .filter((order) => order.status !== OrderStatus.PENDING)
       .reduce((sum, order) => sum + Number(order.totalPrice), 0);
 
     return {
@@ -387,7 +380,7 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async update(orderId: number, items: string) {
-    return this.updateOrder.update(orderId, items);
+    return this.updateService.update(orderId, items);
   }
 
   //? ============================================================================================== */
@@ -395,7 +388,7 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async cancel(orderId: number) {
-    return this.cancelOrder.cancel(orderId);
+    return this.cancelService.cancel(orderId);
   }
 
   //? ============================================================================================== */
@@ -467,6 +460,68 @@ export class OrdersService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  //? ============================================================================================== */
+  //?                                        Export                                                  */
+  //? ============================================================================================== */
+
+  async export(pagination: OrderPaginationDto) {
+    const { status, type, paymentType, startDate, endDate } = pagination;
+
+    const options: any = {
+      where: {},
+    };
+
+    // --------------------------------------------
+    // 1. Filtros
+    // --------------------------------------------
+
+    if (status) options.where.status = status;
+    else options.where.status = Not(OrderStatus.EXPIRED);
+
+    if (type) options.where.type = type;
+    if (paymentType) options.where.payment_type = paymentType;
+
+    if (startDate && !endDate) {
+      const start = new Date(`${startDate}T00:00:00-04:00`);
+      const end = new Date(`${startDate}T23:59:59.999-04:00`);
+      options.where.createdAt = Between(start, end);
+    }
+
+    if (startDate && endDate) {
+      const from = new Date(`${startDate}T00:00:00-04:00`);
+      const to = new Date(`${endDate}T23:59:59.999-04:00`);
+      options.where.createdAt = Between(from, to);
+    }
+
+    // --------------------------------------------
+    // 2. relaciones
+    // --------------------------------------------
+
+    const orders = await this.orderRepository.find({
+      where: options.where,
+      order: { createdAt: 'DESC' },
+      relations: {
+        items: { variant: { productColor: { product: true } } },
+        customer: true,
+        shipment: true,
+        address: true,
+      },
+    });
+
+    // --------------------------------------------
+    // 3. Total
+    // --------------------------------------------
+
+    const totalAmount = orders
+      .filter((order) => order.status !== OrderStatus.CANCELLED)
+      .reduce((sum, order) => sum + Number(order.totalPrice), 0);
+
+    return {
+      orders,
+      totalAmount: Number(totalAmount.toFixed(2)),
+    };
   }
 
   //? ============================================================================================== */

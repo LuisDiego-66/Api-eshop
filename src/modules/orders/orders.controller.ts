@@ -8,8 +8,10 @@ import {
   ParseIntPipe,
   Patch,
   Put,
+  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 
 import { OrderPaginationDto } from './pagination/order-pagination.dto';
 import {
@@ -21,11 +23,12 @@ import {
 
 import { Auth, GetCustomer } from 'src/auth/decorators';
 
-import { OrderType, PaymentType } from './enums';
+import { OrderStatus, OrderType, PaymentType } from './enums';
 import { Roles } from 'src/auth/enums';
 
 import { OrdersService } from './orders.service';
 import { PricingService } from './pricing.service';
+import { ExelService } from 'src/exel/exel.service';
 
 import { Customer } from '../customers/entities/customer.entity';
 
@@ -34,7 +37,10 @@ import { Customer } from '../customers/entities/customer.entity';
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
+
     private readonly pricingService: PricingService,
+
+    private readonly exelService: ExelService,
   ) {}
 
   //? ============================================================================================== */
@@ -100,6 +106,11 @@ export class OrdersController {
   //!
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: OrderStatus,
+  })
   @ApiQuery({
     name: 'type',
     required: false,
@@ -173,5 +184,47 @@ export class OrdersController {
     @Body() changeStatusDto: ChangeStatusDto,
   ) {
     return this.ordersService.changeStatus(id, changeStatusDto);
+  }
+
+  //? ============================================================================================== */
+  //?                                         Export                                                 */
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: OrderStatus,
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: OrderType,
+  })
+  @ApiQuery({
+    name: 'paymentType',
+    required: false,
+    enum: PaymentType,
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+  })
+  @Get('export/exel')
+  async exportExcel(
+    @Query() pagination: OrderPaginationDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.ordersService.export(pagination);
+    return this.exelService.exportOrdersToExcel(result, res);
   }
 }
