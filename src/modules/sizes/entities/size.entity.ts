@@ -19,7 +19,9 @@ export class Size {
   @Column({ type: 'varchar', unique: true, length: 5 })
   name: string; // Ej: 'S', 'M', 'L', 'XL'
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
   @DeleteDateColumn({ nullable: true, select: false })
