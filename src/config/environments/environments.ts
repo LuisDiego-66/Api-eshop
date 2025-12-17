@@ -18,9 +18,14 @@ interface IEnvironmentVariables {
   GOOGLE_ID_OAUTH: string;
   GOOGLE_SECRET_KEY: string;
   GOOGLE_CALLBACK: string;
-  //SendGrid
-  SENDGRID_API_KEY: string;
-  SENDGRID_SENDER: string;
+
+  //Mail
+  MAIL_HOST: string;
+  MAIL_PORT: number;
+  MAIL_USER: string;
+  MAIL_PASS: string;
+  MAIL_FROM: string;
+
   //BNB
   ACCOUNT_ID: string;
   AUTHORIZATION_ID: string;
@@ -62,9 +67,14 @@ export const envs = {
   GOOGLE_ID_OAUTH: envVariables.GOOGLE_ID_OAUTH,
   GOOGLE_SECRET_KEY: envVariables.GOOGLE_SECRET_KEY,
   GOOGLE_CALLBACK: envVariables.GOOGLE_CALLBACK,
-  //SendGrid
-  SENDGRID_API_KEY: envVariables.SENDGRID_API_KEY,
-  SENDGRID_SENDER: envVariables.SENDGRID_SENDER,
+
+  //Mail
+  MAIL_HOST: envVariables.MAIL_HOST,
+  MAIL_PORT: envVariables.MAIL_PORT,
+  MAIL_USER: envVariables.MAIL_USER,
+  MAIL_PASS: envVariables.MAIL_PASS,
+  MAIL_FROM: envVariables.MAIL_FROM,
+
   //BNB
   ACCOUNT_ID: envVariables.ACCOUNT_ID,
   AUTHORIZATION_ID: envVariables.AUTHORIZATION_ID,

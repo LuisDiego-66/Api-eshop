@@ -1,12 +1,38 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { join } from 'path';
 
-import { MailController } from './mail.controller';
+import { envs } from 'src/config/environments/environments';
+
+import { MailsController } from './mail.controller';
 import { MailService } from './mail.service';
 
-import { SendGridClient } from './providers/sendgrid-client';
-
+@Global()
 @Module({
-  controllers: [MailController],
-  providers: [MailService, SendGridClient],
+  imports: [
+    MailerModule.forRoot({
+      transport: {
+        host: envs.MAIL_HOST,
+        port: Number(envs.MAIL_PORT),
+        secure: false,
+        auth: {
+          user: envs.MAIL_USER,
+          pass: envs.MAIL_PASS,
+        },
+      },
+      defaults: {
+        from: envs.MAIL_FROM,
+      },
+      template: {
+        dir: join(__dirname, 'templates'),
+        adapter: new HandlebarsAdapter(),
+        options: { strict: true },
+      },
+    }),
+  ],
+  controllers: [MailsController],
+  providers: [MailService],
+  exports: [MailService],
 })
 export class MailModule {}

@@ -17,6 +17,7 @@ import {
   CreateOrderInStoreDto,
   CreateOrderOnlineDto,
 } from './dto';
+import { SendMailPaymentConfirmationDto } from 'src/mail/dto/sendmail-payment-confirmation.dto';
 
 import { BNBPayload } from '../payments/interfaces/bnb-payload.interface';
 
@@ -30,6 +31,7 @@ import { UpdateService } from './services/update.service';
 import { CustomersService } from '../customers/customers.service';
 
 import { Order } from './entities/order.entity';
+import { MailService } from 'src/mail/mail.service';
 import { Payment } from '../payments/entities/payment.entity';
 import { Customer } from '../customers/entities/customer.entity';
 import { Transaction } from '../variants/entities/transaction.entity';
@@ -48,6 +50,8 @@ export class OrdersService {
     private readonly createService: CreateService,
     private readonly cancelService: CancelService,
     private readonly updateService: UpdateService,
+
+    private readonly mailService: MailService,
   ) {}
 
   //? ============================================================================================== */
@@ -222,6 +226,7 @@ export class OrdersService {
         await queryRunner.manager.save(Order, order);
       } else {
         //*------PAID si es ONLINE
+
         order.status = OrderStatus.PAID;
         await queryRunner.manager.save(Order, order);
       }
@@ -267,6 +272,31 @@ export class OrdersService {
       await queryRunner.manager.save(Payment, payment);
 
       await queryRunner.commitTransaction();
+
+      // --------------------------------------------
+      // 6. Se envia el correo
+      // --------------------------------------------
+
+      if (order.type === OrderType.ONLINE) {
+        const orderEntity: Order = await this.findOne(order.id);
+
+        await this.mailService.sendMail({
+          to: orderEntity.customer?.email,
+
+          orderNumber: order.id.toString(),
+          orderDate: order.createdAt.toISOString().split('T')[0],
+          totalPrice: order.totalPrice,
+
+          customerName: order.customer?.name,
+          customerEmail: order.customer?.email,
+          customerPhone: order.customer?.phone || '',
+
+          shippingAddress: order.address,
+          shippingCity: order.address?.city,
+          shippingCountry: order.address?.country,
+        });
+      }
+
       return order;
     } catch (error) {
       await queryRunner.rollbackTransaction();

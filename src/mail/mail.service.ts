@@ -1,38 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import { MailDataRequired } from '@sendgrid/mail';
-
+import { MailerService } from '@nestjs-modules/mailer';
 import { envs } from 'src/config/environments/environments';
 
-import { SendMailDto } from './dto/send-mail.dto';
-
-import { SendGridClient } from './providers/sendgrid-client';
+import { SendMailPaymentConfirmationDto } from './dto/sendmail-payment-confirmation.dto';
 
 @Injectable()
 export class MailService {
-  constructor(private readonly sendGridClient: SendGridClient) {}
+  constructor(private readonly mailerService: MailerService) {}
 
-  async sendEmail(sendMailDto: SendMailDto) {
-    const mail: MailDataRequired = {
-      to: sendMailDto.to,
-      from: envs.SENDGRID_SENDER, //! Approved sender ID in Sendgrid
-      subject: 'Test email',
-      html: sendMailDto.body, // HTML content
-      //content: [{ type: 'text/plain', value: sendMailDto.body }],
-    };
-    await this.sendGridClient.send(mail);
-  }
+  async sendMail(dto: SendMailPaymentConfirmationDto) {
+    const { to } = dto;
 
-  async sendEmailWithTemplate(sendMailDto: SendMailDto) {
-    const mail: MailDataRequired = {
-      to: sendMailDto.to,
-      from: envs.SENDGRID_SENDER,
-      subject: sendMailDto.subject,
-      templateId: sendMailDto.templateId,
-      dynamicTemplateData: {
-        //name: sendMailDto.name, // variabes usadas en el template {{name}} y {{body}}
-        body: sendMailDto.body,
-      },
+    const context = {
+      ...dto,
+      /*orderNumber: '#12345',
+      orderDate: '15 de Diciembre, 2025',
+      totalPrice: '1,250.50',
+      customerName: 'Juan Pérez',
+      customerEmail: 'juan@example.com',
+      customerPhone: '+591 71234567',
+      shippingAddress: 'Av. Principal #123',
+      shippingCity: 'La Paz',
+      shippingCountry: 'Bolivia', */
+
+      shippingMethod: 'Envío Estándar (3-5 días hábiles)',
     };
-    await this.sendGridClient.send(mail);
+
+    return this.mailerService.sendMail({
+      to,
+      subject: 'Confirmación de Pago de Pedido',
+      cc: envs.MAIL_FROM,
+      template: 'paid-order',
+      context,
+    });
   }
 }
