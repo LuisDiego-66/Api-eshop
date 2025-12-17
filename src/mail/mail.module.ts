@@ -25,7 +25,8 @@ import { MailService } from './mail.service';
         from: envs.MAIL_FROM,
       },
       template: {
-        dir: join(__dirname, 'templates'),
+        dir: join(process.cwd(), 'dist/mail/templates'),
+        //dir: join(__dirname, 'templates'),
         adapter: new HandlebarsAdapter(),
         options: { strict: true },
       },
