@@ -7,6 +7,7 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
@@ -117,5 +118,21 @@ export class CustomersController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.remove(id);
+  }
+
+  //? ============================================================================================== */
+  //?                                        Delete                                                  */
+  //? ============================================================================================== */
+
+  //!
+  @Auth()
+  @ApiBearerAuth('access-token')
+  //!
+  @Post('cancel/order/:id')
+  async cancelOrder(
+    @Param('id', ParseIntPipe) idOrder: number,
+    @GetCustomer() customer: Customer,
+  ) {
+    return this.customersService.cancelOrder(idOrder, customer); //! GetCustomer
   }
 }

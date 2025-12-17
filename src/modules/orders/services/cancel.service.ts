@@ -7,6 +7,7 @@ import { OrderStatus } from '../enums';
 import { ReservationStatus } from '../../stock-reservations/enum/reservation-status.enum';
 
 import { Order } from '../entities/order.entity';
+import { Customer } from 'src/modules/customers/entities/customer.entity';
 import { Transaction } from 'src/modules/variants/entities/transaction.entity';
 import { StockReservation } from 'src/modules/stock-reservations/entities/stock-reservation.entity';
 
@@ -37,7 +38,6 @@ export class CancelService {
       // 2. Obtener la orden con lock
       // --------------------------------------------
 
-      //! revisar
       const orderEntity = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write')
@@ -79,6 +79,7 @@ export class CancelService {
           : orderEntity.deletedAt;
 
       orderEntity.status = OrderStatus.CANCELLED;
+      orderEntity.expiresAt = null;
 
       await queryRunner.manager.save(Order, orderEntity);
 
@@ -126,7 +127,7 @@ export class CancelService {
   //?                          Cancel_Order_Customer                                                 */
   //? ============================================================================================== */
 
-  async cancelForCustomer(orderId: number) {
+  async cancelForCustomer(orderId: number, customer: Customer) {
     // --------------------------------------------
     // 1. Iniciar QueryRunner
     // --------------------------------------------
@@ -137,24 +138,26 @@ export class CancelService {
 
     try {
       // --------------------------------------------
-      // 2. Obtener la orden con lock
+      // 2. Obtener la orden generadas por el customer
       // --------------------------------------------
 
-      //! revisar
       const orderEntity = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write')
+
+        .innerJoin('order.customer', 'customer')
 
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status IN (:...statuses)', {
           statuses: [OrderStatus.PENDING],
         })
         .andWhere('order.expiresAt > NOW()')
+        .andWhere('customer.id = :customerId', { customerId: customer.id })
         .getOne();
 
       if (!orderEntity) {
         throw new NotFoundException(
-          `Order ${orderId} not found or not pending / paid / sent`,
+          `Order ${orderId} not found or not pending`,
         );
       }
 
@@ -164,6 +167,7 @@ export class CancelService {
 
       orderEntity.deletedAt = new Date();
       orderEntity.status = OrderStatus.CANCELLED;
+      orderEntity.expiresAt = null;
 
       await queryRunner.manager.save(Order, orderEntity);
 

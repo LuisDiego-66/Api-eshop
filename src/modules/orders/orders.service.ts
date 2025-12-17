@@ -380,7 +380,7 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async update(orderId: number, items: string) {
-    return this.updateService.update(orderId, items);
+    return await this.updateService.update(orderId, items);
   }
 
   //? ============================================================================================== */
@@ -388,7 +388,15 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async cancel(orderId: number) {
-    return this.cancelService.cancel(orderId);
+    return await this.cancelService.cancel(orderId);
+  }
+
+  //? ============================================================================================== */
+  //?                      Cancel_Order_for_Customer                                                 */
+  //? ============================================================================================== */
+
+  async cancelForCustomer(orderId: number, customer: Customer) {
+    return await this.cancelService.cancelForCustomer(orderId, customer);
   }
 
   //? ============================================================================================== */

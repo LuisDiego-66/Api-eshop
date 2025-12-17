@@ -113,4 +113,12 @@ export class CustomersService {
   async findOneOrder(idOrder: number, customer: Customer) {
     return await this.ordersService.findOne(idOrder, customer);
   }
+
+  //? ============================================================================================== */
+  //?                                  Cancel_Order                                                  */
+  //? ============================================================================================== */
+
+  async cancelOrder(idOrder: number, customer: Customer) {
+    return await this.ordersService.cancelForCustomer(idOrder, customer);
+  }
 }
