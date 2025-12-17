@@ -24,14 +24,15 @@ import { MailService } from './mail.service';
       defaults: {
         from: envs.MAIL_FROM,
       },
+      preview: false,
       template: {
-        dir: join(__dirname, 'templates'),
+        dir: join(process.cwd(), 'dist/mail/templates'),
+        //dir: join(__dirname, 'templates'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,
         },
       },
-      preview: false,
     }),
   ],
   controllers: [MailsController],
@@ -39,3 +40,5 @@ import { MailService } from './mail.service';
   exports: [MailService],
 })
 export class MailModule {}
+
+//"build": "nest build",
