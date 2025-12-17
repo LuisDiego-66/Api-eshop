@@ -25,11 +25,13 @@ import { MailService } from './mail.service';
         from: envs.MAIL_FROM,
       },
       template: {
-        dir: join(process.cwd(), 'dist/mail/templates'),
-        //dir: join(__dirname, 'templates'),
+        dir: join(__dirname, 'templates'),
         adapter: new HandlebarsAdapter(),
-        options: { strict: true },
+        options: {
+          strict: true,
+        },
       },
+      preview: false,
     }),
   ],
   controllers: [MailsController],
