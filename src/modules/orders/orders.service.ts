@@ -17,7 +17,6 @@ import {
   CreateOrderInStoreDto,
   CreateOrderOnlineDto,
 } from './dto';
-import { SendMailPaymentConfirmationDto } from 'src/mail/dto/sendmail-payment-confirmation.dto';
 
 import { BNBPayload } from '../payments/interfaces/bnb-payload.interface';
 
