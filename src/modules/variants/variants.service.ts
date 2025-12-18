@@ -119,6 +119,7 @@ export class VariantsService {
       }
     }
 
+    //! mandar discount
     const paginated = await paginateAdvanced(
       this.productColorRepository,
       paginationDto,

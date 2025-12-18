@@ -51,6 +51,3 @@ export class Category {
   })
   subcategories: Subcategory[];
 }
-
-// 2025-12-11 14:42:37.051
-// 2025-12-11 10:42:37.051

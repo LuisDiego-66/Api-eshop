@@ -58,7 +58,7 @@ export class PaymentsService {
 
     return await this.httpService
       .GenerateQr(token, {
-        amount: Number(order.totalPrice),
+        amount: 0.1, //Number(order.totalPrice),
         gloss: gloss ?? 'PAGO TIENDA MONERO',
         additionalData: order.id.toString(),
       })
