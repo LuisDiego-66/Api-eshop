@@ -7,7 +7,7 @@ export enum OrderStatus {
 
   CANCELLED = 'cancelled', //! se cancelo la orden pagada o pendiente
 
-  //cancelado por edicion
+  CANCELLEDFOREDIT = 'cancelled_for_edit',
 
   EXPIRED = 'expired', //! la orden expirada porque se paso el tiempo para ser pagada
 }
