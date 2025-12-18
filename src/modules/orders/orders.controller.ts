@@ -106,7 +106,7 @@ export class OrdersController {
   //!
   @Post('cancel-for-edit/:id')
   cancelForEdit(@Param('id') id: number) {
-    return this.ordersService.cancel(id);
+    return this.ordersService.cancelForEdit(id);
   }
 
   //? ============================================================================================== */
