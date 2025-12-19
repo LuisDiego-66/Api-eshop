@@ -202,9 +202,9 @@ export class ConfirmService {
       const orderEntity = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
 
-        .innerJoin('order.customer', 'customer') //* CUSTOMER
-        .innerJoin('order.address', 'address') //* ADDRESS
-        .innerJoin('order.shipment', 'shipment') //* SHIPMENT
+        .innerJoinAndSelect('order.customer', 'customer')
+        .innerJoinAndSelect('order.address', 'address')
+        .innerJoinAndSelect('order.shipment', 'shipment')
 
         .where('order.id = :id', { id: orderId })
         .getOne();

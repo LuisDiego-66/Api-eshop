@@ -240,4 +240,13 @@ export class OrdersController {
     const result = await this.ordersService.export(pagination);
     return this.exelService.exportOrdersToExcel(result, res);
   }
+
+  //? ============================================================================================== */
+  //?                                          pueba                                                 */
+  //? ============================================================================================== */
+
+  /* @Post('prueba:id')
+  prueba(@Param('id') orderId: number) {
+    return this.ordersService.prueba(orderId);
+  } */
 }

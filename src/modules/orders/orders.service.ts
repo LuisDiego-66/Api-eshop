@@ -48,6 +48,39 @@ export class OrdersService {
     private readonly confirmService: ConfirmService,
   ) {}
 
+  /* async prueba(orderId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const orderEntity = await queryRunner.manager
+      .createQueryBuilder(Order, 'order')
+      .innerJoinAndSelect('order.customer', 'customer')
+      .innerJoinAndSelect('order.address', 'address') 
+      .innerJoinAndSelect('order.shipment', 'shipment')
+      .where('order.id = :id', { id: orderId })
+      .getOne();
+
+    await queryRunner.commitTransaction();
+
+    const orderProperties = {
+      to: orderEntity?.customer?.email,
+
+      orderNumber: orderEntity?.id.toString(),
+      orderDate: orderEntity?.createdAt.toISOString().split('T')[0],
+      totalPrice: orderEntity?.totalPrice,
+
+      customerName: orderEntity?.customer?.name,
+      customerEmail: orderEntity?.customer?.email,
+      customerPhone: orderEntity?.customer?.phone || '',
+
+      shippingAddress: orderEntity?.address,
+      shippingCity: orderEntity?.address?.city,
+      shippingCountry: orderEntity?.address?.country,
+    };
+    return orderProperties;
+  } */
+
   //? ============================================================================================== */
   //?                         Create_Order_In_Store                                                  */
   //? ============================================================================================== */
@@ -155,8 +188,8 @@ export class OrdersService {
         relations: {
           items: { variant: { productColor: { product: true } } },
           customer: true,
-          shipment: true,
-          address: true,
+          shipment: { place: true },
+          address: { place: true },
         },
       },
       pagination,
@@ -193,8 +226,8 @@ export class OrdersService {
       relations: {
         items: { variant: { productColor: true } },
         customer: true,
-        shipment: true,
-        address: true,
+        shipment: { place: true },
+        address: { place: true },
       },
     });
     if (!order) {
