@@ -7,7 +7,7 @@ export const fileFilter = (
 
   const fileExtension = file.mimetype.split('/')[1]; // se consigue la extencion del archivo
 
-  const validExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'mp4'];
+  const validExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'mp4', 'webp'];
 
   if (validExtensions.includes(fileExtension)) {
     return callback(null, true);
