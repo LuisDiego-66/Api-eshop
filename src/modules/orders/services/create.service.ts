@@ -44,7 +44,6 @@ export class CreateService {
     },
 
     createdAt?: Date,
-
     externalQueryRunner?: QueryRunner,
   ) {
     const isExternal = !!externalQueryRunner;

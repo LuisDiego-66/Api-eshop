@@ -17,6 +17,7 @@ import { PricingService } from './pricing.service';
 import { CreateService } from './services/create.service';
 import { CancelService } from './services/cancel.service';
 import { UpdateService } from './services/update.service';
+import { ConfirmService } from './services/confirm.service';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UpdateService } from './services/update.service';
     CreateService,
     CancelService,
     UpdateService,
+    ConfirmService,
   ],
   exports: [TypeOrmModule, OrdersService],
 })

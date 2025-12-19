@@ -124,8 +124,6 @@ export class CancelService {
   //? ============================================================================================== */
 
   async cancelForEdit(orderId: number) {
-    //! no tiene q
-
     // --------------------------------------------
     // 1. Iniciar QueryRunner
     // --------------------------------------------
@@ -166,6 +164,9 @@ export class CancelService {
           `Order ${orderId} not found or not paid / sent`,
         );
       }
+
+      //! verificar que no fue creada el mismo dia
+      //! validar que no tenga descuentos
 
       // --------------------------------------------
       // 3. CANCELLED
