@@ -227,7 +227,7 @@ export class ConfirmService {
           customerEmail: orderEntity?.customer?.email,
           customerPhone: orderEntity?.customer?.phone || '',
 
-          shippingAddress: orderEntity?.address,
+          shippingAddress: orderEntity?.address?.address,
           shippingCity: orderEntity?.address?.city,
           shippingCountry: orderEntity?.address?.country,
         });

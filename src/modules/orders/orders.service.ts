@@ -56,7 +56,7 @@ export class OrdersService {
     const orderEntity = await queryRunner.manager
       .createQueryBuilder(Order, 'order')
       .innerJoinAndSelect('order.customer', 'customer')
-      .innerJoinAndSelect('order.address', 'address') 
+      .innerJoinAndSelect('order.address', 'address')
       .innerJoinAndSelect('order.shipment', 'shipment')
       .where('order.id = :id', { id: orderId })
       .getOne();
@@ -74,7 +74,7 @@ export class OrdersService {
       customerEmail: orderEntity?.customer?.email,
       customerPhone: orderEntity?.customer?.phone || '',
 
-      shippingAddress: orderEntity?.address,
+      shippingAddress: orderEntity?.address?.address,
       shippingCity: orderEntity?.address?.city,
       shippingCountry: orderEntity?.address?.country,
     };
