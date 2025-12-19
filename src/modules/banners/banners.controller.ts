@@ -18,14 +18,14 @@ export class BannersController {
   //?                                        Create                                                  */
   //? ============================================================================================== */
 
-  //!
+  /*//!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
   //!
   @Post()
   create(@Body() createBannerDto: CreateBannerDto) {
     return this.bannersService.create(createBannerDto);
-  }
+  }*/
 
   //? ============================================================================================== */
   //?                                       FindAll                                                  */
