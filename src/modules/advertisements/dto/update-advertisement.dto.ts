@@ -1,4 +1,8 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateAdvertisementDto } from './create-advertisement.dto';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
 
-export class UpdateAdvertisementDto extends PartialType(CreateAdvertisementDto) {}
+export class UpdateAdvertisementDto {
+  @ApiProperty({ example: 'video.mp4' })
+  @IsString()
+  video: string;
+}

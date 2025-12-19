@@ -37,6 +37,7 @@ import { PlacesModule } from './modules/places/places.module';
 import { SlidersModule } from './modules/sliders/sliders.module';
 import { AdvertisementsModule } from './modules/advertisements/advertisements.module';
 import { ExelModule } from './exel/exel.module';
+import { BannersModule } from './modules/banners/banners.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { ExelModule } from './exel/exel.module';
     SlidersModule,
     AdvertisementsModule,
     ExelModule,
+    BannersModule,
   ],
   controllers: [],
   providers: [],
