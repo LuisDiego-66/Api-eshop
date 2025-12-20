@@ -7,10 +7,13 @@ import { FilesModule } from '../../files/files.module';
 import { VariantsController } from './variants.controller';
 import { VariantsService } from './variants.service';
 
-import { ProductColor } from './entities/product-color.entity';
-import { Transaction } from './entities/transaction.entity';
 import { Variant } from './entities/variant.entity';
+import { Transaction } from './entities/transaction.entity';
+import { ProductColor } from './entities/product-color.entity';
+
+import { ExelModule } from 'src/exel/exel.module';
 import { ColorsModule } from '../colors/colors.module';
+
 import { TransactionsService } from './transaction.service';
 
 @Module({
@@ -19,6 +22,7 @@ import { TransactionsService } from './transaction.service';
     FilesModule,
     SizesModule,
     ColorsModule,
+    ExelModule,
   ],
   controllers: [VariantsController],
   providers: [VariantsService, TransactionsService],

@@ -288,7 +288,7 @@ export class OrdersService {
         .innerJoinAndSelect('order.address', 'address')
         .where('order.id = :id', { id })
         .andWhere('order.status = :status', { status: OrderStatus.PAID })
-        .andWhere('order.expiresAt > NOW()')
+        //.andWhere('order.expiresAt > NOW()')
         .getOne();
 
       if (!orderEntity) {

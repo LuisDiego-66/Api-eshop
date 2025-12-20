@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
+
 import { Order } from 'src/modules/orders/entities/order.entity';
+import { Variant } from 'src/modules/variants/entities/variant.entity';
 
 @Injectable()
 export class ExelService {
@@ -99,4 +101,68 @@ export class ExelService {
   //? ============================================================================================== */
   //?                               Export_Variants                                                  */
   //? ============================================================================================== */
+
+  async exportVariantsToExcel(
+    res: Response,
+    variants: Variant[],
+    stockMap: Map<number, number>,
+  ) {
+    // Crear Excel
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Variants');
+
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      {
+        header: 'Fecha creación',
+        key: 'createdAt',
+        width: 25,
+        style: { numFmt: 'dd/mm/yyyy hh:mm:ss' },
+      },
+      { header: 'Producto', key: 'product', width: 30 },
+      { header: 'Color', key: 'color', width: 20 },
+      { header: 'Talla', key: 'size', width: 15 },
+      { header: 'Stock Disponible', key: 'stock', width: 18 },
+      { header: 'Eliminado', key: 'deleted', width: 12 },
+    ];
+
+    // Llenar filas
+    for (const variant of variants) {
+      const stock = stockMap.get(variant.id) ?? 0;
+
+      const row = worksheet.addRow({
+        id: variant.id,
+        createdAt: this.toBoliviaDate(variant.createdAt),
+        product: variant.productColor?.product?.name ?? '',
+        color: variant.productColor?.color.name ?? '',
+        size: variant.size?.name ?? '',
+        stock,
+        deleted: variant.deletedAt ? 'Sí' : 'No',
+      });
+
+      // Color según stock
+      if (stock === 0) {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFFC7CE' }, // rojo
+          };
+        });
+      }
+    }
+
+    // Respuesta HTTP
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=variants_stock.xlsx',
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  }
 }

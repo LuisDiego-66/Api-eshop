@@ -7,8 +7,11 @@ import {
   Param,
   Query,
   ParseIntPipe,
+  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger';
+
+import { Response } from 'express';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
@@ -22,8 +25,9 @@ import { Auth } from 'src/auth/decorators';
 
 import { Roles } from 'src/auth/enums';
 
-import { TransactionsService } from './transaction.service';
+import { ExelService } from 'src/exel/exel.service';
 import { VariantsService } from './variants.service';
+import { TransactionsService } from './transaction.service';
 
 @ApiTags('Variants')
 @Controller('variants')
@@ -32,6 +36,8 @@ export class VariantsController {
     private readonly variantsService: VariantsService,
 
     private readonly transactionsService: TransactionsService,
+
+    private readonly exelService: ExelService,
   ) {}
 
   //? ============================================================================================== */
@@ -154,5 +160,15 @@ export class VariantsController {
   @Get('dashboard/lowStock')
   getLowStock() {
     return this.variantsService.getLowStock();
+  }
+
+  //? ============================================================================================== */
+  //?                                         Export                                                 */
+  //? ============================================================================================== */
+
+  @Get('export/exel')
+  async exportExcel(@Res() res: Response) {
+    const { variants, stockMap } = await this.variantsService.exportToExel();
+    await this.exelService.exportVariantsToExcel(res, variants, stockMap);
   }
 }

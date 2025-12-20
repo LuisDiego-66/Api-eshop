@@ -389,6 +389,27 @@ export class VariantsService {
     });
   }
 
+  //? ============================================================================================== */
+  //?                                         Export                                                 */
+  //? ============================================================================================== */
+
+  async exportToExel() {
+    const variants = await this.variantRepository.find({
+      relations: {
+        size: true,
+        items: true,
+        stock_reservations: true,
+        productColor: {
+          product: true,
+        },
+      },
+    });
+
+    const stockMap = await this.getAvailableStockMap();
+
+    return { variants, stockMap };
+  }
+
   //* ============================================================================================== */
   //*                                        Functions                                               */
   //* ============================================================================================== */
@@ -420,6 +441,7 @@ export class VariantsService {
     return Number(result[0]?.available_stock ?? 0);
   }
 
+  //? ============================================================================================== */
   //? ============================================================================================== */
 
   async getAvailableStockWithLock(
@@ -467,6 +489,42 @@ export class VariantsService {
   }
 
   //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  async getAvailableStockMap(): Promise<Map<number, number>> {
+    const result = await this.variantRepository.query(
+      `
+      SELECT 
+        v.id AS "variantId",
+        COALESCE((
+          SELECT SUM(t.quantity)
+          FROM transactions t
+          WHERE t."variantId" = v.id
+            AND t."deletedAt" IS NULL
+        ), 0)
+        -
+        COALESCE((
+          SELECT SUM(sr.quantity)
+          FROM stock_reservations sr
+          WHERE sr."variantId" = v.id
+            AND sr.status = $1
+            AND sr."expiresAt" > NOW()
+        ), 0) AS "availableStock"
+      FROM variants v
+      `,
+      [ReservationStatus.PENDING],
+    );
+
+    const stockMap = new Map<number, number>();
+    for (const row of result) {
+      stockMap.set(Number(row.variantId), Number(row.availableStock));
+    }
+
+    return stockMap;
+  }
+
+  //? ============================================================================================== */
+  //? ============================================================================================== */
 
   private getIdProductoByQr(texto: string): number | null {
     const regex = /^<qr>(\d+)<\/qr>$/;
@@ -477,6 +535,7 @@ export class VariantsService {
     return null;
   }
 
+  //? ============================================================================================== */
   //? ============================================================================================== */
 
   private async findProductColorsForVariant(
@@ -513,6 +572,7 @@ export class VariantsService {
     };
   }
 
+  //? ============================================================================================== */
   //? ============================================================================================== */
 
   async addStockToProductColors(producColors: ProductColor[]) {
