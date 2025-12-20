@@ -184,7 +184,7 @@ export class OrdersService {
       this.orderRepository,
       {
         ...options,
-        order: { createdAt: 'DESC' },
+        order: { id: 'DESC' },
         relations: {
           items: { variant: { productColor: { product: true } } },
           customer: true,
