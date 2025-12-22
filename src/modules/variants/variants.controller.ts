@@ -166,9 +166,30 @@ export class VariantsController {
   //?                                         Export                                                 */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Get('export/exel')
   async exportExcel(@Res() res: Response) {
     const { variants, stockMap } = await this.variantsService.exportToExel();
     await this.exelService.exportVariantsToExcel(res, variants, stockMap);
+  }
+
+  //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Get('export/transactions/exel')
+  async exportToExelWhitTransactions(@Res() res: Response) {
+    const { variants } =
+      await this.variantsService.exportToExelWhitTransactions();
+    return await this.exelService.exportvariantsTransactionsToExcel(
+      variants,
+      res,
+    );
   }
 }

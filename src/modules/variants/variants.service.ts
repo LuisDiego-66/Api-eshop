@@ -395,10 +395,12 @@ export class VariantsService {
 
   async exportToExel() {
     const variants = await this.variantRepository.find({
+      order: {
+        productColor: { product: { name: 'ASC' }, color: { name: 'ASC' } },
+        size: { name: 'ASC' },
+      },
       relations: {
         size: true,
-        items: true,
-        stock_reservations: true,
         productColor: {
           product: true,
         },
@@ -408,6 +410,27 @@ export class VariantsService {
     const stockMap = await this.getAvailableStockMap();
 
     return { variants, stockMap };
+  }
+
+  //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  async exportToExelWhitTransactions() {
+    const variants = await this.variantRepository.find({
+      order: {
+        productColor: { product: { name: 'ASC' }, color: { name: 'ASC' } },
+        size: { name: 'ASC' },
+      },
+
+      relations: {
+        productColor: {
+          product: true,
+        },
+        transactions: true,
+      },
+    });
+
+    return { variants };
   }
 
   //* ============================================================================================== */
