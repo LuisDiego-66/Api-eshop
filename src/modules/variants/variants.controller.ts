@@ -192,4 +192,17 @@ export class VariantsController {
       res,
     );
   }
+
+  //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Get('export/total-sales/exel')
+  async exportToExelTotalSales(@Res() res: Response) {
+    const { variants } = await this.variantsService.exportToExelTotalSales();
+    return await this.exelService.exportSalesExcel(variants, res);
+  }
 }

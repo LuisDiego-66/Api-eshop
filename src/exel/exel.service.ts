@@ -379,4 +379,121 @@ export class ExelService {
     await workbook.xlsx.write(res);
     res.end();
   }
+
+  //? ============================================================================================== */
+  //?                             Export_Sales_Exel                                                  */
+  //? ============================================================================================== */
+
+  async exportSalesExcel(variants: Variant[], res: Response) {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Ventas');
+
+    // Encabezados
+    sheet.addRow([
+      'ID Variante',
+      'ID Producto',
+      'Producto',
+      'Color',
+      'Talla',
+      'Vendidos',
+    ]);
+
+    let currentProduct = '';
+    let productTotal = 0;
+
+    const grouped = {};
+
+    // Agrupar por producto → color → talla
+    for (const v of variants) {
+      const productName = v.productColor.product.name;
+      const productId = v.productColor.product.id;
+      const colorName = v.productColor.color.name;
+      const sizeName = v.size.name;
+
+      const sold = this.getSoldQuantity(v.transactions);
+
+      if (!grouped[productName]) grouped[productName] = {};
+      if (!grouped[productName][colorName])
+        grouped[productName][colorName] = [];
+
+      grouped[productName][colorName].push({
+        variantId: v.id,
+        productId,
+        sizeName,
+        sold,
+      });
+    }
+
+    // Construcción del Excel
+    for (const productName of Object.keys(grouped)) {
+      productTotal = 0;
+
+      // Fila de título del producto
+      sheet.addRow([]);
+      sheet.addRow(['', '', productName]).font = { bold: true };
+
+      for (const colorName of Object.keys(grouped[productName])) {
+        let colorTotal = 0;
+
+        // Color
+        sheet.addRow(['', '', '', colorName]).font = { italic: true };
+
+        for (const row of grouped[productName][colorName]) {
+          sheet.addRow([
+            row.variantId,
+            row.productId,
+            '',
+            '',
+            row.sizeName,
+            row.sold,
+          ]);
+
+          colorTotal += row.sold;
+          productTotal += row.sold;
+        }
+
+        // Total por color
+        sheet.addRow(['', '', '', `Total ${colorName}`, '', colorTotal]).font =
+          {
+            bold: true,
+          };
+      }
+
+      // Total por producto
+      sheet.addRow([
+        '',
+        '',
+        `TOTAL ${productName.toUpperCase()}`,
+        '',
+        '',
+        productTotal,
+      ]).font = { bold: true };
+    }
+
+    // Ajustar ancho de columnas
+    sheet.columns.forEach((col) => {
+      col.width = 20;
+    });
+
+    // Respuesta HTTP
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename=ventas.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+  }
+
+  //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  private getSoldQuantity(transactions: any[]): number {
+    return Math.abs(
+      transactions
+        .filter((t) => t.quantity < 0 && t.reason == null && !t.deletedAt)
+        .reduce((sum, t) => sum + t.quantity, 0),
+    );
+  }
 }

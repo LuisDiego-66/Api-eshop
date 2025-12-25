@@ -433,6 +433,27 @@ export class VariantsService {
     return { variants };
   }
 
+  //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  async exportToExelTotalSales() {
+    const variants = await this.variantRepository.find({
+      order: {
+        id: 'ASC',
+        productColor: { product: { name: 'ASC' }, color: { name: 'ASC' } },
+      },
+
+      relations: {
+        productColor: {
+          product: true,
+        },
+        transactions: true,
+      },
+    });
+
+    return { variants };
+  }
+
   //* ============================================================================================== */
   //*                                        Functions                                               */
   //* ============================================================================================== */
