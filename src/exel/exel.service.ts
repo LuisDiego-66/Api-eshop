@@ -453,21 +453,39 @@ export class ExelService {
         }
 
         // Total por color
-        sheet.addRow(['', '', '', `Total ${colorName}`, '', colorTotal]).font =
-          {
-            bold: true,
-          };
+        const totalColorRow = sheet.addRow([
+          '',
+          '',
+          '',
+          `Total ${colorName}`,
+          '',
+          colorTotal,
+        ]);
+
+        totalColorRow.font = { bold: true };
+        totalColorRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFEFEFEF' }, // gris claro
+        };
       }
 
       // Total por producto
-      sheet.addRow([
+      const totalProductRow = sheet.addRow([
         '',
         '',
         `TOTAL ${productName.toUpperCase()}`,
         '',
         '',
         productTotal,
-      ]).font = { bold: true };
+      ]);
+
+      totalProductRow.font = { bold: true };
+      totalProductRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFE699' }, // amarillo suave
+      };
     }
 
     // Ajustar ancho de columnas
