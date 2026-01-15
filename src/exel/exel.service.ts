@@ -10,7 +10,7 @@ export class ExelService {
   //?                                 Export_Orders                                                  */
   //? ============================================================================================== */
 
-  async exportOrders(result: { orders: any[] }, res: Response) {
+  async exportOrdersTotal(result: { orders: any[] }, res: Response) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Orders');
 
@@ -148,7 +148,7 @@ export class ExelService {
   //?                           Export_Orders_Total                                                  */
   //? ============================================================================================== */
 
-  async exportOrdersTotal(
+  async exportOrders(
     data: { orders: any[]; totalAmount: number },
     res: Response,
   ) {
