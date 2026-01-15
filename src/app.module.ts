@@ -38,6 +38,7 @@ import { SlidersModule } from './modules/sliders/sliders.module';
 import { AdvertisementsModule } from './modules/advertisements/advertisements.module';
 import { ExelModule } from './exel/exel.module';
 import { BannersModule } from './modules/banners/banners.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { BannersModule } from './modules/banners/banners.module';
     AdvertisementsModule,
     ExelModule,
     BannersModule,
+    SchedulerModule,
   ],
   controllers: [],
   providers: [],

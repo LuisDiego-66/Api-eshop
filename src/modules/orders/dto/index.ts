@@ -9,3 +9,5 @@ export { CreateItemDto } from './create-item.dto';
 export { AddressData } from './address-data.dto';
 
 export { ChangeStatusDto } from './change-status.dto';
+
+export { CreateDailyCashDto } from './daily-cash-create.dto';

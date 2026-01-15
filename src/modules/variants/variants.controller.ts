@@ -173,7 +173,7 @@ export class VariantsController {
   @Get('export/exel')
   async exportExcel(@Res() res: Response) {
     const { variants, stockMap } = await this.variantsService.exportToExel();
-    await this.exelService.exportVariantsToExcel(res, variants, stockMap);
+    await this.exelService.exportVariants(res, variants, stockMap);
   }
 
   //? ============================================================================================== */
@@ -187,22 +187,6 @@ export class VariantsController {
   async exportToExelWhitTransactions(@Res() res: Response) {
     const { variants } =
       await this.variantsService.exportToExelWhitTransactions();
-    return await this.exelService.exportvariantsTransactionsToExcel(
-      variants,
-      res,
-    );
-  }
-
-  //? ============================================================================================== */
-  //? ============================================================================================== */
-
-  //!
-  @Auth(Roles.ADMIN)
-  @ApiBearerAuth('access-token')
-  //!
-  @Get('export/total-sales/exel')
-  async exportToExelTotalSales(@Res() res: Response) {
-    const { variants } = await this.variantsService.exportToExelTotalSales();
-    return await this.exelService.exportSalesExcel(variants, res);
+    return await this.exelService.exportvariantsTransactions(variants, res);
   }
 }

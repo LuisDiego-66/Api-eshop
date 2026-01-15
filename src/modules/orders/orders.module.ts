@@ -19,15 +19,19 @@ import { CancelService } from './services/cancel.service';
 import { UpdateService } from './services/update.service';
 import { ConfirmService } from './services/confirm.service';
 
+import { DailyCash } from './entities/dailycash.entity';
+import { DailyCashService } from './daily-cash.service';
+import { DailyCashController } from './daily-cash.controller';
+
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, Item]),
+    TypeOrmModule.forFeature([Order, Item, DailyCash]),
     VariantsModule,
     StockReservationsModule,
     forwardRef(() => CustomersModule),
     ExelModule,
   ],
-  controllers: [OrdersController],
+  controllers: [OrdersController, DailyCashController],
   providers: [
     OrdersService,
     PricingService,
@@ -36,6 +40,8 @@ import { ConfirmService } from './services/confirm.service';
     CancelService,
     UpdateService,
     ConfirmService,
+
+    DailyCashService,
   ],
   exports: [TypeOrmModule, OrdersService],
 })

@@ -288,7 +288,6 @@ export class OrdersService {
         .innerJoinAndSelect('order.address', 'address')
         .where('order.id = :id', { id })
         .andWhere('order.status = :status', { status: OrderStatus.PAID })
-        //.andWhere('order.expiresAt > NOW()')
         .getOne();
 
       if (!orderEntity) {
@@ -381,9 +380,56 @@ export class OrdersService {
       order: { createdAt: 'DESC' },
       relations: {
         items: { variant: { productColor: { product: true } } },
-        customer: true,
-        shipment: true,
-        address: true,
+      },
+    });
+
+    return {
+      orders,
+    };
+  }
+
+  //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  async exportTotal(pagination: OrderPaginationDto) {
+    const { status, type, paymentType, startDate, endDate } = pagination;
+
+    const options: any = {
+      where: {},
+    };
+
+    // --------------------------------------------
+    // 1. Filtros
+    // --------------------------------------------
+
+    if (status) options.where.status = status;
+    else options.where.status = Not(OrderStatus.EXPIRED);
+
+    if (type) options.where.type = type;
+    if (paymentType) options.where.payment_type = paymentType;
+
+    if (startDate && !endDate) {
+      const start = new Date(`${startDate}T00:00:00-04:00`);
+      const end = new Date(`${startDate}T23:59:59.999-04:00`);
+      options.where.createdAt = Between(start, end);
+    }
+
+    if (startDate && endDate) {
+      const from = new Date(`${startDate}T00:00:00-04:00`);
+      const to = new Date(`${endDate}T23:59:59.999-04:00`);
+      options.where.createdAt = Between(from, to);
+    }
+
+    // --------------------------------------------
+    // 2. relaciones
+    // --------------------------------------------
+
+    const orders = await this.orderRepository.find({
+      where: options.where,
+      take: 3,
+      order: { createdAt: 'DESC' },
+      relations: {
+        items: { variant: { productColor: { product: true } } },
       },
     });
 
@@ -395,10 +441,7 @@ export class OrdersService {
       .filter((order) => order.status !== OrderStatus.CANCELLED)
       .reduce((sum, order) => sum + Number(order.totalPrice), 0);
 
-    return {
-      orders,
-      totalAmount: Number(totalAmount.toFixed(2)),
-    };
+    return { orders, totalAmount };
   }
 
   //? ============================================================================================== */

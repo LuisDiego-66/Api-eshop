@@ -233,20 +233,53 @@ export class OrdersController {
     type: String,
   })
   @Get('export/exel')
-  async exportExcel(
+  async exportOrders(
     @Query() pagination: OrderPaginationDto,
     @Res() res: Response,
   ) {
     const result = await this.ordersService.export(pagination);
-    return this.exelService.exportOrdersToExcel(result, res);
+    return this.exelService.exportOrders(result, res);
   }
 
   //? ============================================================================================== */
-  //?                                          pueba                                                 */
   //? ============================================================================================== */
 
-  /* @Post('prueba:id')
-  prueba(@Param('id') orderId: number) {
-    return this.ordersService.prueba(orderId);
-  } */
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: OrderStatus,
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: OrderType,
+  })
+  @ApiQuery({
+    name: 'paymentType',
+    required: false,
+    enum: PaymentType,
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+  })
+  @Get('export-total/exel')
+  async exportTotalOrders(
+    @Query() pagination: OrderPaginationDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.ordersService.exportTotal(pagination);
+    //return result;
+    return this.exelService.exportOrdersTotal(result, res);
+  }
 }

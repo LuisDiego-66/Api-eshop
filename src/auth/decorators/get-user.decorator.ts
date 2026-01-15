@@ -15,7 +15,7 @@ export const GetUser = createParamDecorator(
     if (!user) throw new UnauthorizedException('User not found (request)');
 
     if (!(user instanceof User)) {
-      throw new UnauthorizedException('You need to be a customer');
+      throw new UnauthorizedException('You need to be a user');
     }
 
     return user;
