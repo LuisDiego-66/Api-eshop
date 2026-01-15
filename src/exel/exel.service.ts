@@ -637,6 +637,10 @@ export class ExelService {
           const hasReason =
             transaction.reason && transaction.reason.trim() !== '';
 
+          if (hasReason) {
+            type = 'Baja/Ajuste';
+          }
+
           worksheet.getCell(`A${currentRow}`).value = type;
           worksheet.getCell(`B${currentRow}`).value = transaction.reason || '';
           worksheet.getCell(`C${currentRow}`).value = Math.abs(
