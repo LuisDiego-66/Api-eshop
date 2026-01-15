@@ -273,7 +273,7 @@ export class OrdersController {
     required: false,
     type: String,
   })
-  @Get('export-total/exel')
+  @Get('export/exel')
   async exportTotalOrders(
     @Query() pagination: OrderPaginationDto,
     @Res() res: Response,
