@@ -426,7 +426,6 @@ export class OrdersService {
 
     const orders = await this.orderRepository.find({
       where: options.where,
-      take: 3,
       order: { createdAt: 'DESC' },
       relations: {
         items: { variant: { productColor: { product: true } } },
