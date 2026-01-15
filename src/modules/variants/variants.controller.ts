@@ -27,7 +27,10 @@ import { Roles } from 'src/auth/enums';
 
 import { ExelService } from 'src/exel/exel.service';
 import { VariantsService } from './variants.service';
+import { OrdersService } from '../orders/orders.service';
 import { TransactionsService } from './transaction.service';
+import { OrderPaginationDto } from '../orders/pagination/order-pagination.dto';
+import { OrderStatus, OrderType, PaymentType } from '../orders/enums';
 
 @ApiTags('Variants')
 @Controller('variants')
@@ -38,6 +41,8 @@ export class VariantsController {
     private readonly transactionsService: TransactionsService,
 
     private readonly exelService: ExelService,
+
+    private readonly ordersService: OrdersService,
   ) {}
 
   //? ============================================================================================== */
@@ -188,5 +193,46 @@ export class VariantsController {
     const { variants } =
       await this.variantsService.exportToExelWhitTransactions();
     return await this.exelService.exportvariantsTransactions(variants, res);
+  }
+
+  //? ============================================================================================== */
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: OrderStatus,
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: OrderType,
+  })
+  @ApiQuery({
+    name: 'paymentType',
+    required: false,
+    enum: PaymentType,
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+  })
+  @Get('export/total-sales/exel')
+  async totalSales(
+    @Query() pagination: OrderPaginationDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.ordersService.exportTotal(pagination);
+    return await this.exelService.exportOrdersTotal(result, res);
   }
 }
