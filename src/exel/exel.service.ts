@@ -54,7 +54,10 @@ export class ExelService {
       // ---- DETECTAR TALLAS ----
       const sizeSet = new Set<string>();
       for (const item of items) sizeSet.add(item.variant.size.name);
-      const sizes = Array.from(sizeSet).sort();
+      const sizes = Array.from(sizeSet).sort((a, b) => {
+        const order = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
+        return order.indexOf(a) - order.indexOf(b);
+      });
 
       // ---- ENCABEZADO ----
       const headerRow = worksheet.addRow(['Color', ...sizes, 'Total']);
@@ -438,7 +441,10 @@ export class ExelService {
         }
       }
 
-      const sizes = Array.from(sizeSet).sort((a, b) => a.localeCompare(b));
+      const sizes = Array.from(sizeSet).sort((a, b) => {
+        const order = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
+        return order.indexOf(a) - order.indexOf(b);
+      });
 
       // ---- ENCABEZADO ----
       const header = ['Color', ...sizes, 'Total'];
