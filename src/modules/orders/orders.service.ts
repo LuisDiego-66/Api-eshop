@@ -342,7 +342,7 @@ export class OrdersService {
   //?                                        Export                                                  */
   //? ============================================================================================== */
 
-  async export(pagination: OrderPaginationDto) {
+  async exportTotal(pagination: OrderPaginationDto) {
     const { status, type, paymentType, startDate, endDate } = pagination;
 
     const options: any = {
@@ -391,7 +391,7 @@ export class OrdersService {
   //? ============================================================================================== */
   //? ============================================================================================== */
 
-  async exportTotal(pagination: OrderPaginationDto) {
+  async export(pagination: OrderPaginationDto) {
     const { status, type, paymentType, startDate, endDate } = pagination;
 
     const options: any = {

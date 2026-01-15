@@ -232,7 +232,7 @@ export class VariantsController {
     @Query() pagination: OrderPaginationDto,
     @Res() res: Response,
   ) {
-    const result = await this.ordersService.exportTotal(pagination);
+    const result = await this.ordersService.export(pagination);
     return await this.exelService.exportOrdersTotal(result, res);
   }
 }

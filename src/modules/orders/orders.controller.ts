@@ -237,14 +237,14 @@ export class OrdersController {
     @Query() pagination: OrderPaginationDto,
     @Res() res: Response,
   ) {
-    const result = await this.ordersService.export(pagination);
+    const result = await this.ordersService.exportTotal(pagination);
     return this.exelService.exportOrders(result, res);
   }
 
   //? ============================================================================================== */
   //? ============================================================================================== */
 
-  //!
+  /*   //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
   //!
@@ -281,5 +281,5 @@ export class OrdersController {
     const result = await this.ordersService.exportTotal(pagination);
     //return result;
     return this.exelService.exportOrdersTotal(result, res);
-  }
+  } */
 }
