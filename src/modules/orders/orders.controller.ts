@@ -238,7 +238,7 @@ export class OrdersController {
     @Res() res: Response,
   ) {
     const result = await this.ordersService.export(pagination);
-    return await this.exelService.exportOrdersTotal(result, res);
+    return await this.exelService.exportOrders(result, res);
   }
 
   //? ============================================================================================== */
