@@ -26,7 +26,9 @@ import { DailyCashController } from './daily-cash.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, Item, DailyCash]),
-    VariantsModule,
+
+    forwardRef(() => VariantsModule),
+
     StockReservationsModule,
     forwardRef(() => CustomersModule),
     ExelModule,

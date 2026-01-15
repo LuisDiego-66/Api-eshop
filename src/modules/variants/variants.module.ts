@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { SizesModule } from '../sizes/sizes.module';
@@ -15,6 +15,7 @@ import { ExelModule } from 'src/exel/exel.module';
 import { ColorsModule } from '../colors/colors.module';
 
 import { TransactionsService } from './transaction.service';
+import { OrdersModule } from '../orders/orders.module';
 
 @Module({
   imports: [
@@ -23,6 +24,8 @@ import { TransactionsService } from './transaction.service';
     SizesModule,
     ColorsModule,
     ExelModule,
+
+    forwardRef(() => OrdersModule),
   ],
   controllers: [VariantsController],
   providers: [VariantsService, TransactionsService],
