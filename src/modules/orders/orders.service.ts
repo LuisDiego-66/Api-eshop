@@ -31,6 +31,7 @@ import { CustomersService } from '../customers/customers.service';
 
 import { Order } from './entities/order.entity';
 import { Customer } from '../customers/entities/customer.entity';
+import { DailyCash } from './entities/dailycash.entity';
 
 @Injectable()
 export class OrdersService {
@@ -41,45 +42,15 @@ export class OrdersService {
     @Inject(forwardRef(() => CustomersService))
     private readonly customersService: CustomersService,
 
+    @InjectRepository(DailyCash)
+    private readonly dailyCashRepository: Repository<DailyCash>,
+
     private readonly dataSource: DataSource,
     private readonly createService: CreateService,
     private readonly cancelService: CancelService,
     private readonly updateService: UpdateService,
     private readonly confirmService: ConfirmService,
   ) {}
-
-  /* async prueba(orderId: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    const orderEntity = await queryRunner.manager
-      .createQueryBuilder(Order, 'order')
-      .innerJoinAndSelect('order.customer', 'customer')
-      .innerJoinAndSelect('order.address', 'address')
-      .innerJoinAndSelect('order.shipment', 'shipment')
-      .where('order.id = :id', { id: orderId })
-      .getOne();
-
-    await queryRunner.commitTransaction();
-
-    const orderProperties = {
-      to: orderEntity?.customer?.email,
-
-      orderNumber: orderEntity?.id.toString(),
-      orderDate: orderEntity?.createdAt.toISOString().split('T')[0],
-      totalPrice: orderEntity?.totalPrice,
-
-      customerName: orderEntity?.customer?.name,
-      customerEmail: orderEntity?.customer?.email,
-      customerPhone: orderEntity?.customer?.phone || '',
-
-      shippingAddress: orderEntity?.address?.address,
-      shippingCity: orderEntity?.address?.city,
-      shippingCountry: orderEntity?.address?.country,
-    };
-    return orderProperties;
-  } */
 
   //? ============================================================================================== */
   //?                         Create_Order_In_Store                                                  */
@@ -398,6 +369,8 @@ export class OrdersService {
       where: {},
     };
 
+    let dailyCashQuantity: number | null = null;
+
     // --------------------------------------------
     // 1. Filtros
     // --------------------------------------------
@@ -411,7 +384,19 @@ export class OrdersService {
     if (startDate && !endDate) {
       const start = new Date(`${startDate}T00:00:00-04:00`);
       const end = new Date(`${startDate}T23:59:59.999-04:00`);
+
       options.where.createdAt = Between(start, end);
+
+      // Buscar DailyCash del mismo día
+      const dailyCash = await this.dailyCashRepository.findOne({
+        where: {
+          createdAt: Between(start, end),
+        },
+      });
+
+      if (dailyCash) {
+        dailyCashQuantity = Number(dailyCash.quantity);
+      }
     }
 
     if (startDate && endDate) {
@@ -440,7 +425,11 @@ export class OrdersService {
       .filter((order) => order.status !== OrderStatus.CANCELLED)
       .reduce((sum, order) => sum + Number(order.totalPrice), 0);
 
-    return { orders, totalAmount };
+    return {
+      orders,
+      totalAmount,
+      dailyCashQuantity,
+    };
   }
 
   //? ============================================================================================== */

@@ -233,6 +233,7 @@ export class VariantsController {
     @Res() res: Response,
   ) {
     const result = await this.ordersService.exportTotal(pagination);
+    //return result;
     return this.exelService.exportOrdersTotal(result, res);
   }
 }

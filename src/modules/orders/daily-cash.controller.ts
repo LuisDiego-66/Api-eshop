@@ -1,4 +1,4 @@
-import { Post, Body, Controller } from '@nestjs/common';
+import { Post, Body, Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CreateDailyCashDto } from './dto';
@@ -23,7 +23,20 @@ export class DailyCashController {
   @ApiBearerAuth('access-token')
   //!
   @Post()
-  createInStore(@Body() createDailyCashDto: CreateDailyCashDto) {
+  create(@Body() createDailyCashDto: CreateDailyCashDto) {
     return this.sailyCashService.create(createDailyCashDto);
+  }
+
+  //? ============================================================================================== */
+  //?                                       FindOne                                                  */
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Get()
+  findOne() {
+    return this.sailyCashService.findOne();
   }
 }

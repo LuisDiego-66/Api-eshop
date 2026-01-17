@@ -238,48 +238,7 @@ export class OrdersController {
     @Res() res: Response,
   ) {
     const result = await this.ordersService.export(pagination);
+    //return result;
     return await this.exelService.exportOrders(result, res);
   }
-
-  //? ============================================================================================== */
-  //? ============================================================================================== */
-
-  /*   //!
-  @Auth(Roles.ADMIN)
-  @ApiBearerAuth('access-token')
-  //!
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: OrderStatus,
-  })
-  @ApiQuery({
-    name: 'type',
-    required: false,
-    enum: OrderType,
-  })
-  @ApiQuery({
-    name: 'paymentType',
-    required: false,
-    enum: PaymentType,
-  })
-  @ApiQuery({
-    name: 'startDate',
-    required: false,
-    type: String,
-  })
-  @ApiQuery({
-    name: 'endDate',
-    required: false,
-    type: String,
-  })
-  @Get('export/exel')
-  async exportTotalOrders(
-    @Query() pagination: OrderPaginationDto,
-    @Res() res: Response,
-  ) {
-    const result = await this.ordersService.exportTotal(pagination);
-    //return result;
-    return this.exelService.exportOrdersTotal(result, res);
-  } */
 }

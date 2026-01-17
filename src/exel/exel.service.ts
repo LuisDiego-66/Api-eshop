@@ -152,11 +152,22 @@ export class ExelService {
   //? ============================================================================================== */
 
   async exportOrders(
-    data: { orders: any[]; totalAmount: number },
+    data: {
+      orders: any[];
+      totalAmount: number;
+      dailyCashQuantity?: number | null;
+    },
     res: Response,
   ) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Orders');
+
+    let dailyCash: number | null = null;
+
+    // Validar si dailyCashQuantity está presente en los datos
+    if (data.dailyCashQuantity) {
+      dailyCash = data.dailyCashQuantity;
+    }
 
     let currentRow = 1;
 
@@ -183,6 +194,7 @@ export class ExelService {
         'Orden Editada',
         '',
         'Total Orden',
+        dailyCash ? 'Daily Cash' : '',
       ];
       orderRow.eachCell((cell) => {
         cell.font = { bold: true };
@@ -208,6 +220,7 @@ export class ExelService {
         order.edited ? 'VERDADERO' : 'FALSO',
         '',
         parseFloat(order.totalPrice),
+        dailyCash || '',
       ];
       orderDataRow.getCell(8).numFmt = '#,##0.00';
       currentRow++;

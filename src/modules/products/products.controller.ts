@@ -16,7 +16,12 @@ import {
   DiscountFilter,
   ProductPaginationDto,
 } from './pagination/product-pagination.dto';
-import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
+import {
+  AddDiscountsAllDto,
+  AddDiscountsDto,
+  CreateProductDto,
+  UpdateProductDto,
+} from './dto';
 
 import { Auth } from 'src/auth/decorators';
 import { Roles } from 'src/auth/enums';
@@ -99,6 +104,17 @@ export class ProductsController {
   @Put('add-discounts')
   addDiscounts(@Body() addDiscountsDto: AddDiscountsDto) {
     return this.productsService.addDiscounts(addDiscountsDto);
+  }
+
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Put('add-discounts/all')
+  addDiscountsAll(@Body() addDiscountsAllDto: AddDiscountsAllDto) {
+    return this.productsService.addDiscountsAll(addDiscountsAllDto);
   }
 
   //? ============================================================================================== */

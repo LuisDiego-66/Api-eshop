@@ -19,7 +19,12 @@ import {
   DiscountFilter,
 } from './pagination/product-pagination.dto';
 
-import { AddDiscountsDto, CreateProductDto, UpdateProductDto } from './dto';
+import {
+  AddDiscountsAllDto,
+  AddDiscountsDto,
+  CreateProductDto,
+  UpdateProductDto,
+} from './dto';
 
 import { GenderType } from '../categories/enums/gender-type.enum';
 
@@ -319,6 +324,59 @@ export class ProductsService {
         message: 'Discount applied successfully to products',
         count: products.length,
         products: products.map((p) => ({ id: p.id, name: p.name })),
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleDBExceptions(error);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  //? ============================================================================================== */
+  //?                                  AddDiscounts                                                  */
+  //? ============================================================================================== */
+
+  async addDiscountsAll(addDiscountsAllDto: AddDiscountsAllDto) {
+    const { discountId } = addDiscountsAllDto;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // --------------------------------------------
+      // 1. Verificar que el descuento exista
+      // --------------------------------------------
+
+      const discountEntity = await queryRunner.manager.findOne(Discount, {
+        where: { id: discountId },
+      });
+      if (!discountEntity)
+        throw new NotFoundException(`Discount with ID ${discountId} not found`);
+
+      // --------------------------------------------
+      // 2. Buscar los productos
+      // --------------------------------------------
+
+      const products = await queryRunner.manager.find(Product);
+
+      // --------------------------------------------
+      // 3. Actualización masiva con un solo UPDATE
+      // --------------------------------------------
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(Product)
+        .set({ discount: discountEntity })
+        .execute();
+
+      await queryRunner.commitTransaction();
+
+      return {
+        message: 'Discount applied successfully to products',
+        count: products.length,
+        //products: products.map((p) => ({ id: p.id, name: p.name })),
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
