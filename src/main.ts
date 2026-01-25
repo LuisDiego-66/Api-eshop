@@ -17,7 +17,11 @@ async function bootstrap() {
   }
 
   //! cors global enable
-  app.enableCors();
+  app.enableCors({
+    origin: true,
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  });
 
   app.setGlobalPrefix('api');
 
