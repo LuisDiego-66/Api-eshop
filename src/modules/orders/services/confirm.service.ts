@@ -115,6 +115,7 @@ export class ConfirmService {
     try {
       const { additionalData: orderId, ...data } = body;
 
+      console.log('1. prueba');
       // --------------------------------------------
       // 1. Orden PENDING, tipo QR, no expirada
       // --------------------------------------------
@@ -184,6 +185,8 @@ export class ConfirmService {
       // --------------------------------------------
       // 5. Se crea el Payment
       // --------------------------------------------
+
+      console.log('2. prueba');
 
       const payment = queryRunner.manager.create(Payment, {
         qrId: data.QRId,

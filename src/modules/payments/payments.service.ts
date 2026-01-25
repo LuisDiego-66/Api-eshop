@@ -95,7 +95,7 @@ export class PaymentsService {
   //? ============================================================================================== */
 
   async verifyPayment(orderId: number) {
-    /*     const now = new Date();
+    const now = new Date();
 
     const order = await this.orderRepository.findOne({
       where: [
@@ -122,9 +122,7 @@ export class PaymentsService {
       return order.status === OrderStatus.SENT;
     } else if (order.type === OrderType.ONLINE) {
       return order.status === OrderStatus.PAID;
-    } */
-
-    console.log('verifyPayment called for orderId:', orderId);
+    }
   }
 
   //? ============================================================================================== */
