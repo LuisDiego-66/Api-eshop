@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, QueryRunner } from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
@@ -115,7 +120,6 @@ export class ConfirmService {
     try {
       const { additionalData: orderId, ...data } = body;
 
-      //console.log('1. prueba');
       // --------------------------------------------
       // 1. Orden PENDING, tipo QR, no expirada
       // --------------------------------------------
@@ -188,13 +192,11 @@ export class ConfirmService {
       // 5. Se crea el Payment
       // --------------------------------------------
 
-      //console.log('2. prueba');
-
       const payment = queryRunner.manager.create(Payment, {
         qrId: data.QRId,
         sourceBankId: data.sourceBankId.toString(),
         //saver: data.originName,
-        amount: data.amount.toString(),
+        amount: data.amount.toString() || order.totalPrice.toString(),
         gloss: data.Gloss,
         order: order,
       });
@@ -241,6 +243,12 @@ export class ConfirmService {
       return order;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+
+      if (!(error instanceof HttpException)) {
+        console.error(error); // Log del error real
+        throw new InternalServerErrorException('Unexpected error occurred');
+      }
+
       handleDBExceptions(error);
     } finally {
       await queryRunner.release();
