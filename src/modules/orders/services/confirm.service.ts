@@ -124,7 +124,7 @@ export class ConfirmService {
       // 1. Orden PENDING, tipo QR, no expirada
       // --------------------------------------------
 
-      console.log(body);
+      //console.log(body);
 
       const order = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
@@ -192,14 +192,19 @@ export class ConfirmService {
       // 5. Se crea el Payment
       // --------------------------------------------
 
+      const amount =
+        data?.amount != null
+          ? data.amount.toString()
+          : order.totalPrice.toString();
+
       const payment = queryRunner.manager.create(Payment, {
         qrId: data.QRId,
-        sourceBankId: data.sourceBankId.toString(),
-        //saver: data.originName,
-        amount: data.amount.toString() || order.totalPrice.toString(),
-        gloss: data.Gloss,
+        sourceBankId: data.sourceBankId?.toString() || '',
+        amount: amount,
+        gloss: data.Gloss ?? '',
         order: order,
       });
+
       await queryRunner.manager.save(Payment, payment);
 
       // --------------------------------------------
