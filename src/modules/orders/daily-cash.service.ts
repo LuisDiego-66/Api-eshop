@@ -25,7 +25,7 @@ export class DailyCashService {
   //?                                       FindOne                                                  */
   //? ============================================================================================== */
 
-  /*   async findOne() {
+  /* async findOne() {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
@@ -45,10 +45,18 @@ export class DailyCashService {
   } */
 
   async findOne() {
-    const dailyCash = await this.dailyCashRepository
-      .createQueryBuilder('dc')
-      .where('DATE(dc.createdAt) = CURRENT_DATE')
-      .getOne();
+    const now = new Date();
+    const start = new Date(now);
+    start.setUTCHours(0, 0, 0, 0);
+
+    const end = new Date(now);
+    end.setUTCHours(23, 59, 59, 999);
+
+    const dailyCash = await this.dailyCashRepository.findOne({
+      where: {
+        createdAt: Between(start, end),
+      },
+    });
 
     if (!dailyCash)
       throw new NotFoundException('No daily cash record found for today');
