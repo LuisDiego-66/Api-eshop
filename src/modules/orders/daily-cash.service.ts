@@ -25,7 +25,7 @@ export class DailyCashService {
   //?                                       FindOne                                                  */
   //? ============================================================================================== */
 
-  /* async findOne() {
+  async findOne() {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
@@ -42,9 +42,9 @@ export class DailyCashService {
       throw new NotFoundException('No daily cash record found for today');
 
     return dailyCash;
-  } */
+  }
 
-  async findOne() {
+  /* async findOne() {
     const now = new Date();
     const start = new Date(now);
     start.setUTCHours(0, 0, 0, 0);
@@ -62,5 +62,5 @@ export class DailyCashService {
       throw new NotFoundException('No daily cash record found for today');
 
     return dailyCash;
-  }
+  } */
 }
