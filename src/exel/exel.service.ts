@@ -377,6 +377,193 @@ export class ExelService {
   //?                               Export_Variants                                                  */
   //? ============================================================================================== */
 
+  /*   async exportVariants(
+    res: Response,
+    variants: Variant[],
+    stockMap: Map<number, number>,
+  ) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Variants');
+
+    // -------------------------------
+    // 1) AGRUPAR Producto -> Color
+    // -------------------------------
+    const grouped = new Map<
+      string,
+      {
+        productId: number | string;
+        colors: Map<string, Variant[]>;
+      }
+    >();
+
+    for (const variant of variants) {
+      const product = variant.productColor?.product;
+      const color = variant.productColor?.color;
+
+      const productName = product?.name ?? 'Sin producto';
+      const productId = product?.id ?? '';
+      const colorName = color?.name ?? 'Sin color';
+
+      if (!grouped.has(productName)) {
+        grouped.set(productName, {
+          productId,
+          colors: new Map<string, Variant[]>(),
+        });
+      }
+
+      const productGroup = grouped.get(productName)!;
+
+      if (!productGroup.colors.has(colorName)) {
+        productGroup.colors.set(colorName, []);
+      }
+
+      productGroup.colors.get(colorName)!.push(variant);
+    }
+
+    // -------------------------------
+    // 2) CONSTRUIR EL EXCEL
+    // -------------------------------
+    for (const [productName, data] of grouped) {
+      const productId = data.productId;
+      const colors = data.colors;
+
+      // ---- TÍTULO PRODUCTO ----
+      const productRow = worksheet.addRow([productId, productName]);
+
+      worksheet.mergeCells(`B${productRow.number}:H${productRow.number}`);
+
+      productRow.font = { bold: true, size: 14 };
+      productRow.alignment = { wrapText: true, vertical: 'middle' };
+      productRow.height = 30;
+
+      productRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFD9E1F2' },
+      };
+
+      worksheet.getColumn(2).width = 40;
+
+      worksheet.addRow({});
+
+      // ---- TALLAS DINÁMICAS ----
+      const sizeSet = new Set<string>();
+      for (const variants of colors.values()) {
+        for (const v of variants) {
+          sizeSet.add(v.size?.name ?? '');
+        }
+      }
+
+      const sizes = Array.from(sizeSet).sort((a, b) => {
+        const order = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
+        return order.indexOf(a) - order.indexOf(b);
+      });
+
+      // ---- ENCABEZADO ----
+      const header = ['Color', ...sizes, 'Total'];
+      const headerRow = worksheet.addRow(header);
+
+      headerRow.font = { bold: true };
+      headerRow.alignment = { horizontal: 'center' };
+
+      worksheet.getColumn(1).width = 22;
+      for (let i = 2; i < 2 + sizes.length; i++) {
+        worksheet.getColumn(i).width = 8;
+      }
+
+      let generalTotal = 0;
+
+      // ---- FILAS POR COLOR ----
+      for (const [colorName, variantsOfColor] of colors) {
+        const sizeTotals = new Map<string, number>();
+        sizes.forEach((s) => sizeTotals.set(s, 0));
+
+        for (const v of variantsOfColor) {
+          const sizeName = v.size?.name ?? '';
+          const stock = stockMap.get(v.id) ?? 0;
+
+          sizeTotals.set(sizeName, (sizeTotals.get(sizeName) ?? 0) + stock);
+        }
+
+        const rowData: (string | number)[] = [colorName];
+        let colorTotal = 0;
+
+        for (const s of sizes) {
+          const value = sizeTotals.get(s) ?? 0;
+          rowData.push(value);
+          colorTotal += value;
+        }
+
+        rowData.push(colorTotal);
+        generalTotal += colorTotal;
+
+        const row = worksheet.addRow(rowData);
+
+        row.getCell(1).alignment = { wrapText: true, vertical: 'middle' };
+
+        row.eachCell((cell, colNumber) => {
+          if (colNumber > 1) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+
+          if (typeof cell.value === 'number' && cell.value === 0) {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFC7CE' },
+            };
+          }
+        });
+      }
+
+      // -------------------------------
+      //  TOTAL GENERAL SOLO EN SU CELDA
+      // -------------------------------
+      const totalRow = worksheet.addRow([
+        '',
+        ...new Array(sizes.length).fill(''),
+        generalTotal,
+      ]);
+
+      // celda del total = última columna
+      const totalCell = totalRow.getCell(sizes.length + 2);
+
+      totalCell.font = { bold: true };
+      totalCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      totalCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFFF99' },
+      };
+
+      // opcional: borde alrededor del total
+      totalCell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+
+      worksheet.addRow({});
+      worksheet.addRow({});
+    }
+
+    // -------------------------------
+    // 3) RESPUESTA HTTP
+    // -------------------------------
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=productos-stock.xlsx',
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  }
+ */
   async exportVariants(
     res: Response,
     variants: Variant[],
@@ -419,6 +606,60 @@ export class ExelService {
 
       productGroup.colors.get(colorName)!.push(variant);
     }
+
+    // -------------------------------
+    // 1.5) CALCULAR TOTAL GENERAL
+    // -------------------------------
+    let overallTotal = 0;
+    for (const data of grouped.values()) {
+      for (const variantsOfColor of data.colors.values()) {
+        for (const v of variantsOfColor) {
+          const stock = stockMap.get(v.id) ?? 0;
+          overallTotal += stock;
+        }
+      }
+    }
+
+    // MOSTRAR TOTAL GENERAL AL PRINCIPIO
+    const titleRow = worksheet.addRow(['INVENTARIO TOTAL']);
+    titleRow.font = { bold: true, size: 16 };
+    titleRow.alignment = { horizontal: 'center' };
+    titleRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' }, // azul oscuro
+    };
+    titleRow.height = 25;
+    worksheet.mergeCells(`A${titleRow.number}:H${titleRow.number}`);
+
+    const totalRow = worksheet.addRow([
+      '',
+      'TOTAL GENERAL DE STOCK',
+      '',
+      '',
+      '',
+      '',
+      '',
+      overallTotal,
+    ]);
+    worksheet.mergeCells(`B${totalRow.number}:G${totalRow.number}`);
+    totalRow.font = { bold: true, size: 14 };
+    totalRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFFF99' }, // amarillo
+    };
+    totalRow.height = 22;
+
+    const labelCell = totalRow.getCell(2);
+    labelCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    const totalValueCell = totalRow.getCell(8);
+    totalValueCell.font = { bold: true, size: 14 };
+    totalValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    worksheet.addRow({}); // separación
+    worksheet.addRow({});
 
     // -------------------------------
     // 2) CONSTRUIR EL EXCEL
