@@ -71,7 +71,7 @@ export class ProductsService {
   //?                                        FindAll                                                 */
   //? ============================================================================================== */
 
-  async findAll(pagination: ProductPaginationDto) {
+  /*   async findAll(pagination: ProductPaginationDto) {
     const { days, discounts } = pagination;
 
     const where: any = {};
@@ -103,6 +103,61 @@ export class ProductsService {
 
       {
         where,
+
+        relations: {
+          subcategory: { category: true },
+          discount: true,
+          productColors: true,
+        },
+      },
+
+      pagination,
+      ['name'], //* busqueda por:
+    );
+  } */
+  async findAll(pagination: ProductPaginationDto) {
+    const { days, discounts } = pagination;
+
+    const qb = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.subcategory', 'subcategory')
+      .leftJoinAndSelect('subcategory.category', 'category')
+      .leftJoinAndSelect(
+        'product.discount',
+        'discount',
+        'discount.deletedAt IS NULL',
+      )
+      .leftJoinAndSelect('product.productColors', 'productColors');
+
+    // --------------------------------------------
+    // 1. Búsqueda por días
+    // --------------------------------------------
+    if (days) {
+      const dateFrom = new Date();
+      dateFrom.setDate(dateFrom.getDate() - days);
+
+      qb.andWhere('product.createdAt >= :dateFrom', { dateFrom });
+    }
+
+    // --------------------------------------------
+    // 2. Filtro descuentos (true / false)
+    // --------------------------------------------
+    if (discounts !== undefined) {
+      if (discounts === DiscountFilter.true) {
+        qb.andWhere('discount.id IS NOT NULL');
+      } else {
+        qb.andWhere('discount.id IS NULL');
+      }
+    }
+
+    // --------------------------------------------
+    // 3. Paginación
+    // --------------------------------------------
+    return paginate(
+      this.productRepository,
+
+      {
+        //where,
 
         relations: {
           subcategory: { category: true },
