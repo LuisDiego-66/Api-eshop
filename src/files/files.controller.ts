@@ -53,6 +53,9 @@ export class FilesController {
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       fileFilter: fileFilter,
+      limits: {
+        fileSize: 3 * 1024 * 1024, // 3MB
+      },
       storage: diskStorage({
         destination: './static/uploads',
         filename: fileNamer,
