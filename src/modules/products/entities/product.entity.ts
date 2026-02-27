@@ -9,9 +9,9 @@ import {
 } from 'typeorm';
 
 import { Subcategory } from 'src/modules/subcategories/entities/subcategory.entity';
+import { ProductColor } from '../../variants/entities/product-color.entity';
 import { Discount } from 'src/modules/discounts/entities/discount.entity';
 import { Brand } from 'src/modules/brands/entities/brand.entity';
-import { ProductColor } from '../../variants/entities/product-color.entity';
 
 @Entity('products')
 export class Product {
@@ -26,6 +26,9 @@ export class Product {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: string; //! string
+
+  @Column('text', { nullable: true })
+  video: string;
 
   @Column('boolean', { default: true })
   enabled: boolean;
