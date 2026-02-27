@@ -70,6 +70,11 @@ export class DiscountsController {
   //?                                        FindOne                                                 */
   //? ============================================================================================== */
 
+  @Get('first-discount')
+  findFirstDiscount() {
+    return this.discountsService.findFirstDiscount();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.discountsService.findOne(id);

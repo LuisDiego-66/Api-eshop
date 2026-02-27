@@ -57,6 +57,38 @@ export class DiscountsService {
     return discount;
   }
 
+  async findFirstDiscount() {
+    const now = new Date();
+
+    const discount = await this.discountRepository
+      .createQueryBuilder('discount')
+      .where('discount.isActive = :isActive', { isActive: true })
+      .andWhere(
+        `
+      (
+        discount.discountType = :permanent
+        OR
+        (
+          discount.discountType = :seasonal
+          AND discount.startDate IS NOT NULL
+          AND discount.endDate IS NOT NULL
+          AND discount.startDate <= :now
+          AND discount.endDate >= :now
+        )
+      )
+      `,
+        {
+          permanent: DiscountType.PERMANENT,
+          seasonal: DiscountType.SEASONAL,
+          now,
+        },
+      )
+      .orderBy('discount.createdAt', 'DESC')
+      .getOne();
+
+    return discount;
+  }
+
   //? ============================================================================================== */
   //?                                        Update                                                  */
   //? ============================================================================================== */

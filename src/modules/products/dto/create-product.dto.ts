@@ -31,13 +31,6 @@ export class CreateProductDto {
   price: string; //! string
 
   @ApiPropertyOptional({
-    example: 'video',
-  })
-  @IsOptional()
-  @IsString()
-  video?: string;
-
-  @ApiPropertyOptional({
     example: true,
     default: true,
   })

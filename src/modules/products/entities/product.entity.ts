@@ -27,9 +27,6 @@ export class Product {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: string; //! string
 
-  @Column('text', { nullable: true })
-  video: string;
-
   @Column('boolean', { default: true })
   enabled: boolean;
 
