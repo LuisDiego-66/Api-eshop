@@ -25,11 +25,6 @@ import { Roles } from 'src/auth/enums';
 
 import { DiscountsService } from './discounts.service';
 
-//!
-@Auth(Roles.ADMIN)
-@ApiBearerAuth('access-token')
-//!
-
 @ApiTags('Discounts')
 @Controller('discounts')
 export class DiscountsController {
@@ -39,6 +34,10 @@ export class DiscountsController {
   //?                                        Create                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post('seasonal')
   createSeasonal(
     @Body()
@@ -49,6 +48,10 @@ export class DiscountsController {
 
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Post('permanent')
   createPermanent(
     @Body()
@@ -84,6 +87,10 @@ export class DiscountsController {
   //?                                        Update                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch('seasonal/:id')
   updateSeasonal(
     @Param('id', ParseIntPipe) id: number,
@@ -93,6 +100,12 @@ export class DiscountsController {
     return this.discountsService.update(id, updateDiscountDto);
   }
 
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Patch('permanent/:id')
   updatePermanent(
     @Param('id', ParseIntPipe) id: number,
@@ -106,6 +119,10 @@ export class DiscountsController {
   //?                                        Delete                                                  */
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete('permanents')
   removePermanent() {
     return this.discountsService.removePermanent();
@@ -113,6 +130,10 @@ export class DiscountsController {
 
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete('seasonals')
   removeSeasonal() {
     return this.discountsService.removeSeasonal();
@@ -120,6 +141,10 @@ export class DiscountsController {
 
   //? ============================================================================================== */
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.discountsService.remove(id);
