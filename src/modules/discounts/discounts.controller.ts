@@ -6,12 +6,10 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
   CreateSeasonalDiscountDto,
   CreatePermanentDiscountDto,
@@ -65,8 +63,8 @@ export class DiscountsController {
   //? ============================================================================================== */
 
   @Get()
-  findAll(@Query() pagination: PaginationDto) {
-    return this.discountsService.findAll(pagination);
+  findAll() {
+    return this.discountsService.findAll();
   }
 
   //? ============================================================================================== */

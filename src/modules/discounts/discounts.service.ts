@@ -42,11 +42,42 @@ export class DiscountsService {
   //?                                        FindAll                                                 */
   //? ============================================================================================== */
 
-  async findAll(pagination: PaginationDto) {
+  /* async findAll(pagination: PaginationDto) {
     const discounts = await this.discountRepository.find({});
     return discounts;
-  }
+  } */
 
+  async findAll() {
+    const now = new Date();
+
+    const discounts = await this.discountRepository
+      .createQueryBuilder('discount')
+      .where('discount.isActive = :isActive', { isActive: true })
+      .andWhere(
+        `
+      (
+        discount.discountType = :permanent
+        OR
+        (
+          discount.discountType = :seasonal
+          AND discount.startDate IS NOT NULL
+          AND discount.endDate IS NOT NULL
+          AND discount.startDate <= :now
+          AND discount.endDate >= :now
+        )
+      )
+      `,
+        {
+          permanent: DiscountType.PERMANENT,
+          seasonal: DiscountType.SEASONAL,
+          now,
+        },
+      )
+      .orderBy('discount.createdAt', 'DESC')
+      .getMany();
+
+    return discounts;
+  }
   //? ============================================================================================== */
   //?                                        FindOne                                                 */
   //? ============================================================================================== */
@@ -56,6 +87,8 @@ export class DiscountsService {
     if (!discount) throw new NotFoundException('Discount not found');
     return discount;
   }
+
+  //? ============================================================================================== */
 
   async findFirstDiscount() {
     const now = new Date();
