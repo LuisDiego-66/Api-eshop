@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import {
   CreateSeasonalDiscountDto,
   CreatePermanentDiscountDto,

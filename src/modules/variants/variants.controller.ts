@@ -181,6 +181,16 @@ export class VariantsController {
     await this.exelService.exportVariants(res, variants, stockMap);
   }
 
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @Get('export/stock-critico')
+  async exporStockCritico(@Res() res: Response) {
+    const { variants, stockMap } = await this.variantsService.exportToExel();
+    await this.exelService.exportVariantsCritico(res, variants, stockMap);
+  }
+
   //? ============================================================================================== */
   //? ============================================================================================== */
 
