@@ -68,6 +68,9 @@ export class Order {
   @Column('boolean', { default: false })
   edited: boolean;
 
+  @Column('text', { nullable: true }) //! nullable
+  email?: string | null;
+
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
   //* ---------------------------------------------------------------------------------------------- */

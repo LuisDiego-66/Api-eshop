@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateOrderOnlineDto {
   @ApiProperty({
@@ -35,4 +35,12 @@ export class CreateOrderOnlineDto {
   })
   @IsNumber()
   address: number;
+
+  @ApiPropertyOptional({
+    example: 'admin@gmail.com',
+  })
+  @IsOptional()
+  @IsString()
+  @IsEmail()
+  email?: string;
 }

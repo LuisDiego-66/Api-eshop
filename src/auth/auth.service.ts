@@ -80,6 +80,26 @@ export class AuthService {
   }
 
   //? ============================================================================================== */
+  //?                                        Guest                                                   */
+  //? ============================================================================================== */
+
+  async getTokenGuest() {
+    const email = 'guest@moneroget.com';
+    const guest = await this.findCustomerByEmail(email);
+
+    if (!guest) throw new NotFoundException('Guest not found');
+
+    return {
+      email: guest.email,
+      token: this.generateJwt({
+        id: guest.id,
+        email: guest.email,
+        type: LoginType.customer,
+      }),
+    };
+  }
+
+  //? ============================================================================================== */
   //?                                RegisterCustomer                                                */
   //? ============================================================================================== */
 

@@ -223,20 +223,33 @@ export class ConfirmService {
 
       await queryRunner.commitTransaction();
 
+      if (!orderEntity) {
+        throw new NotFoundException('Order not found');
+      }
+
       // --------------------------------------------
       // 7. Se envia el correo
       // --------------------------------------------
 
-      if (order.type === OrderType.ONLINE) {
+      if (orderEntity.type === OrderType.ONLINE && orderEntity.customer) {
+        let email = orderEntity.customer.email;
+
+        if (
+          orderEntity.customer.email == 'guest@moneroget.com' &&
+          orderEntity.email
+        ) {
+          email = orderEntity.email;
+        }
+
         await this.mailService.sendMail({
-          to: orderEntity?.customer?.email,
+          to: email,
 
           orderNumber: orderEntity?.id.toString(),
           orderDate: orderEntity?.createdAt.toISOString().split('T')[0],
           totalPrice: orderEntity?.totalPrice,
 
           customerName: orderEntity?.customer?.name,
-          customerEmail: orderEntity?.customer?.email,
+          customerEmail: email,
           customerPhone: orderEntity?.customer?.phone || '',
 
           shippingAddress: orderEntity?.address?.address,
