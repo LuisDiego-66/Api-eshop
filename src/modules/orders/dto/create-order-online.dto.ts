@@ -8,6 +8,16 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+export class BillingDto {
+  @IsOptional()
+  @IsString()
+  ci?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
+
 export class CreateOrderOnlineDto {
   @ApiProperty({
     description: 'Token items',
@@ -55,14 +65,4 @@ export class CreateOrderOnlineDto {
   @ValidateNested()
   @Type(() => BillingDto)
   billing?: BillingDto;
-}
-
-export class BillingDto {
-  @IsOptional()
-  @IsString()
-  ci?: string;
-
-  @IsOptional()
-  @IsString()
-  name?: string;
 }

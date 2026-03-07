@@ -24,6 +24,7 @@ import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
 import { Address } from 'src/modules/addresses/entities/address.entity';
 import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Item } from './item.entity';
+import { BillingDto } from '../dto/create-order-online.dto';
 
 @Entity('orders')
 export class Order {
@@ -68,8 +69,11 @@ export class Order {
   @Column('boolean', { default: false })
   edited: boolean;
 
-  @Column('text', { nullable: true }) //! nullable
+  @Column('text', { nullable: true })
   email?: string | null;
+
+  @Column('json', { nullable: true })
+  billing?: BillingDto;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */
