@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 export class CreateOrderOnlineDto {
   @ApiProperty({
@@ -43,4 +50,19 @@ export class CreateOrderOnlineDto {
   @IsString()
   @IsEmail()
   email?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BillingDto)
+  billing?: BillingDto;
+}
+
+export class BillingDto {
+  @IsOptional()
+  @IsString()
+  ci?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
 }
