@@ -70,6 +70,7 @@ export class CreateService {
       if (type === OrderType.ONLINE && buyer) {
         const dtoOnline = dto as CreateOrderOnlineDto;
         orderData.email = dtoOnline.email; //! se asigna el email opcional
+        orderData.billing = dtoOnline.billing;
 
         // --------------------------------------------
         // 3. Se rellenan los datos de la Order Online
