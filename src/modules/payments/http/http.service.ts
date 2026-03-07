@@ -36,7 +36,7 @@ export class HttpService {
       {
         currency: 'BOB',
         gloss: payload.gloss,
-        amount: 0.1, //payload.amount,
+        amount: payload.amount,
         singleUse: true,
         expirationDate: '2026-06-15',
         additionalData: payload.additionalData,
