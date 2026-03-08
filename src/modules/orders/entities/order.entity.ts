@@ -76,7 +76,7 @@ export class Order {
   billing?: BillingDto;
 
   @Column('json', { nullable: true })
-  name_phone?: any | null;
+  name_phone?: any;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */

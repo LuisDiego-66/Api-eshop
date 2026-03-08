@@ -233,12 +233,15 @@ export class ConfirmService {
 
       if (orderEntity.type === OrderType.ONLINE && orderEntity.customer) {
         let email = orderEntity.customer.email;
+        let name = orderEntity?.customer?.name;
 
         if (
           orderEntity.customer.email == 'guest@moneroget.com' &&
           orderEntity.email
         ) {
           email = orderEntity.email;
+
+          name = orderEntity.name_phone?.name ?? name;
         }
 
         await this.mailService.sendMail({
@@ -248,7 +251,7 @@ export class ConfirmService {
           orderDate: orderEntity?.createdAt.toISOString().split('T')[0],
           totalPrice: orderEntity?.totalPrice,
 
-          customerName: orderEntity?.customer?.name,
+          customerName: name,
           customerEmail: email,
           customerPhone: orderEntity?.customer?.phone || '',
 
