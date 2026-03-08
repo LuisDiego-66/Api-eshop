@@ -77,11 +77,14 @@ export class OrdersService {
     if (!(buyer instanceof Customer)) {
       throw new BadRequestException('Only customers can create online orders');
     }
-    //* Actualizar datos del cliente
-    await this.customersService.update(buyer.id, {
-      phone: dto.phone,
-      name: dto.name,
-    });
+
+    if (buyer.email != 'guest@moneroget.com') {
+      //* Actualizar datos del cliente
+      await this.customersService.update(buyer.id, {
+        phone: dto.phone,
+        name: dto.name,
+      });
+    }
 
     //* Crear orden
     return this.createService.createOrderBase({
