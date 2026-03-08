@@ -100,12 +100,18 @@ export class CustomersService {
   //? ============================================================================================== */
 
   async getCustomer(customer: Customer) {
-    return await this.customerRepository.findOne({
+    const customerEntity = await this.customerRepository.findOne({
       where: { id: customer.id },
       relations: { address: { place: true }, orders: true },
     });
-  }
 
+    if (customerEntity?.email === 'guest@moneroget.com') {
+      customerEntity.address = [];
+      customerEntity.orders = [];
+    }
+
+    return customerEntity;
+  }
   //? ============================================================================================== */
   //?                                 FindOne_Order                                                  */
   //? ============================================================================================== */
