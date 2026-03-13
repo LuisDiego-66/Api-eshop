@@ -234,14 +234,15 @@ export class ConfirmService {
       if (orderEntity.type === OrderType.ONLINE && orderEntity.customer) {
         let email = orderEntity.customer.email;
         let name = orderEntity?.customer?.name;
+        let phone = orderEntity?.customer?.phone || '';
 
         if (
           orderEntity.customer.email == 'guest@moneroget.com' &&
           orderEntity.email
         ) {
           email = orderEntity.email;
-
           name = orderEntity.name_phone?.name ?? name;
+          phone = orderEntity.name_phone?.phone ?? phone;
         }
 
         await this.mailService.sendMail({
@@ -253,7 +254,7 @@ export class ConfirmService {
 
           customerName: name,
           customerEmail: email,
-          customerPhone: orderEntity?.customer?.phone || '',
+          customerPhone: phone,
 
           shippingAddress: orderEntity?.address?.address,
           shippingCity: orderEntity?.address?.city,
