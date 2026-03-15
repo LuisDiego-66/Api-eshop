@@ -143,16 +143,29 @@ export class ExelService {
 
   //* ============================================================================================== */
 
-  /* private toBoliviaDate(date: Date): Date {
-    return new Date(date.getTime() - 4 * 60 * 60 * 1000);
-  } */
-
-  toBoliviaDate(date: Date): Date {
+  /* toBoliviaDate(date: Date) {
     const boliviaDate = new Date(
       date.toLocaleString('en-US', { timeZone: 'America/La_Paz' }),
     );
-    return boliviaDate;
+    return boliviaDate.toLocaleString('es-BO');
+  } */
+
+  toBoliviaDate(date: Date) {
+    const boliviaDate = new Date(
+      date.toLocaleString('en-US', { timeZone: 'America/La_Paz' }),
+    );
+
+    return boliviaDate.toLocaleString('es-BO', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
   }
+
   //? ============================================================================================== */
   //?                           Export_Orders_Total                                                  */
   //? ============================================================================================== */
@@ -222,17 +235,29 @@ export class ExelService {
       /* const date = new Date(order.createdAt);
       date.setHours(date.getHours() - 4); */
 
-      const dateBolivia = new Date(
+      /* const dateBolivia = new Date(
         new Date(order.createdAt).toLocaleString('en-US', {
           timeZone: 'America/La_Paz',
         }),
       );
+ */
 
+      const dateBolivia = new Date(
+        new Date(order.createdAt).toLocaleString('en-US', {
+          timeZone: 'America/La_Paz',
+        }),
+      ).toLocaleString('es-BO', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
       orderDataRow.values = [
         order.id,
-        //new Date(order.createdAt).toLocaleString('es-BO'),
-        //date.toLocaleString('es-BO'),
-        dateBolivia.toLocaleString('es-BO'),
+        dateBolivia /* .toLocaleString('es-BO') */,
         ,
         order.status,
         order.type,
