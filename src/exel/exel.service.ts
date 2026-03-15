@@ -211,9 +211,23 @@ export class ExelService {
       // 2️⃣ Fila con datos de la orden
       // ---------------------------
       const orderDataRow = worksheet.getRow(currentRow);
+
+      // convertir fecha a hora Bolivia
+      /* const date = new Date(order.createdAt);
+      date.setHours(date.getHours() - 4); */
+
+      const dateBolivia = new Date(
+        new Date(order.createdAt).toLocaleString('en-US', {
+          timeZone: 'America/La_Paz',
+        }),
+      );
+
       orderDataRow.values = [
         order.id,
-        new Date(order.createdAt).toLocaleString('es-BO'),
+        //new Date(order.createdAt).toLocaleString('es-BO'),
+        //date.toLocaleString('es-BO'),
+        dateBolivia.toLocaleString('es-BO'),
+        ,
         order.status,
         order.type,
         order.payment_type,

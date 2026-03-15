@@ -357,15 +357,15 @@ export class OrdersService {
       },
     });
 
-    const ordersFormatted = orders.map((order) => ({
+    /* const ordersFormatted = orders.map((order) => ({
       ...order,
       createdAt: order.createdAt.toLocaleString('es-BO', {
         timeZone: 'America/La_Paz',
       }),
-    }));
+    })); */
 
     return {
-      orders: ordersFormatted,
+      orders,
     };
   }
 
@@ -427,12 +427,12 @@ export class OrdersService {
       },
     });
 
-    const ordersFormatted = orders.map((order) => ({
+    /* const ordersFormatted = orders.map((order) => ({
       ...order,
       createdAt: order.createdAt.toLocaleString('es-BO', {
         timeZone: 'America/La_Paz',
       }),
-    }));
+    })); */
 
     // --------------------------------------------
     // 3. Total
@@ -443,7 +443,7 @@ export class OrdersService {
       .reduce((sum, order) => sum + Number(order.totalPrice), 0);
 
     return {
-      orders: ordersFormatted,
+      orders,
       totalAmount,
       dailyCashQuantity,
     };
