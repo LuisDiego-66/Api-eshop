@@ -143,10 +143,16 @@ export class ExelService {
 
   //* ============================================================================================== */
 
-  private toBoliviaDate(date: Date): Date {
+  /* private toBoliviaDate(date: Date): Date {
     return new Date(date.getTime() - 4 * 60 * 60 * 1000);
-  }
+  } */
 
+  toBoliviaDate(date: Date): Date {
+    const boliviaDate = new Date(
+      date.toLocaleString('en-US', { timeZone: 'America/La_Paz' }),
+    );
+    return boliviaDate;
+  }
   //? ============================================================================================== */
   //?                           Export_Orders_Total                                                  */
   //? ============================================================================================== */
