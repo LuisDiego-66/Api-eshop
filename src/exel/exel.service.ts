@@ -361,13 +361,13 @@ export class ExelService {
       dailyCash ? 'Daily Cash' : '',
       dailyCash || null,
       'TOTAL DE VENTAS',
-      dailyCash ? data.totalAmount + dailyCash : data.totalAmount,
-      'TOTAL GENERAL',
       data.totalAmount,
+      'TOTAL GENERAL',
+      dailyCash ? data.totalAmount + dailyCash : data.totalAmount,
     ];
     grandTotalRow.getCell(8).numFmt = '#,##0.00';
     grandTotalRow.eachCell((cell, colNumber) => {
-      if (colNumber >= 7 || colNumber >= 8) {
+      if (colNumber >= 6 || colNumber >= 7 || colNumber >= 8) {
         cell.font = { bold: true };
         cell.alignment = { horizontal: 'right' };
         cell.fill = {
