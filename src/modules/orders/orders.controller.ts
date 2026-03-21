@@ -238,7 +238,6 @@ export class OrdersController {
     @Res() res: Response,
   ) {
     const result = await this.ordersService.export(pagination);
-    //return result;
     return await this.exelService.exportOrders(result, res);
   }
 }

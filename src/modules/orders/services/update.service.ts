@@ -35,7 +35,9 @@ export class UpdateService {
       const orderOld = await queryRunner.manager
         .createQueryBuilder(Order, 'order')
         .setLock('pessimistic_write')
-
+        .innerJoinAndSelect('order.address', 'address')
+        .innerJoinAndSelect('order.customer', 'customer')
+        .innerJoinAndSelect('order.shipment', 'shipment')
         .where('order.id = :id', { id: orderId })
         .andWhere('order.status IN (:...statuses)', {
           statuses: [OrderStatus.CANCELLEDFOREDIT],

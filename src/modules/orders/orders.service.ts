@@ -427,13 +427,6 @@ export class OrdersService {
       },
     });
 
-    /* const ordersFormatted = orders.map((order) => ({
-      ...order,
-      createdAt: order.createdAt.toLocaleString('es-BO', {
-        timeZone: 'America/La_Paz',
-      }),
-    })); */
-
     // --------------------------------------------
     // 3. Total
     // --------------------------------------------

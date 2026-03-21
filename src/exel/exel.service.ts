@@ -184,7 +184,10 @@ export class ExelService {
     let dailyCash: number | null = null;
 
     // Validar si dailyCashQuantity está presente en los datos
-    if (data.dailyCashQuantity) {
+    if (
+      data.dailyCashQuantity !== null &&
+      data.dailyCashQuantity !== undefined
+    ) {
       dailyCash = data.dailyCashQuantity;
     }
 
@@ -212,8 +215,8 @@ export class ExelService {
         'Tipo Pago',
         'Orden Editada',
         '',
-        'Total Orden',
-        dailyCash ? 'Daily Cash' : '',
+        //'Total Orden',
+        dailyCash ? 'Daily Cash' : null,
       ];
       orderRow.eachCell((cell) => {
         cell.font = { bold: true };
@@ -231,17 +234,6 @@ export class ExelService {
       // ---------------------------
       const orderDataRow = worksheet.getRow(currentRow);
 
-      // convertir fecha a hora Bolivia
-      /* const date = new Date(order.createdAt);
-      date.setHours(date.getHours() - 4); */
-
-      /* const dateBolivia = new Date(
-        new Date(order.createdAt).toLocaleString('en-US', {
-          timeZone: 'America/La_Paz',
-        }),
-      );
- */
-
       const dateBolivia = new Date(
         new Date(order.createdAt).toLocaleString('en-US', {
           timeZone: 'America/La_Paz',
@@ -258,14 +250,13 @@ export class ExelService {
       orderDataRow.values = [
         order.id,
         dateBolivia /* .toLocaleString('es-BO') */,
-        ,
         order.status,
         order.type,
         order.payment_type,
         order.edited ? 'VERDADERO' : 'FALSO',
         '',
-        parseFloat(order.totalPrice),
-        dailyCash || '',
+        //parseFloat(order.totalPrice),
+        dailyCash || null,
       ];
       orderDataRow.getCell(8).numFmt = '#,##0.00';
       currentRow++;
@@ -367,14 +358,16 @@ export class ExelService {
       '',
       '',
       '',
-      '',
-      '',
+      dailyCash ? 'Daily Cash' : '',
+      dailyCash || null,
+      'TOTAL DE VENTAS',
+      dailyCash ? data.totalAmount + dailyCash : data.totalAmount,
       'TOTAL GENERAL',
       data.totalAmount,
     ];
     grandTotalRow.getCell(8).numFmt = '#,##0.00';
     grandTotalRow.eachCell((cell, colNumber) => {
-      if (colNumber >= 7) {
+      if (colNumber >= 7 || colNumber >= 8) {
         cell.font = { bold: true };
         cell.alignment = { horizontal: 'right' };
         cell.fill = {
