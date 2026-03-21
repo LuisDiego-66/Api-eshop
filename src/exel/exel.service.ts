@@ -352,7 +352,7 @@ export class ExelService {
     // ---------------------------
     // Total general de todas las órdenes
     // ---------------------------
-    const grandTotalRow = worksheet.getRow(currentRow);
+    /* const grandTotalRow = worksheet.getRow(currentRow);
     grandTotalRow.values = [
       '',
       '',
@@ -364,8 +364,74 @@ export class ExelService {
       data.totalAmount,
       'TOTAL GENERAL',
       dailyCash ? data.totalAmount + dailyCash : data.totalAmount,
+    ]; */
+
+    // ---------------------------
+    // TOTAL DE VENTAS
+    // ---------------------------
+    const totalVentasRow = worksheet.getRow(currentRow);
+    totalVentasRow.values = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      'TOTAL DE VENTAS',
+      data.totalAmount,
     ];
-    grandTotalRow.getCell(8).numFmt = '#,##0.00';
+    totalVentasRow.getCell(7).numFmt = '#,##0.00';
+    totalVentasRow.eachCell((cell, colNumber) => {
+      if (colNumber >= 6) {
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: 'right' };
+      }
+    });
+    currentRow++;
+
+    // ---------------------------
+    // DAILY CASH (solo si existe)
+    // ---------------------------
+    if (dailyCash !== null) {
+      const dailyCashRow = worksheet.getRow(currentRow);
+      dailyCashRow.values = ['', '', '', '', '', 'DAILY CASH', dailyCash];
+      dailyCashRow.getCell(7).numFmt = '#,##0.00';
+      dailyCashRow.eachCell((cell, colNumber) => {
+        if (colNumber >= 6) {
+          cell.font = { bold: true };
+          cell.alignment = { horizontal: 'right' };
+        }
+      });
+      currentRow++;
+    }
+
+    // ---------------------------
+    // TOTAL GENERAL
+    // ---------------------------
+    const totalGeneralRow = worksheet.getRow(currentRow);
+    totalGeneralRow.values = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      'TOTAL GENERAL',
+      dailyCash !== null ? data.totalAmount + dailyCash : data.totalAmount,
+    ];
+
+    totalGeneralRow.getCell(7).numFmt = '#,##0.00';
+    totalGeneralRow.eachCell((cell, colNumber) => {
+      if (colNumber >= 6) {
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: 'right' };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD3D3D3' },
+        };
+      }
+    });
+
+    /* grandTotalRow.getCell(8).numFmt = '#,##0.00';
     grandTotalRow.eachCell((cell, colNumber) => {
       if (colNumber >= 6 || colNumber >= 7 || colNumber >= 8) {
         cell.font = { bold: true };
@@ -377,7 +443,7 @@ export class ExelService {
         };
       }
     });
-    grandTotalRow.height = 25;
+    grandTotalRow.height = 25; */
 
     // ---------------------------
     // Ajuste automático de columnas
