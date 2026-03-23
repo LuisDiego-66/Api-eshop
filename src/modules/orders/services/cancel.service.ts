@@ -172,7 +172,7 @@ export class CancelService {
       // 3. CANCELLED
       // --------------------------------------------
 
-      orderEntity.status = OrderStatus.CANCELLEDFOREDIT;
+      orderEntity.status = OrderStatus.CANCELLED_FOR_EDIT;
       orderEntity.expiresAt = null;
 
       await queryRunner.manager.save(Order, orderEntity);
@@ -208,11 +208,11 @@ export class CancelService {
 
       return orderEntity;
     } catch (error) {
-      queryRunner.rollbackTransaction();
+      await queryRunner.rollbackTransaction();
       handleDBExceptions(error);
       throw error; //! por typescript
     } finally {
-      queryRunner.release();
+      await queryRunner.release();
     }
   }
 

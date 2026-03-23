@@ -6,7 +6,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, DataSource, LessThan, Not, Repository } from 'typeorm';
+import { Between, DataSource, In, LessThan, Not, Repository } from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
@@ -127,9 +127,13 @@ export class OrdersService {
     // --------------------------------------------
 
     //! Estado de la orden
-    if (status) options.where.status = status;
-    else options.where.status = Not(OrderStatus.EXPIRED);
-
+    if (status) {
+      options.where.status = status;
+    } else {
+      options.where.status = Not(
+        In([OrderStatus.EXPIRED, OrderStatus.COMPLETED_EDITION]),
+      );
+    }
     //! tipo de orden (inStore, online)
     if (type) options.where.type = type;
 
@@ -327,8 +331,16 @@ export class OrdersService {
     // 1. Filtros
     // --------------------------------------------
 
-    if (status) options.where.status = status;
-    else options.where.status = Not(OrderStatus.EXPIRED);
+    /* if (status) options.where.status = status;
+    else options.where.status = Not(OrderStatus.EXPIRED); */
+
+    if (status) {
+      options.where.status = status;
+    } else {
+      options.where.status = Not(
+        In([OrderStatus.EXPIRED, OrderStatus.COMPLETED_EDITION]),
+      );
+    }
 
     if (type) options.where.type = type;
     if (paymentType) options.where.payment_type = paymentType;
@@ -385,8 +397,16 @@ export class OrdersService {
     // 1. Filtros
     // --------------------------------------------
 
-    if (status) options.where.status = status;
-    else options.where.status = Not(OrderStatus.EXPIRED);
+    /* if (status) options.where.status = status;
+    else options.where.status = Not(OrderStatus.EXPIRED); */
+
+    if (status) {
+      options.where.status = status;
+    } else {
+      options.where.status = Not(
+        In([OrderStatus.EXPIRED, OrderStatus.COMPLETED_EDITION]),
+      );
+    }
 
     if (type) options.where.type = type;
     if (paymentType) options.where.payment_type = paymentType;

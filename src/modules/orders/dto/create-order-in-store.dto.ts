@@ -1,7 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { PaymentType } from '../enums';
+
+import { BillingDto } from './create-order-online.dto';
 
 export class CreateOrderInStoreDto {
   @ApiProperty({
@@ -19,4 +22,9 @@ export class CreateOrderInStoreDto {
   @IsString()
   @IsEnum(PaymentType)
   payment_type: PaymentType;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BillingDto)
+  billing?: BillingDto;
 }

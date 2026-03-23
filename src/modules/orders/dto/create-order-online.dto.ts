@@ -11,11 +11,17 @@ import {
 export class BillingDto {
   @IsOptional()
   @IsString()
-  ci?: string;
+  ci: string; //! unique
 
   @IsOptional()
   @IsString()
-  name?: string;
+  name: string;
+
+  /*   
+  phone?: string;
+  email;
+  extencion?;
+  tipo_de_documento: number; */
 }
 
 export class CreateOrderOnlineDto {

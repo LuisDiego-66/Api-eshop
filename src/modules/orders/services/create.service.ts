@@ -36,11 +36,13 @@ export class CreateService {
       buyer,
       type,
       payment_type,
+      inherited_id,
     }: {
       dto: CreateOrderInStoreDto | CreateOrderOnlineDto;
       buyer?: Customer;
       type: OrderType;
       payment_type: PaymentType;
+      inherited_id?: number;
     },
 
     createdAt?: Date,
@@ -64,13 +66,14 @@ export class CreateService {
       //* Se inicializa el objeto de Order
       const orderData: Partial<Order> = {
         type,
+        inherited_id,
+        billing: dto.billing,
         totalPrice: rePricing.total,
       };
 
       if (type === OrderType.ONLINE && buyer) {
         const dtoOnline = dto as CreateOrderOnlineDto;
-        orderData.email = dtoOnline.email; //! se asigna el email opcional
-        orderData.billing = dtoOnline.billing;
+        orderData.email = dtoOnline.email;
         orderData.name_phone = { name: dtoOnline.name, phone: dtoOnline.phone };
 
         // --------------------------------------------

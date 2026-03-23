@@ -143,13 +143,6 @@ export class ExelService {
 
   //* ============================================================================================== */
 
-  /* toBoliviaDate(date: Date) {
-    const boliviaDate = new Date(
-      date.toLocaleString('en-US', { timeZone: 'America/La_Paz' }),
-    );
-    return boliviaDate.toLocaleString('es-BO');
-  } */
-
   toBoliviaDate(date: Date) {
     const boliviaDate = new Date(
       date.toLocaleString('en-US', { timeZone: 'America/La_Paz' }),
@@ -350,23 +343,6 @@ export class ExelService {
     }
 
     // ---------------------------
-    // Total general de todas las órdenes
-    // ---------------------------
-    /* const grandTotalRow = worksheet.getRow(currentRow);
-    grandTotalRow.values = [
-      '',
-      '',
-      '',
-      '',
-      dailyCash ? 'Daily Cash' : '',
-      dailyCash || null,
-      'TOTAL DE VENTAS',
-      data.totalAmount,
-      'TOTAL GENERAL',
-      dailyCash ? data.totalAmount + dailyCash : data.totalAmount,
-    ]; */
-
-    // ---------------------------
     // TOTAL DE VENTAS
     // ---------------------------
     const totalVentasRow = worksheet.getRow(currentRow);
@@ -430,20 +406,6 @@ export class ExelService {
         };
       }
     });
-
-    /* grandTotalRow.getCell(8).numFmt = '#,##0.00';
-    grandTotalRow.eachCell((cell, colNumber) => {
-      if (colNumber >= 6 || colNumber >= 7 || colNumber >= 8) {
-        cell.font = { bold: true };
-        cell.alignment = { horizontal: 'right' };
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFD3D3D3' }, // gris claro
-        };
-      }
-    });
-    grandTotalRow.height = 25; */
 
     // ---------------------------
     // Ajuste automático de columnas

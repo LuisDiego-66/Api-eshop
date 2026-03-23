@@ -3,7 +3,7 @@ import { DataSource } from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
-import { CreateOrderInStoreDto } from '../dto';
+import { CreateOrderInStoreDto, CreateOrderOnlineDto } from '../dto';
 
 import { OrderStatus, OrderType, PaymentType } from '../enums';
 
@@ -16,9 +16,7 @@ import { Order } from '../entities/order.entity';
 export class UpdateService {
   constructor(
     private readonly dataSource: DataSource,
-
     private readonly createService: CreateService,
-
     private readonly confirmService: ConfirmService,
   ) {}
 
@@ -33,14 +31,14 @@ export class UpdateService {
       // --------------------------------------------
 
       const orderOld = await queryRunner.manager
-        .createQueryBuilder(Order, 'order')
-        .setLock('pessimistic_write')
-        .innerJoinAndSelect('order.address', 'address')
-        .innerJoinAndSelect('order.customer', 'customer')
-        .innerJoinAndSelect('order.shipment', 'shipment')
-        .where('order.id = :id', { id: orderId })
-        .andWhere('order.status IN (:...statuses)', {
-          statuses: [OrderStatus.CANCELLEDFOREDIT],
+        .createQueryBuilder(Order, 'orders')
+        .setLock('pessimistic_write', undefined, ['orders']) //.setLock('pessimistic_write')
+        .leftJoinAndSelect('orders.address', 'address')
+        .leftJoinAndSelect('orders.customer', 'customer')
+        .leftJoinAndSelect('orders.shipment', 'shipment')
+        .where('orders.id = :id', { id: orderId })
+        .andWhere('orders.status IN (:...statuses)', {
+          statuses: [OrderStatus.CANCELLED_FOR_EDIT],
         })
         .getOne();
 
@@ -60,12 +58,22 @@ export class UpdateService {
       if (orderOld.type === OrderType.IN_STORE) {
         newOrder = await this.createService.createOrderBase(
           {
-            dto: { items } as CreateOrderInStoreDto,
+            dto: {
+              items,
+              billing: {
+                ci: orderOld.billing?.ci,
+                name: orderOld.billing?.name,
+              },
+            } as CreateOrderInStoreDto,
             type: OrderType.IN_STORE,
-            payment_type: PaymentType.CASH, //* Cash
+            payment_type: PaymentType.CASH,
+
+            inherited_id: orderOld.inherited_id
+              ? orderOld.inherited_id
+              : orderOld.id,
           },
           orderOld.createdAt,
-          queryRunner, //! queryRunner
+          queryRunner,
         );
       }
 
@@ -80,15 +88,26 @@ export class UpdateService {
           {
             dto: {
               items,
+              billing: {
+                ci: orderOld.billing?.ci,
+                name: orderOld.billing?.name,
+              },
+              name: orderOld.name_phone.name,
+              phone: orderOld.name_phone.phone,
+
               address: orderOld.address.id,
               shipment: orderOld.shipment.id,
-            },
+            } as CreateOrderOnlineDto,
             buyer: orderOld.customer,
             type: OrderType.ONLINE,
-            payment_type: PaymentType.CASH, //* Cash
+            payment_type: PaymentType.CASH,
+
+            inherited_id: orderOld.inherited_id
+              ? orderOld.inherited_id
+              : orderOld.id,
           },
           orderOld.createdAt,
-          queryRunner, //! queryRunner
+          queryRunner,
         );
       }
 
@@ -104,7 +123,8 @@ export class UpdateService {
       // --------------------------------------------
       // 3. Se guarda la nueva orden
       // --------------------------------------------
-      orderOld.status = OrderStatus.CANCELLED;
+      orderOld.status = OrderStatus.COMPLETED_EDITION;
+
       await queryRunner.manager.save(orderOld);
 
       await queryRunner.commitTransaction();
