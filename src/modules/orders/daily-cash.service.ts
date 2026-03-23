@@ -26,25 +26,6 @@ export class DailyCashService {
   //? ============================================================================================== */
 
   /* async findOne() {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-
-    const dailyCash = await this.dailyCashRepository.findOne({
-      where: {
-        createdAt: Between(start, end),
-      },
-    });
-
-    if (!dailyCash)
-      throw new NotFoundException('No daily cash record found for today');
-
-    return dailyCash;
-  } */
-
-  async findOne() {
     const now = new Date(
       new Date().toLocaleString('en-US', {
         timeZone: 'America/La_Paz',
@@ -63,6 +44,50 @@ export class DailyCashService {
       },
     });
 
+    if (!dailyCash) {
+      throw new NotFoundException('No daily cash record found for today');
+    }
+
+    return dailyCash;
+  } */
+
+  async findOne() {
+    // --------------------------------------------
+    // 1. Fecha actual en Bolivia
+    // --------------------------------------------
+    const nowBolivia = new Date(
+      new Date().toLocaleString('en-US', {
+        timeZone: 'America/La_Paz',
+      }),
+    );
+
+    // --------------------------------------------
+    // 2. Inicio y fin del día en Bolivia
+    // --------------------------------------------
+    const startBolivia = new Date(nowBolivia);
+    startBolivia.setHours(0, 0, 0, 0);
+
+    const endBolivia = new Date(nowBolivia);
+    endBolivia.setHours(23, 59, 59, 999);
+
+    // --------------------------------------------
+    // 3. Convertir a UTC (IMPORTANTE)
+    // --------------------------------------------
+    const startUTC = new Date(startBolivia.toISOString());
+    const endUTC = new Date(endBolivia.toISOString());
+
+    // --------------------------------------------
+    // 4. Consulta
+    // --------------------------------------------
+    const dailyCash = await this.dailyCashRepository.findOne({
+      where: {
+        createdAt: Between(startUTC, endUTC),
+      },
+    });
+
+    // --------------------------------------------
+    // 5. Validación
+    // --------------------------------------------
     if (!dailyCash) {
       throw new NotFoundException('No daily cash record found for today');
     }
