@@ -52,9 +52,6 @@ export class DailyCashService {
   } */
 
   async findOne() {
-    // --------------------------------------------
-    // 1. Fecha actual en Bolivia
-    // --------------------------------------------
     const nowBolivia = new Date(
       new Date().toLocaleString('en-US', {
         timeZone: 'America/La_Paz',
