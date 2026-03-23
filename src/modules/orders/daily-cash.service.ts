@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { DateTime } from 'luxon';
+
 import { CreateDailyCashDto } from './dto';
 import { DailyCash } from './entities/dailycash.entity';
 import { Between, Repository } from 'typeorm';
@@ -52,29 +54,27 @@ export class DailyCashService {
   } */
 
   async findOne() {
-    const nowBolivia = new Date(
-      new Date().toLocaleString('en-US', {
-        timeZone: 'America/La_Paz',
-      }),
-    );
+    // --------------------------------------------
+    // 1. Día Bolivia → convertido correctamente a UTC
+    // --------------------------------------------
+    const startUTC = DateTime.now()
+      .setZone('America/La_Paz')
+      .startOf('day')
+      .toUTC()
+      .toJSDate();
+
+    const endUTC = DateTime.now()
+      .setZone('America/La_Paz')
+      .endOf('day')
+      .toUTC()
+      .toJSDate();
+
+    // 🔍 DEBUG (muy importante ahora)
+    /* console.log('startUTC:', startUTC);
+    console.log('endUTC:', endUTC); */
 
     // --------------------------------------------
-    // 2. Inicio y fin del día en Bolivia
-    // --------------------------------------------
-    const startBolivia = new Date(nowBolivia);
-    startBolivia.setHours(0, 0, 0, 0);
-
-    const endBolivia = new Date(nowBolivia);
-    endBolivia.setHours(23, 59, 59, 999);
-
-    // --------------------------------------------
-    // 3. Convertir a UTC (IMPORTANTE)
-    // --------------------------------------------
-    const startUTC = new Date(startBolivia.toISOString());
-    const endUTC = new Date(endBolivia.toISOString());
-
-    // --------------------------------------------
-    // 4. Consulta
+    // 2. Consulta
     // --------------------------------------------
     const dailyCash = await this.dailyCashRepository.findOne({
       where: {
@@ -82,9 +82,6 @@ export class DailyCashService {
       },
     });
 
-    // --------------------------------------------
-    // 5. Validación
-    // --------------------------------------------
     if (!dailyCash) {
       throw new NotFoundException('No daily cash record found for today');
     }
