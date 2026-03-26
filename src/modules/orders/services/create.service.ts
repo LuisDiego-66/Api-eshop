@@ -20,6 +20,7 @@ import { Order } from '../entities/order.entity';
 import { Variant } from '../../variants/entities/variant.entity';
 import { Customer } from '../../customers/entities/customer.entity';
 import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
+import { BillingService } from 'src/modules/billings/billing.service';
 
 @Injectable()
 export class CreateService {
@@ -28,6 +29,8 @@ export class CreateService {
     private readonly pricingService: PricingService,
     private readonly variantsService: VariantsService,
     private readonly stockReservationsService: StockReservationsService,
+
+    private readonly billingService: BillingService,
   ) {}
 
   async createOrderBase(
@@ -63,11 +66,14 @@ export class CreateService {
       // 1. Se crea la order Base
       // --------------------------------------------
 
+      //! se obtiene o se crea el billing
+      const billing = await this.billingService.createOrUpdate(dto.billing);
+
       //* Se inicializa el objeto de Order
       const orderData: Partial<Order> = {
         type,
         inherited_id,
-        billing: dto.billing,
+        billing,
         totalPrice: rePricing.total,
       };
 

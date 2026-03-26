@@ -8,21 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class BillingDto {
-  @IsOptional()
-  @IsString()
-  ci: string; //! unique
-
-  @IsOptional()
-  @IsString()
-  name: string;
-
-  /*   
-  phone?: string;
-  email;
-  extencion?;
-  tipo_de_documento: number; */
-}
+import { BillingDto } from '../../billings/dto/billing.dto';
 
 export class CreateOrderOnlineDto {
   @ApiProperty({
@@ -67,8 +53,11 @@ export class CreateOrderOnlineDto {
   @IsEmail()
   email?: string;
 
-  @IsOptional()
+  @ApiProperty({
+    type: BillingDto,
+    description: 'Datos de facturación',
+  })
   @ValidateNested()
   @Type(() => BillingDto)
-  billing?: BillingDto;
+  billing: BillingDto;
 }

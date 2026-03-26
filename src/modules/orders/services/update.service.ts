@@ -36,6 +36,7 @@ export class UpdateService {
         .leftJoinAndSelect('orders.address', 'address')
         .leftJoinAndSelect('orders.customer', 'customer')
         .leftJoinAndSelect('orders.shipment', 'shipment')
+        .leftJoinAndSelect('orders.billing', 'billing')
         .where('orders.id = :id', { id: orderId })
         .andWhere('orders.status IN (:...statuses)', {
           statuses: [OrderStatus.CANCELLED_FOR_EDIT],
@@ -60,10 +61,8 @@ export class UpdateService {
           {
             dto: {
               items,
-              billing: {
-                ci: orderOld.billing?.ci,
-                name: orderOld.billing?.name,
-              },
+              billing: orderOld.billing,
+              payment_type: PaymentType.CASH,
             } as CreateOrderInStoreDto,
             type: OrderType.IN_STORE,
             payment_type: PaymentType.CASH,
@@ -88,10 +87,8 @@ export class UpdateService {
           {
             dto: {
               items,
-              billing: {
-                ci: orderOld.billing?.ci,
-                name: orderOld.billing?.name,
-              },
+              billing: orderOld.billing,
+
               name: orderOld.name_phone.name,
               phone: orderOld.name_phone.phone,
 

@@ -23,6 +23,8 @@ import { DailyCash } from './entities/dailycash.entity';
 import { DailyCashService } from './daily-cash.service';
 import { DailyCashController } from './daily-cash.controller';
 
+import { BillingModule } from '../billings/billing.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, Item, DailyCash]),
@@ -32,6 +34,7 @@ import { DailyCashController } from './daily-cash.controller';
     StockReservationsModule,
     forwardRef(() => CustomersModule),
     ExelModule,
+    BillingModule,
   ],
   controllers: [OrdersController, DailyCashController],
   providers: [

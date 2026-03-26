@@ -24,7 +24,7 @@ import { Shipment } from 'src/modules/shipments/entities/shipment.entity';
 import { Address } from 'src/modules/addresses/entities/address.entity';
 import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Item } from './item.entity';
-import { BillingDto } from '../dto/create-order-online.dto';
+import { Billing } from 'src/modules/billings/entities/billing.entity';
 
 @Entity('orders')
 export class Order {
@@ -73,12 +73,9 @@ export class Order {
   email?: string | null;
 
   @Column('json', { nullable: true })
-  billing?: BillingDto;
-
-  @Column('json', { nullable: true })
   name_phone?: any;
 
-  @Column('text', { nullable: true })
+  @Column('int', { nullable: true })
   inherited_id?: number | null;
 
   //* ---------------------------------------------------------------------------------------------- */
@@ -105,6 +102,9 @@ export class Order {
 
   @OneToMany(() => Transaction, (transaction) => transaction.order)
   transactions: Transaction[];
+
+  @ManyToOne(() => Billing, (billing) => billing.orders)
+  billing: Billing;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */

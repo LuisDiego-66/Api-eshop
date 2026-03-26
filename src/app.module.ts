@@ -39,6 +39,7 @@ import { AdvertisementsModule } from './modules/advertisements/advertisements.mo
 import { ExelModule } from './exel/exel.module';
 import { BannersModule } from './modules/banners/banners.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { BillingModule } from './modules/billings/billing.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     ExelModule,
     BannersModule,
     SchedulerModule,
+    BillingModule,
   ],
   controllers: [],
   providers: [],

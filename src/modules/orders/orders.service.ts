@@ -1,9 +1,9 @@
 import {
+  Inject,
+  forwardRef,
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, DataSource, In, LessThan, Not, Repository } from 'typeorm';
@@ -393,6 +393,12 @@ export class OrdersService {
 
     let dailyCashQuantity: number | null = null;
 
+    //! no cancelados
+
+    //! restar shipment price
+
+    //! arreglar el id heredado
+
     // --------------------------------------------
     // 1. Filtros
     // --------------------------------------------
@@ -404,7 +410,11 @@ export class OrdersService {
       options.where.status = status;
     } else {
       options.where.status = Not(
-        In([OrderStatus.EXPIRED, OrderStatus.COMPLETED_EDITION]),
+        In([
+          OrderStatus.EXPIRED,
+          OrderStatus.COMPLETED_EDITION,
+          OrderStatus.CANCELLED,
+        ]),
       );
     }
 
@@ -451,6 +461,19 @@ export class OrdersService {
     // 3. Total
     // --------------------------------------------
 
+    //! sin shipment_rice
+    orders.forEach((order) => {
+      const total = Number(order.totalPrice);
+      const shipment = Number(order.shipment_price || 0);
+
+      // 1. Restar shipment
+      order.totalPrice = (total - shipment).toFixed(2) as any;
+
+      // 2. Reemplazar id si tiene inherited_id
+      if (order.inherited_id !== null && order.inherited_id !== undefined) {
+        order.id = Number(order.inherited_id);
+      }
+    });
     const totalAmount = orders
       .filter((order) => order.status !== OrderStatus.CANCELLED)
       .reduce((sum, order) => sum + Number(order.totalPrice), 0);

@@ -3,8 +3,7 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { PaymentType } from '../enums';
-
-import { BillingDto } from './create-order-online.dto';
+import { BillingDto } from '../../billings/dto/billing.dto';
 
 export class CreateOrderInStoreDto {
   @ApiProperty({
@@ -23,8 +22,11 @@ export class CreateOrderInStoreDto {
   @IsEnum(PaymentType)
   payment_type: PaymentType;
 
-  @IsOptional()
+  @ApiProperty({
+    type: BillingDto,
+    description: 'Datos de facturación',
+  })
   @ValidateNested()
   @Type(() => BillingDto)
-  billing?: BillingDto;
+  billing: BillingDto;
 }
