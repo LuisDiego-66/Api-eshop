@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsDefined,
   IsEmail,
   IsNumber,
   IsOptional,
@@ -59,5 +60,6 @@ export class CreateOrderOnlineDto {
   })
   @ValidateNested()
   @Type(() => BillingDto)
+  @IsDefined()
   billing: BillingDto;
 }

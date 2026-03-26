@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsDefined, IsEnum, IsString, ValidateNested } from 'class-validator';
 
 import { PaymentType } from '../enums';
 import { BillingDto } from '../../billings/dto/billing.dto';
@@ -28,5 +28,6 @@ export class CreateOrderInStoreDto {
   })
   @ValidateNested()
   @Type(() => BillingDto)
+  @IsDefined()
   billing: BillingDto;
 }
