@@ -1,0 +1,8 @@
+export enum FacturaStatusEnum {
+  PENDIENTE = 'PENDIENTE',
+  ENVIADA = 'ENVIADA',
+  REVERTIDA = 'REVERTIDA',
+  RECHAZADA = 'RECHAZADA',
+  ANULADA = 'ANULADA',
+  VALIDADA = 'VALIDADA',
+}

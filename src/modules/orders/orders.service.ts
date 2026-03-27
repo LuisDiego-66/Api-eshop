@@ -168,6 +168,7 @@ export class OrdersService {
           customer: true,
           shipment: { place: true },
           address: { place: true },
+          billing: true,
         },
       },
       pagination,
@@ -206,6 +207,7 @@ export class OrdersService {
         customer: true,
         shipment: { place: true },
         address: { place: true },
+        billing: true,
       },
     });
     if (!order) {
