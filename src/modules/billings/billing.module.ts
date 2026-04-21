@@ -8,6 +8,6 @@ import { Billing } from './entities/billing.entity';
   imports: [TypeOrmModule.forFeature([Billing])],
   controllers: [BillingController],
   providers: [BillingService],
-  exports: [BillingService],
+  exports: [BillingService, TypeOrmModule],
 })
 export class BillingModule {}

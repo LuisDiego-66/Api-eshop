@@ -31,6 +31,7 @@ import { PricingService } from './pricing.service';
 import { ExelService } from 'src/exel/exel.service';
 
 import { Customer } from '../customers/entities/customer.entity';
+import { SearchBillingDto } from './pagination/search-billing-filter.dto';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -197,6 +198,34 @@ export class OrdersController {
     @Body() changeStatusDto: ChangeStatusDto,
   ) {
     return this.ordersService.changeStatus(id, changeStatusDto);
+  }
+
+  //? ============================================================================================== */
+  //?                             Search_For_Billing                                                 */
+  //? ============================================================================================== */
+
+  //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @ApiQuery({
+    name: 'ci',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'name',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'orderId',
+    required: false,
+    type: Number,
+  })
+  @Get('search/billing')
+  searchForBilling(@Query() search: SearchBillingDto) {
+    return this.ordersService.searchForBilling(search);
   }
 
   //? ============================================================================================== */

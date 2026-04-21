@@ -6,17 +6,26 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, DataSource, In, LessThan, Not, Repository } from 'typeorm';
+import {
+  Between,
+  DataSource,
+  In,
+  LessThan,
+  Like,
+  Not,
+  Repository,
+} from 'typeorm';
 
 import { handleDBExceptions } from 'src/common/helpers/handleDBExceptions';
 
 import { paginate } from 'src/common/pagination/paginate';
-import { OrderPaginationDto } from './pagination/order-pagination.dto';
 import {
   ChangeStatusDto,
   CreateOrderInStoreDto,
   CreateOrderOnlineDto,
 } from './dto';
+import { OrderPaginationDto } from './pagination/order-pagination.dto';
+import { SearchBillingDto } from './pagination/search-billing-filter.dto';
 
 import { BNBPayload } from '../payments/interfaces/bnb-payload.interface';
 
@@ -30,8 +39,9 @@ import { ConfirmService } from './services/confirm.service';
 import { CustomersService } from '../customers/customers.service';
 
 import { Order } from './entities/order.entity';
-import { Customer } from '../customers/entities/customer.entity';
 import { DailyCash } from './entities/dailycash.entity';
+import { Customer } from '../customers/entities/customer.entity';
+import { Billing } from '../billings/entities/billing.entity';
 
 @Injectable()
 export class OrdersService {
@@ -44,6 +54,9 @@ export class OrdersService {
 
     @InjectRepository(DailyCash)
     private readonly dailyCashRepository: Repository<DailyCash>,
+
+    @InjectRepository(Billing)
+    private readonly billingRepository: Repository<Billing>,
 
     private readonly dataSource: DataSource,
     private readonly createService: CreateService,
@@ -316,6 +329,31 @@ export class OrdersService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  //? ============================================================================================== */
+  //?                             Search_For_Billing                                                 */
+  //? ============================================================================================== */
+
+  async searchForBilling(search: SearchBillingDto) {
+    const { ci, name, orderId } = search;
+
+    const options: any = {};
+
+    if (ci) {
+      options.where = { ci };
+    } else if (name) {
+      options.where = { name: Like(`%${name}%`) };
+    } else if (orderId) {
+      options.where = { orders: { id: orderId } };
+    }
+
+    const order = await this.billingRepository.findOne({
+      ...options,
+      relations: { orders: true },
+    });
+
+    return order;
   }
 
   //? ============================================================================================== */
