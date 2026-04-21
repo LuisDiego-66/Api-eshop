@@ -138,11 +138,11 @@ export class OrdersService {
     const { ci, name, orderId } = pagination;
 
     if (ci) {
-      options.where = { billing: { ci } };
+      options.where.billing = { ci };
     } else if (name) {
-      options.where = { billing: { name: Like(`%${name}%`) } };
+      options.where.billing = { name: Like(`%${name}%`) };
     } else if (orderId) {
-      options.where = { id: orderId };
+      options.where.id = orderId;
     }
 
     // --------------------------------------------
