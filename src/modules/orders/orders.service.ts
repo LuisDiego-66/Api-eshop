@@ -135,6 +135,16 @@ export class OrdersService {
       where: {},
     };
 
+    const { ci, name, orderId } = pagination;
+
+    if (ci) {
+      options.where = { billing: { ci } };
+    } else if (name) {
+      options.where = { billing: { name: Like(`%${name}%`) } };
+    } else if (orderId) {
+      options.where = { id: orderId };
+    }
+
     // --------------------------------------------
     // 1. Filtros
     // --------------------------------------------
@@ -335,7 +345,7 @@ export class OrdersService {
   //?                             Search_For_Billing                                                 */
   //? ============================================================================================== */
 
-  async searchForBilling(search: SearchBillingDto) {
+  /* async searchForBilling(search: SearchBillingDto) {
     const { ci, name, orderId } = search;
 
     const options: any = {};
@@ -354,7 +364,7 @@ export class OrdersService {
     });
 
     return order;
-  }
+  } */
 
   //? ============================================================================================== */
   //?                                        Export                                                  */

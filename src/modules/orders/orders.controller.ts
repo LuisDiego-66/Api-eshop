@@ -145,6 +145,23 @@ export class OrdersController {
     required: false,
     type: String,
   })
+
+  //! billing search
+  @ApiQuery({
+    name: 'ci',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'name',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'orderId',
+    required: false,
+    type: Number,
+  })
   @Get()
   findAll(@Query() pagination: OrderPaginationDto) {
     return this.ordersService.findAll(pagination);
@@ -204,7 +221,7 @@ export class OrdersController {
   //?                             Search_For_Billing                                                 */
   //? ============================================================================================== */
 
-  //!
+  /* //!
   @Auth(Roles.ADMIN)
   @ApiBearerAuth('access-token')
   //!
@@ -226,7 +243,7 @@ export class OrdersController {
   @Get('search/billing')
   searchForBilling(@Query() search: SearchBillingDto) {
     return this.ordersService.searchForBilling(search);
-  }
+  } */
 
   //? ============================================================================================== */
   //?                                         Export                                                 */
