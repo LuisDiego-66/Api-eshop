@@ -25,7 +25,7 @@ export function completarCeros(
 //?                                     Modulo 11                                                  */
 //? ============================================================================================== */
 
-export function modulo11(cadena: string): number {
+/* export function modulo11(cadena: string): number {
   let suma = 0;
   let multiplicador = 2;
 
@@ -36,8 +36,87 @@ export function modulo11(cadena: string): number {
 
   const digito = suma % 11;
   return digito === 10 ? 1 : digito === 11 ? 0 : digito;
+} */
+
+export function modulo11(cadena: string): string {
+  let suma = 0;
+  let multiplicador = 2;
+
+  for (let i = cadena.length - 1; i >= 0; i--) {
+    suma += Number(cadena[i]) * multiplicador;
+    multiplicador = multiplicador === 9 ? 2 : multiplicador + 1;
+  }
+
+  const digito = suma % 11;
+
+  return digito === 10 ? '1' : String(digito);
 }
 
+/* export function calculaDigitoMod11(
+  cadena: string,
+  numDig: number = 1,
+  limMult: number = 9,
+  x10: boolean = true,
+): string {
+  let cadenaTrabajo = cadena;
+
+  for (let n = 1; n <= numDig; n++) {
+    let suma = 0;
+    let mult = 2;
+
+    // Recorrer de derecha a izquierda
+    for (let i = cadenaTrabajo.length - 1; i >= 0; i--) {
+      suma += mult * parseInt(cadenaTrabajo.substring(i, i + 1));
+      mult++;
+      if (mult > limMult) mult = 2;
+    }
+
+    let dig: number;
+    if (x10) {
+      // Fórmula especial para CUF (x10 = true)
+      dig = ((suma * 10) % 11) % 10;
+    } else {
+      // Módulo simple
+      dig = suma % 11;
+    }
+
+    // Agregar dígito a la cadena según las reglas
+    if (dig === 10) {
+      cadenaTrabajo += '1';
+    } else if (dig === 11) {
+      cadenaTrabajo += '0';
+    } else if (dig < 10) {
+      cadenaTrabajo += dig.toString();
+    }
+  }
+
+  // Retornar los últimos numDig dígitos
+  return cadenaTrabajo.substring(cadenaTrabajo.length - numDig);
+} */
+
+// Mantén la función original para compatibilidad, pero que use la correcta
+/* export function modulo11(cadena: string): number {
+  const digitoStr = calculaDigitoMod11(cadena, 1, 9, true);
+  return parseInt(digitoStr, 10);
+} */
+
+/* export function modulo11(cadena: string): number {
+  let suma = 0;
+  let multiplicador = 2;
+
+  for (let i = cadena.length - 1; i >= 0; i--) {
+    suma += parseInt(cadena[i], 10) * multiplicador;
+    multiplicador = multiplicador === 9 ? 2 : multiplicador + 1;
+  }
+
+  const digito = ((suma * 10) % 11) % 10;
+
+  if (digito === 10) return 1;
+  if (digito === 11) return 0;
+
+  return digito;
+}
+ */
 //? ============================================================================================== */
 //?                                       Base 16                                                  */
 //? ============================================================================================== */

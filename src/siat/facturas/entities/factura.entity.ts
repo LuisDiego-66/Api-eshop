@@ -2,10 +2,8 @@ import {
   Index,
   Entity,
   Column,
-  OneToOne,
   OneToMany,
   ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -18,6 +16,7 @@ import { MensajesList } from '../interfaces/response-recepcion-factura.interface
 import { Detalle } from './detalle.entity';
 import { Paquete } from './paquete.entity';
 import { SiatSync } from 'src/siat/catalogos/entities/siat_sync.entity';
+import { Cafc } from './cafc.entity';
 
 @Entity('facturas')
 export class Factura {
@@ -91,7 +90,7 @@ export class Factura {
   codigoMetodoPago: number; //! Catalogos
 
   @Column({ type: 'bigint', nullable: true })
-  numeroTarjeta?: number | null;
+  numeroTarjeta?: string | null;
 
   //* ============================================================================================== */
   //* Montos
@@ -126,8 +125,8 @@ export class Factura {
   @Column({ type: 'int', nullable: true })
   codigoExcepcion?: number | null;
 
-  @Column({ type: 'bigint', nullable: true })
-  cafc?: number | null;
+  /* @Column({ type: 'text', nullable: true })
+  cafc?: string | null; */
 
   @Column({ type: 'text' })
   leyenda: string; //! Catalogos
@@ -193,9 +192,9 @@ export class Factura {
   @ManyToOne(() => Paquete, (paquete) => paquete.facturas)
   paquete: Paquete;
 
-  @OneToOne(() => SiatSync, (siatSync) => siatSync.factura, {
-    cascade: true,
-  })
-  @JoinColumn()
+  @ManyToOne(() => SiatSync, (siatSync) => siatSync.facturas, { cascade: true })
   siatSync: SiatSync;
+
+  @ManyToOne(() => Cafc, (cafc) => cafc.facturas, { nullable: true })
+  cafc: Cafc | null;
 }

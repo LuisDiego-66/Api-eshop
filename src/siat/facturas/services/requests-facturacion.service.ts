@@ -242,7 +242,7 @@ export class RequestsFacturacionService {
     archivo: string;
     fechaEnvio: string;
     hashArchivo: string;
-    cafc?: number; //! opcional
+    cafc?: string; //! opcional
     cantidadFacturas: number;
     codigoEvento: number;
   }): Promise<any> {

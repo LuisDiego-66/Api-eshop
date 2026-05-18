@@ -29,7 +29,7 @@ export class ListasService {
   async getLista(dto: ListasDto, query: QueryDto) {
     const siatSync = await this.sincronizacionService.sincronizacion(query);
 
-    const parametrica = await this.siatSyncRepository.findOne({
+    const lista = await this.siatSyncRepository.findOne({
       where: {
         id: siatSync.id,
         listas: { methodName: dto.metodo },
@@ -37,6 +37,6 @@ export class ListasService {
       relations: { listas: true },
     });
 
-    return parametrica;
+    return lista;
   }
 }

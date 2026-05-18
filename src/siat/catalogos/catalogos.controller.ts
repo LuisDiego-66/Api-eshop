@@ -6,6 +6,7 @@ import { ParametricasDto } from './dto/parametricas.dto';
 import { QueryDto } from '../common/dto/query.dto';
 
 import { ListasService } from './Listas.service';
+import { FechaHoraService } from './fecha-hora.service';
 import { ParametricasService } from './parametricas.service';
 import { SincronizacionService } from './services/sincronizacion.service';
 
@@ -16,6 +17,7 @@ export class CatalogosController {
     private readonly sincronizacionService: SincronizacionService,
     private readonly parametricasService: ParametricasService,
     private readonly listasService: ListasService,
+    private readonly fechaHoraService: FechaHoraService,
   ) {}
 
   //? ============================================================================================== */
@@ -52,5 +54,16 @@ export class CatalogosController {
   @Post('listas')
   getListas(@Query() query: QueryDto, @Body() listasDto: ListasDto) {
     return this.listasService.getLista(listasDto, query);
+  }
+
+  //? ============================================================================================== */
+  //?                                  Fecha_Y_Hora                                                  */
+  //? ============================================================================================== */
+
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @Post('fecha-hora')
+  getFechaHora(@Query() query: QueryDto) {
+    return this.fechaHoraService.getFechaHora(query);
   }
 }

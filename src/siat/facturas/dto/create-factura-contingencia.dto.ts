@@ -1,20 +1,20 @@
 import {
+  Min,
+  IsInt,
+  IsArray,
   IsString,
   IsNumber,
-  IsArray,
-  ValidateNested,
   IsOptional,
   IsNotEmpty,
   IsPositive,
-  Min,
-  IsInt,
   ValidateIf,
+  ValidateNested,
   Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateFacturaDto {
+export class CreateFacturaContingenciaDto {
   //* ============================================================================================== */
   //* Información del Emisor
 
@@ -130,7 +130,7 @@ export class CreateFacturaDto {
 
   @ApiPropertyOptional({
     description: 'Número de tarjeta (si aplica)',
-    example: 4111111111111111,
+    example: '4111111111111111',
   })
   @ValidateIf((o) => o.codigoMetodoPago === 10)
   @IsNotEmpty({
@@ -141,25 +141,6 @@ export class CreateFacturaDto {
   })
   @IsString()
   numeroTarjeta?: string | null;
-
-  //* ============================================================================================== */
-  //* Montos
-
-  /* @ApiProperty({
-    description: 'Monto total de la factura',
-    example: 25,
-  })
-  @IsNumber()
-  @IsPositive()
-  montoTotal: number; */
-
-  /* @ApiProperty({
-    description: 'Monto sujeto a IVA',
-    example: 25,
-  })
-  @IsNumber()
-  @Min(0)
-  montoTotalSujetoIva: number; */
 
   //* ============================================================================================== */
   //* Moneda
@@ -180,25 +161,8 @@ export class CreateFacturaDto {
   @IsPositive()
   tipoCambio: number;
 
-  /* @ApiProperty({
-    description: 'Monto total en la moneda seleccionada',
-    example: 25,
-  })
-  @IsNumber()
-  @IsPositive()
-  montoTotalMoneda: number; */
-
   //* ============================================================================================== */
   //* Descuentos y adicionales
-
-  /* @ApiPropertyOptional({
-    description: 'Monto de gift card',
-    example: 10,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  montoGiftCard?: number | null; */
 
   @ApiPropertyOptional({
     description: 'Monto de gift card',
@@ -227,6 +191,13 @@ export class CreateFacturaDto {
   @IsNumber()
   @IsInt()
   codigoExcepcion?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'CAFC (solo emisión fuera de línea)',
+    example: '101A194B4341C',
+  })
+  @IsString()
+  cafc: string;
 
   @ApiProperty({
     description: 'Usuario que emite la factura',
@@ -299,7 +270,6 @@ export class FacturaDetalleDto {
   })
   @IsNumber()
   @IsPositive()
-  @Min(0.01, { message: 'La cantidad debe ser mayor a 0' })
   cantidad: number;
 
   @ApiProperty({
@@ -326,28 +296,4 @@ export class FacturaDetalleDto {
   @IsNumber()
   @Min(0)
   montoDescuento?: number | null;
-
-  /* @ApiProperty({
-    description: 'Subtotal',
-    example: 25,
-  })
-  @IsNumber()
-  @Min(0)
-  subTotal: number; */
-
-  /* @ApiPropertyOptional({
-    description: 'Número de serie',
-    example: 'SN-123456',
-  })
-  @IsOptional()
-  @IsString()
-  numeroSerie?: string | null;
-
-  @ApiPropertyOptional({
-    description: 'Número IMEI',
-    example: '356938035643809',
-  })
-  @IsOptional()
-  @IsString()
-  numeroImei?: string | null; */
 }

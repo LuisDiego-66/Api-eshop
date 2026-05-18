@@ -60,6 +60,9 @@ export class Paquete {
   @Column({ type: 'text' })
   hashArchivo: string;
 
+  @Column({ type: 'text', nullable: true })
+  cafc?: string | null;
+
   @Column({ type: 'int' })
   cantidadFacturas: number;
 

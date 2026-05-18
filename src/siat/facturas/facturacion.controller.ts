@@ -2,14 +2,15 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import {
-  CreatePaqueteDto,
   CreateFacturaDto,
+  AnulacionFacturaDto,
   VerificacionEstadoFacturaDto,
   ValidacionPaqueteFacturaDto,
-  AnulacionFacturaDto,
   ReversionAnulacionFacturaDto,
 } from './dto';
 import { QueryDto } from '../common/dto/query.dto';
+import { CreatePaqueteContingenciaDto } from './dto/create-paquete-contingencia.dto';
+import { CreateFacturaContingenciaDto } from './dto/create-factura-contingencia.dto';
 
 import { PaquetesService } from './paquetes.service';
 import { FacturacionService } from './facturacion.service';
@@ -31,9 +32,23 @@ export class FacturacionController {
   @Post('facturacion/online')
   async recepcionFacturaOnline(
     @Query() query: QueryDto,
-    @Body() createfacturaDto: CreateFacturaDto,
+    @Body() dto: CreateFacturaDto,
   ) {
-    return this.facturacionService.facturacionOnline(createfacturaDto, query);
+    return this.facturacionService.facturacionOnline(dto, query);
+  }
+
+  //? ============================================================================================== */
+  //?               Facturacion_Offline_Contingencia                                                  */
+  //? ============================================================================================== */
+
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @Post('facturacion/online/contingencia')
+  async recepcionFacturaOnlineContingencia(
+    @Query() query: QueryDto,
+    @Body() dto: CreateFacturaContingenciaDto,
+  ) {
+    return this.facturacionService.facturacionOfflineContingencia(dto, query);
   }
 
   //? ============================================================================================== */
@@ -45,9 +60,23 @@ export class FacturacionController {
   @Post('facturacion/offline')
   async recepcionFacturaOffline(
     @Query() query: QueryDto,
-    @Body() createfacturaDto: CreateFacturaDto,
+    @Body() dto: CreateFacturaDto,
   ) {
-    return this.facturacionService.facturacionOffline(createfacturaDto, query);
+    return this.facturacionService.facturacionOffline(dto, query);
+  }
+
+  //? ============================================================================================== */
+  //?                      Facturacion_Offline_Lote                                                  */
+  //? ============================================================================================== */
+
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @Post('facturacion/offline/lote')
+  async facturacionOfflineLote(
+    @Query() query: QueryDto,
+    @Body() dto: CreateFacturaDto,
+  ) {
+    return this.facturacionService.facturacionOfflineLote(dto, query);
   }
 
   //? ============================================================================================== */
@@ -59,43 +88,27 @@ export class FacturacionController {
   @Post('facturacion/verificacion')
   async verificacionEstadoFactura(
     @Query() query: QueryDto,
-    @Body() verificacionfacturaDto: VerificacionEstadoFacturaDto,
+    @Body() dto: VerificacionEstadoFacturaDto,
   ) {
-    return this.facturacionService.verificacionEstadoFactura(
-      verificacionfacturaDto,
-      query,
-    );
+    return this.facturacionService.verificacionEstadoFactura(dto, query);
   }
 
   //? ============================================================================================== */
   //?                               Anulacion_Factura                                                */
   //? ============================================================================================== */
 
-  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
-  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/anulacion')
-  async anulacionFactura(
-    @Query() query: QueryDto,
-    @Body() anulacionfacturaDto: AnulacionFacturaDto,
-  ) {
-    return this.facturacionService.anulacionFactura(anulacionfacturaDto, query);
+  async anulacionFactura(@Body() dto: AnulacionFacturaDto) {
+    return this.facturacionService.anulacionFactura(dto);
   }
 
   //? ============================================================================================== */
   //?                   Reversion_Anulacion_Factura                                                  */
   //? ============================================================================================== */
 
-  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
-  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/reversion')
-  async reversionAnulacionFactura(
-    @Query() query: QueryDto,
-    @Body() reversionAnulacionFacturaDto: ReversionAnulacionFacturaDto,
-  ) {
-    return this.facturacionService.reversionAnulacionFactura(
-      reversionAnulacionFacturaDto,
-      query,
-    );
+  async reversionAnulacionFactura(@Body() dto: ReversionAnulacionFacturaDto) {
+    return this.facturacionService.reversionAnulacionFactura(dto);
   }
 
   //? ============================================================================================== */
@@ -111,33 +124,32 @@ export class FacturacionController {
   //?                                Enviar_Paquete                                                  */
   //? ============================================================================================== */
 
-  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
-  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('paquetes')
-  async recepcionPaqueteFacturas(
-    @Query() query: QueryDto,
-    @Body() createPaqueteDto: CreatePaqueteDto,
+  async recepcionPaqueteFacturas() {
+    return this.paquetesService.recepcionPaqueteFactura();
+  }
+
+  //? ============================================================================================== */
+  //?                   Enviar_Paquete_Contingencia                                                  */
+  //? ============================================================================================== */
+
+  @Post('paquetes/contingencia')
+  async recepcionPaqueteFacturasContingencia(
+    @Body() dto: CreatePaqueteContingenciaDto,
   ) {
-    return this.paquetesService.recepcionPaqueteFactura(
-      createPaqueteDto,
-      query,
-    );
+    return this.paquetesService.recepcionPaqueteFacturaContingencia(dto);
   }
 
   //? ============================================================================================== */
   //?                            Validacion_Paquete                                                  */
   //? ============================================================================================== */
 
-  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
-  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('paquetes/validacion')
   async validacionPaqueteFacturas(
-    @Query() query: QueryDto,
     @Body() validacionPaqueteFacturaDto: ValidacionPaqueteFacturaDto,
   ) {
     return this.paquetesService.validacionPaqueteFactura(
       validacionPaqueteFacturaDto,
-      query,
     );
   }
 }

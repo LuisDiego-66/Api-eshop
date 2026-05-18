@@ -104,6 +104,8 @@ export class ProductsService {
       {
         where,
 
+        //order: { createdAt: 'ASC' },
+
         relations: {
           subcategory: { category: true },
           discount: true,

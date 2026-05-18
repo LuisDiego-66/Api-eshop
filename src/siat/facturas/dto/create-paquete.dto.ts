@@ -1,6 +1,5 @@
-import { IsEnum, IsInt, IsNotEmpty, IsNumber } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { CodigoEmisionEnum } from '../enums/codigo-emision.enum';
+import { IsInt, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePaqueteDto {
   @ApiProperty({
@@ -24,4 +23,12 @@ export class CreatePaqueteDto {
   @IsInt()
   @IsNotEmpty()
   codigoEvento: number;
+
+  /* @ApiPropertyOptional({
+    description: 'Código de Contingencia',
+    example: 9538603,
+  })
+  @IsInt()
+  @IsOptional()
+  cafc: number; */
 }

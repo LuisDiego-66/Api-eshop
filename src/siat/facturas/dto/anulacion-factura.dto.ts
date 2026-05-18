@@ -2,9 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { IsEnum, IsNumber, IsString } from 'class-validator';
 import { CodigoEmisionEnum } from '../enums/codigo-emision.enum';
+import { Type } from 'class-transformer';
 
 export class AnulacionFacturaDto {
-  @ApiProperty({
+  /*   @ApiProperty({
     description: 'Codigo Documento Sector de la Factura',
     example: 1,
   })
@@ -24,7 +25,7 @@ export class AnulacionFacturaDto {
     example: 1,
   })
   @IsNumber()
-  tipoFacturaDocumento: number;
+  tipoFacturaDocumento: number; */
 
   @ApiProperty({
     description: 'Codigo Motivo (catálogo SIAT)',
@@ -34,9 +35,17 @@ export class AnulacionFacturaDto {
   codigoMotivo: number;
 
   @ApiProperty({
+    description: 'Factura Id',
+    example: 1,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  facturaId: number;
+
+  /* @ApiProperty({
     description: 'CUF de la Factura',
     example: '202DC8A36A3AB879F5F623937F1E756BF33B58F2E675B49B411CD8AF74',
   })
   @IsString()
-  cuf: string;
+  cuf: string; */
 }

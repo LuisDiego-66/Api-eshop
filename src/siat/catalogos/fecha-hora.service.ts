@@ -7,20 +7,26 @@ import { ListasEnum } from './enums/listas.enum';
 
 import { ResponseFechaHora } from './interfaces/response-fecha-hora.interface';
 
+import { QueryDto } from '../common/dto/query.dto';
+
+import { CodigosService } from '../codigos/codigos.service';
+
 import { Cufd } from '../codigos/entities/cufd.entity';
 
 @Injectable()
 export class FechaHoraService {
   private readonly client: SoapClient;
 
-  constructor() {
+  constructor(private readonly codigosService: CodigosService) {
     this.client = new SoapClient(
       SIAT_CONFIG.wsdl.sincronizacion,
       SIAT_CONFIG.TOKEN_SIAT,
     );
   }
 
-  async getFechaHora(cufd: Cufd) {
+  async getFechaHora(query: QueryDto /* cufd: Cufd */) {
+    const cufd = await this.codigosService.getCUFD(query);
+
     const response: ResponseFechaHora = await this.client.call(
       ListasEnum.FechaHora,
       {

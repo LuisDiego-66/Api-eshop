@@ -56,6 +56,9 @@ export class SiatSync {
   })
   parametrica: SiatParametrica[];
 
-  @OneToOne(() => Factura, (factura) => factura.siatSync)
-  factura: Factura;
+  /* @OneToOne(() => Factura, (factura) => factura.siatSync)
+  factura: Factura; */
+
+  @OneToMany(() => Factura, (factura) => factura.siatSync)
+  facturas: Factura[];
 }

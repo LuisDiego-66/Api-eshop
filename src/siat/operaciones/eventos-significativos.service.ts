@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -8,7 +8,10 @@ import {
 } from './dto';
 import { QueryDto } from '../common/dto/query.dto';
 
-import { ResponseEventoSiginificativo } from './interfaces/response-evento-significativo.interface';
+import {
+  ResponseEventoSiginificativo,
+  RespuestaListaEventos,
+} from './interfaces/response-evento-significativo.interface';
 
 import { CodigosService } from '../codigos/codigos.service';
 import { RequestsOperacionesService } from './services/requests-operaciones.service';
@@ -52,7 +55,16 @@ export class EventosSignificativosService {
         fechaHoraInicioEvento: dto.fechaHoraInicioEvento,
         nit: cufd.nit,
       });
+
+    // --------------------------------------------------
+    // Respuesta principal o fallback
+    // --------------------------------------------------
+
     const response = eventoSignificativoResponse.data.RespuestaListaEventos;
+
+    // --------------------------------------------------
+    // Transacción exitosa
+    // --------------------------------------------------
 
     if (response.transaccion) {
       const eventoSignificativo = this.eventoSignificativoRepository.create({
@@ -79,6 +91,7 @@ export class EventosSignificativosService {
       await this.eventoSignificativoRepository.save(eventoSignificativo);
       return eventoSignificativo;
     }
+
     return response;
   }
 

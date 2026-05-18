@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 import * as zlib from 'zlib';
 
@@ -8,6 +12,7 @@ import { algoritmoHash } from '../helpers/functions';
 import { generarCUF } from '../helpers/cuf.generator';
 import { formatDateForCUF } from '../helpers/date.util';
 
+import { ListasEnum } from '../catalogos/enums/listas.enum';
 import { CodigoEmisionEnum } from './enums/codigo-emision.enum';
 import { FacturaStatusEnum } from './enums/factura-status.enum';
 
@@ -18,6 +23,7 @@ import {
   ReversionAnulacionFacturaDto,
 } from './dto';
 import { QueryDto } from '../common/dto/query.dto';
+import { CreateFacturaContingenciaDto } from './dto/create-factura-contingencia.dto';
 
 import {
   ResponseRecepcionFactura,
@@ -26,12 +32,14 @@ import {
 } from './interfaces';
 
 import { CodigosService } from '../codigos/codigos.service';
-import { FechaHoraService } from '../catalogos/fecha-hora.service';
+import { ListasService } from '../catalogos/Listas.service';
 import { FacturaBuilderService } from './services/factura-builder.service';
 import { SincronizacionService } from '../catalogos/services/sincronizacion.service';
 import { RequestsFacturacionService } from './services/requests-facturacion.service';
 
 import { Factura } from './entities/factura.entity';
+import { Detalle } from './entities/detalle.entity';
+import { Cafc } from './entities/cafc.entity';
 
 @Injectable()
 export class FacturacionService {
@@ -39,11 +47,21 @@ export class FacturacionService {
     @InjectRepository(Factura)
     private readonly facturaRepository: Repository<Factura>,
 
+    @InjectRepository(Detalle)
+    private readonly detalleRepository: Repository<Detalle>,
+
+    @InjectRepository(Cafc)
+    private readonly cafcRepository: Repository<Cafc>,
+
     private readonly codigosService: CodigosService,
-    private readonly fechaHoraService: FechaHoraService,
+
     private readonly request: RequestsFacturacionService,
+
     private readonly facturaBuilderService: FacturaBuilderService,
+
     private readonly sincronizacionService: SincronizacionService,
+
+    private readonly listasService: ListasService,
   ) {}
 
   //? ============================================================================================== */
@@ -60,23 +78,46 @@ export class FacturacionService {
       codigoSucursal: query.codigoSucursal,
     });
     const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
-    const fechaHora = await this.fechaHoraService.getFechaHora(cufd);
+
+    const now = new Date();
+    const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'America/La_Paz',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(now);
+    const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
+    const fechaHora = fechaHoraBolivia.replace(' ', 'T') + '.' + milliseconds;
 
     // --------------------------------------------------
     // 2. Número de factura
     // --------------------------------------------------
 
-    const count = await this.facturaRepository.count({});
-    const numeroFactura = count + 1;
+    const lastFactura = await this.facturaRepository.findOne({
+      where: {
+        codigoSucursal: cufd.codigoSucursal,
+        codigoPuntoVenta: cufd.codigoPuntoVenta,
+        cafc: IsNull(), // Excluir facturas de contingencia
+      },
+      order: {
+        numeroFactura: 'DESC',
+      },
+    });
+
+    const numeroFactura = (lastFactura?.numeroFactura || 0) + 1;
 
     // --------------------------------------------------
     // 3. Generar CUF
     // --------------------------------------------------
 
-    const cuf = this.getCuf({
+    const cuf = generarCUF({
       nit: cufd.nit,
-      fechaHora: fechaHora.fechaHora,
-      codigoModalidad: cufd.codigoModalidad,
+      fechaHora: formatDateForCUF(new Date(fechaHora)),
+      modalidad: cufd.codigoModalidad,
       codigoSucursal: cufd.codigoSucursal,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       codigoControlCUFD: cufd.codigoControl,
@@ -86,6 +127,75 @@ export class FacturacionService {
       tipoFactura: tipoFactura,
       numeroFactura: numeroFactura,
     });
+
+    // --------------------------------------------------
+    // 5. Validaciones
+    // --------------------------------------------------
+
+    //! Calculo de detalles
+    const detallesCalculados = data.detalles.map((item) => {
+      const montoDescuento = item.montoDescuento ?? 0;
+      const subTotal = item.cantidad * item.precioUnitario - montoDescuento;
+      return {
+        ...item,
+        subTotal,
+      };
+    });
+
+    for (const detalle of detallesCalculados) {
+      if (detalle.cantidad <= 0) {
+        throw new BadRequestException(
+          `La cantidad del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+      if (detalle.subTotal <= 0) {
+        throw new BadRequestException(
+          `El subtotal del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+    }
+
+    //! Calculo de montoTolta
+    const sumaSubTotal = detallesCalculados.reduce(
+      (acc, d) => acc + d.subTotal,
+      0,
+    );
+    const descuentoAdicional = data.descuentoAdicional ?? 0;
+    const montoTotal = sumaSubTotal - descuentoAdicional;
+
+    //! Calculo de montoTotalMoneda
+    const montoTotalMoneda = montoTotal / data.tipoCambio;
+
+    //! Calculo de montoTotalSujetoIva
+    let montoTotalSujetoIva = montoTotal;
+
+    //!validar si el pago es con gifcard
+    if (data.montoGiftCard && data.codigoMetodoPago === 27) {
+      montoTotalSujetoIva = montoTotal - data.montoGiftCard;
+    } else {
+      data.montoGiftCard = null;
+    }
+
+    //! Leyenda aleatoria
+    let leyendaObject: { codigoActividad: string; descripcionLeyenda: string } =
+      { codigoActividad: '', descripcionLeyenda: '' };
+
+    const listaLeyendas = await this.listasService.getLista(
+      { metodo: ListasEnum.ListaLeyendasFactura },
+      query,
+    );
+    if (listaLeyendas) {
+      const lista =
+        listaLeyendas?.listas[0].payload.RespuestaListaParametricasLeyendas
+          .listaLeyendas;
+      const randomIndex = Math.floor(Math.random() * lista.length);
+      leyendaObject = lista[randomIndex];
+    }
+
+    //! validar la tarjeta solo si el metodo de pago es con tarjeta
+    if (dto.codigoMetodoPago != 2) {
+      dto.numeroTarjeta = null;
+    }
 
     // --------------------------------------------------
     // 5. Construcción del XML
@@ -103,7 +213,7 @@ export class FacturacionService {
       codigoSucursal: cufd.codigoSucursal,
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
-      fechaEmision: new Date(fechaHora.fechaHora),
+      fechaEmision: fechaHora, //new Date(fechaHora),
 
       nombreRazonSocial: data.nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -113,24 +223,22 @@ export class FacturacionService {
       codigoMetodoPago: data.codigoMetodoPago,
       numeroTarjeta: data.numeroTarjeta,
 
-      montoTotal: data.montoTotal,
-      montoTotalSujetoIva: data.montoTotalSujetoIva,
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
 
       codigoMoneda: data.codigoMoneda,
       tipoCambio: data.tipoCambio,
-      montoTotalMoneda: data.montoTotalMoneda,
+      montoTotalMoneda: montoTotalMoneda,
 
       montoGiftCard: data.montoGiftCard,
       descuentoAdicional: data.descuentoAdicional,
       codigoExcepcion: data.codigoExcepcion,
 
-      cafc: data.cafc,
-
-      leyenda: data.leyenda,
+      leyenda: leyendaObject.descripcionLeyenda,
       usuario: data.usuario,
       codigoDocumentoSector: data.codigoDocumentoSector,
 
-      detalles: data.detalles,
+      detalles: detallesCalculados,
     });
 
     // --------------------------------------------------
@@ -158,7 +266,7 @@ export class FacturacionService {
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
-      fechaEmision: new Date(fechaHora.fechaHora),
+      fechaEmision: fechaHora,
 
       nombreRazonSocial: data.nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -168,20 +276,18 @@ export class FacturacionService {
       codigoMetodoPago: data.codigoMetodoPago,
       numeroTarjeta: data.numeroTarjeta,
 
-      montoTotal: data.montoTotal,
-      montoTotalSujetoIva: data.montoTotalSujetoIva,
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
 
       codigoMoneda: data.codigoMoneda,
       tipoCambio: data.tipoCambio,
-      montoTotalMoneda: data.montoTotalMoneda,
+      montoTotalMoneda: montoTotalMoneda,
 
       montoGiftCard: data.montoGiftCard,
       descuentoAdicional: data.descuentoAdicional,
       codigoExcepcion: data.codigoExcepcion,
 
-      cafc: data.cafc,
-
-      leyenda: data.leyenda,
+      leyenda: leyendaObject.descripcionLeyenda,
       usuario: data.usuario,
       codigoDocumentoSector: data.codigoDocumentoSector,
 
@@ -191,6 +297,12 @@ export class FacturacionService {
       siatSync: siatSync,
 
       xml,
+
+      detalles: detallesCalculados.map((detalle) =>
+        this.detalleRepository.create({
+          ...detalle,
+        }),
+      ),
     });
     const factura = await this.facturaRepository.save(newFactura);
 
@@ -212,7 +324,7 @@ export class FacturacionService {
         nit: cufd.nit,
         tipoFacturaDocumento: factura.tipoFacturaDocumento,
         archivo: archivo,
-        fechaEnvio: fechaHora.fechaHora,
+        fechaEnvio: fechaHora.toString(),
         hashArchivo: hashArchivo,
       });
     const response = recepcionFacturaResponse.data.RespuestaServicioFacturacion;
@@ -221,19 +333,265 @@ export class FacturacionService {
     // 9. Guardar respuesta SIAT
     // --------------------------------------------------
 
-    await this.facturaRepository.update(factura.id, {
-      codigoDescripcion: response.codigoDescripcion,
-      codigoEstado: response.codigoEstado,
-      codigoRecepcion: response.codigoRecepcion ?? null,
-      transaccion: response.transaccion,
-      mensajesList: response.mensajesList ?? null,
-      fechaRespuesta: recepcionFacturaResponse.timestamp,
-      estado: response.transaccion
-        ? FacturaStatusEnum.VALIDADA
-        : FacturaStatusEnum.RECHAZADA,
+    if (response) {
+      await this.facturaRepository.update(factura.id, {
+        codigoDescripcion: response.codigoDescripcion,
+        codigoEstado: response.codigoEstado,
+        codigoRecepcion: response.codigoRecepcion ?? null,
+        transaccion: response.transaccion,
+        mensajesList: response.mensajesList ?? null,
+        fechaRespuesta: recepcionFacturaResponse.timestamp,
+        estado: response.transaccion
+          ? FacturaStatusEnum.VALIDADA
+          : FacturaStatusEnum.RECHAZADA,
+      });
+
+      return response;
+    } else {
+      await this.facturaRepository.update(factura.id, {
+        codigoEmision: CodigoEmisionEnum.OFFLINE,
+      });
+
+      return response;
+    }
+  }
+
+  //? ============================================================================================== */
+  //?               Facturacion_Online_Contingencia                                                  */
+  //? ============================================================================================== */
+
+  async facturacionOfflineContingencia(
+    dto: CreateFacturaContingenciaDto,
+    query: QueryDto,
+  ) {
+    // --------------------------------------------------
+    // 1. Obtener códigos vigentes
+    // --------------------------------------------------
+
+    const { cufd } = await this.getCodigos({
+      codigoPuntoVenta: query.codigoPuntoVenta,
+      codigoSucursal: query.codigoSucursal,
+    });
+    const { tipoDocumentoSector, tipoEmision, tipoFactura, cafc, ...data } =
+      dto;
+
+    const now = new Date();
+    const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'America/La_Paz',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(now);
+    const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
+    const fechaHora = fechaHoraBolivia.replace(' ', 'T') + '.' + milliseconds;
+
+    // --------------------------------------------------
+    // 2. Número de factura
+    // --------------------------------------------------
+
+    const cafcEntity = await this.cafcRepository.findOne({
+      where: { codigo: cafc },
     });
 
-    return response;
+    if (!cafcEntity) {
+      throw new BadRequestException('CAFC no válido');
+    }
+
+    const lastFactura = await this.facturaRepository.findOne({
+      where: { cafc: { codigo: cafc } },
+      order: { numeroFactura: 'DESC' },
+    });
+
+    const numeroFactura = lastFactura
+      ? lastFactura.numeroFactura + 1
+      : cafcEntity.numeroInicial;
+
+    if (numeroFactura > cafcEntity.numeroFinal) {
+      throw new BadRequestException('Rango CAFC agotado');
+    }
+
+    // --------------------------------------------------
+    // 3. Generar CUF
+    // --------------------------------------------------
+
+    const cuf = generarCUF({
+      nit: cufd.nit,
+      fechaHora: formatDateForCUF(new Date(fechaHora)), // fechaHora.toString(),
+      modalidad: cufd.codigoModalidad,
+      codigoSucursal: cufd.codigoSucursal,
+      codigoPuntoVenta: cufd.codigoPuntoVenta,
+      codigoControlCUFD: cufd.codigoControl,
+
+      tipoDocumentoSector: tipoDocumentoSector,
+      tipoEmision: tipoEmision,
+      tipoFactura: tipoFactura,
+      numeroFactura: numeroFactura,
+    });
+
+    // --------------------------------------------------
+    // 5. Validaciones
+    // --------------------------------------------------
+
+    //! Calculo de detalles
+    const detallesCalculados = data.detalles.map((item) => {
+      const montoDescuento = item.montoDescuento ?? 0;
+      const subTotal = item.cantidad * item.precioUnitario - montoDescuento;
+      return {
+        ...item,
+        subTotal,
+      };
+    });
+
+    //! Calculo de montoTolta
+    const sumaSubTotal = detallesCalculados.reduce(
+      (acc, d) => acc + d.subTotal,
+      0,
+    );
+    const descuentoAdicional = data.descuentoAdicional ?? 0;
+    const montoTotal = sumaSubTotal - descuentoAdicional;
+
+    //! Calculo de montoTotalMoneda
+    const montoTotalMoneda = montoTotal / data.tipoCambio;
+
+    //! Calculo de montoTotalSujetoIva
+    let montoTotalSujetoIva = montoTotal;
+
+    //!validar si el pago es con gifcard
+    if (data.montoGiftCard && data.codigoMetodoPago === 27) {
+      montoTotalSujetoIva = montoTotal - data.montoGiftCard;
+    }
+
+    //! Leyenda aleatoria
+    let leyendaObject: { codigoActividad: string; descripcionLeyenda: string } =
+      { codigoActividad: '', descripcionLeyenda: '' };
+
+    const listaLeyendas = await this.listasService.getLista(
+      { metodo: ListasEnum.ListaLeyendasFactura },
+      query,
+    );
+    if (listaLeyendas) {
+      const lista =
+        listaLeyendas?.listas[0].payload.RespuestaListaParametricasLeyendas
+          .listaLeyendas;
+      const randomIndex = Math.floor(Math.random() * lista.length);
+      leyendaObject = lista[randomIndex];
+    }
+
+    //! validar la tarjeta solo si el metodo de pago es con tarjeta
+    if (dto.codigoMetodoPago != 2) {
+      dto.numeroTarjeta = null;
+    }
+
+    // --------------------------------------------------
+    // 5. Construcción del XML
+    // --------------------------------------------------
+
+    const xml = this.facturaBuilderService.buildFactura({
+      nitEmisor: cufd.nit,
+      razonSocialEmisor: data.razonSocialEmisor,
+      municipio: data.municipio,
+      telefono: data.telefono,
+
+      numeroFactura: numeroFactura,
+      cuf: cuf,
+      cufd: cufd.codigo,
+      codigoSucursal: cufd.codigoSucursal,
+      direccion: cufd.direccion,
+      codigoPuntoVenta: cufd.codigoPuntoVenta,
+      fechaEmision: fechaHora, // new Date(fechaHora),
+
+      nombreRazonSocial: data.nombreRazonSocial,
+      codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
+      numeroDocumento: data.numeroDocumento,
+      complemento: data.complemento,
+      codigoCliente: data.codigoCliente,
+      codigoMetodoPago: data.codigoMetodoPago,
+      numeroTarjeta: data.numeroTarjeta,
+
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
+
+      codigoMoneda: data.codigoMoneda,
+      tipoCambio: data.tipoCambio,
+      montoTotalMoneda: montoTotalMoneda,
+
+      montoGiftCard: data.montoGiftCard,
+      descuentoAdicional: data.descuentoAdicional,
+      codigoExcepcion: data.codigoExcepcion,
+
+      cafc: cafcEntity.codigo, //! CAFC
+
+      leyenda: leyendaObject.descripcionLeyenda,
+      usuario: data.usuario,
+      codigoDocumentoSector: data.codigoDocumentoSector,
+
+      detalles: detallesCalculados,
+    });
+
+    // --------------------------------------------------
+    // 7. Persistir factura ANTES de SIAT
+    // --------------------------------------------------
+
+    const siatSync = await this.sincronizacionService.sincronizacion(query);
+
+    const newFactura = this.facturaRepository.create({
+      nitEmisor: cufd.nit,
+      razonSocialEmisor: data.razonSocialEmisor,
+      municipio: data.municipio,
+      telefono: data.telefono,
+
+      numeroFactura: numeroFactura,
+      cuf: cuf,
+      cufd: cufd.codigo,
+      codigoSucursal: cufd.codigoSucursal,
+      direccion: cufd.direccion,
+      codigoPuntoVenta: cufd.codigoPuntoVenta,
+      tipoFacturaDocumento: data.tipoFacturaDocumento,
+      fechaEmision: fechaHora,
+
+      nombreRazonSocial: data.nombreRazonSocial,
+      codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
+      numeroDocumento: data.numeroDocumento,
+      complemento: data.complemento,
+      codigoCliente: data.codigoCliente,
+      codigoMetodoPago: data.codigoMetodoPago,
+      numeroTarjeta: data.numeroTarjeta,
+
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
+
+      codigoMoneda: data.codigoMoneda,
+      tipoCambio: data.tipoCambio,
+      montoTotalMoneda: montoTotalMoneda,
+
+      montoGiftCard: data.montoGiftCard,
+      descuentoAdicional: data.descuentoAdicional,
+      codigoExcepcion: data.codigoExcepcion,
+
+      cafc: cafcEntity, //! CAFC
+
+      leyenda: leyendaObject.descripcionLeyenda,
+      usuario: data.usuario,
+      codigoDocumentoSector: data.codigoDocumentoSector,
+
+      estado: FacturaStatusEnum.PENDIENTE,
+      codigoEmision: CodigoEmisionEnum.OFFLINE, //! offline
+
+      siatSync: siatSync,
+
+      xml,
+
+      detalles: detallesCalculados.map((detalle) =>
+        this.detalleRepository.create({
+          ...detalle,
+        }),
+      ),
+    });
+    return await this.facturaRepository.save(newFactura);
   }
 
   //? ============================================================================================== */
@@ -250,23 +608,45 @@ export class FacturacionService {
       codigoSucursal: query.codigoSucursal,
     });
     const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
-    const fechaHora = await this.fechaHoraService.getFechaHora(cufd);
+
+    const now = new Date();
+    const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'America/La_Paz',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(now);
+    const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
+    const fechaHora = fechaHoraBolivia.replace(' ', 'T') + '.' + milliseconds;
 
     // --------------------------------------------------
     // 2. Número de factura
     // --------------------------------------------------
 
-    const count = await this.facturaRepository.count({});
-    const numeroFactura = count + 1;
+    const lastFactura = await this.facturaRepository.findOne({
+      where: {
+        codigoSucursal: cufd.codigoSucursal,
+        codigoPuntoVenta: cufd.codigoPuntoVenta,
+        cafc: IsNull(), // Excluir facturas de contingencia
+      },
+      order: {
+        numeroFactura: 'DESC',
+      },
+    });
 
+    const numeroFactura = (lastFactura?.numeroFactura || 0) + 1;
     // --------------------------------------------------
     // 3. Generar CUF
     // --------------------------------------------------
 
-    const cuf = this.getCuf({
+    const cuf = generarCUF({
       nit: cufd.nit,
-      fechaHora: fechaHora.fechaHora,
-      codigoModalidad: cufd.codigoModalidad,
+      fechaHora: formatDateForCUF(new Date(fechaHora)),
+      modalidad: cufd.codigoModalidad,
       codigoSucursal: cufd.codigoSucursal,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       codigoControlCUFD: cufd.codigoControl,
@@ -278,7 +658,63 @@ export class FacturacionService {
     });
 
     // --------------------------------------------------
-    // 4. Construcción del XML
+    // 4. Validaciones
+    // --------------------------------------------------
+
+    //! Calculo de detalles
+    const detallesCalculados = data.detalles.map((item) => {
+      const montoDescuento = item.montoDescuento ?? 0;
+      const subTotal = item.cantidad * item.precioUnitario - montoDescuento;
+      return {
+        ...item,
+        subTotal,
+      };
+    });
+
+    //! Calculo de montoTolta
+    const sumaSubTotal = detallesCalculados.reduce(
+      (acc, d) => acc + d.subTotal,
+      0,
+    );
+    const descuentoAdicional = data.descuentoAdicional ?? 0;
+    const montoTotal = sumaSubTotal - descuentoAdicional;
+
+    //! Calculo de montoTotalMoneda
+    const montoTotalMoneda = montoTotal / data.tipoCambio;
+
+    //! Calculo de montoTotalSujetoIva
+    let montoTotalSujetoIva = montoTotal;
+
+    //!validar si el pago es con gifcard
+    if (data.montoGiftCard && data.codigoMetodoPago === 27) {
+      montoTotalSujetoIva = montoTotal - data.montoGiftCard;
+    }
+
+    //! Leyenda aleatoria
+    let leyendaObject: { codigoActividad: string; descripcionLeyenda: string } =
+      { codigoActividad: '', descripcionLeyenda: '' };
+
+    const listaLeyendas = await this.listasService.getLista(
+      { metodo: ListasEnum.ListaLeyendasFactura },
+      query,
+    );
+
+    if (listaLeyendas) {
+      const lista =
+        listaLeyendas?.listas[0].payload.RespuestaListaParametricasLeyendas
+          .listaLeyendas;
+
+      const randomIndex = Math.floor(Math.random() * lista.length);
+      leyendaObject = lista[randomIndex];
+    }
+
+    //! validar la tarjeta solo si el metodo de pago es con tarjeta
+    if (dto.codigoMetodoPago != 2) {
+      dto.numeroTarjeta = null;
+    }
+
+    // --------------------------------------------------
+    // 5. Construcción del XML
     // --------------------------------------------------
 
     const xml = this.facturaBuilderService.buildFactura({
@@ -293,7 +729,7 @@ export class FacturacionService {
       codigoSucursal: cufd.codigoSucursal,
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
-      fechaEmision: new Date(fechaHora.fechaHora),
+      fechaEmision: fechaHora, // new Date(fechaHora),
 
       nombreRazonSocial: data.nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -303,29 +739,31 @@ export class FacturacionService {
       codigoMetodoPago: data.codigoMetodoPago,
       numeroTarjeta: data.numeroTarjeta,
 
-      montoTotal: data.montoTotal,
-      montoTotalSujetoIva: data.montoTotalSujetoIva,
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
 
       codigoMoneda: data.codigoMoneda,
       tipoCambio: data.tipoCambio,
-      montoTotalMoneda: data.montoTotalMoneda,
+      montoTotalMoneda: montoTotalMoneda,
 
       montoGiftCard: data.montoGiftCard,
       descuentoAdicional: data.descuentoAdicional,
       codigoExcepcion: data.codigoExcepcion,
 
-      cafc: data.cafc,
+      //cafc: data.cafc,
 
-      leyenda: data.leyenda,
+      leyenda: leyendaObject.descripcionLeyenda,
       usuario: data.usuario,
       codigoDocumentoSector: data.codigoDocumentoSector,
 
-      detalles: data.detalles,
+      detalles: detallesCalculados,
     });
 
     // --------------------------------------------------
     // 5. Persistir factura
     // --------------------------------------------------
+
+    const siatSync = await this.sincronizacionService.sincronizacion(query);
 
     const newFactura = this.facturaRepository.create({
       nitEmisor: cufd.nit,
@@ -340,7 +778,7 @@ export class FacturacionService {
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
-      fechaEmision: new Date(fechaHora.fechaHora),
+      fechaEmision: new Date(fechaHora),
 
       nombreRazonSocial: data.nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -350,29 +788,82 @@ export class FacturacionService {
       codigoMetodoPago: data.codigoMetodoPago,
       numeroTarjeta: data.numeroTarjeta,
 
-      montoTotal: data.montoTotal,
-      montoTotalSujetoIva: data.montoTotalSujetoIva,
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
 
       codigoMoneda: data.codigoMoneda,
       tipoCambio: data.tipoCambio,
-      montoTotalMoneda: data.montoTotalMoneda,
+      montoTotalMoneda: montoTotalMoneda,
 
       montoGiftCard: data.montoGiftCard,
       descuentoAdicional: data.descuentoAdicional,
       codigoExcepcion: data.codigoExcepcion,
 
-      cafc: data.cafc,
+      //cafc: data.cafc,
 
-      leyenda: data.leyenda,
+      leyenda: leyendaObject.descripcionLeyenda,
       usuario: data.usuario,
       codigoDocumentoSector: data.codigoDocumentoSector,
 
       estado: FacturaStatusEnum.PENDIENTE,
       codigoEmision: CodigoEmisionEnum.OFFLINE,
 
+      siatSync: siatSync,
+
       xml,
+
+      detalles: detallesCalculados.map((detalle) =>
+        this.detalleRepository.create({
+          ...detalle,
+        }),
+      ),
     });
     return await this.facturaRepository.save(newFactura);
+  }
+
+  //? ============================================================================================== */
+  //?                        Facturacion_Offline_Lote                                                */
+  //? ============================================================================================== */
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async facturacionOfflineLote(dto: CreateFacturaDto, query: QueryDto) {
+    const resultados: any[] = [];
+    const total = 44;
+
+    // Ajusta según SIAT (ej. 100–500 ms suele ser suficiente)
+    const delayMs = 300;
+
+    for (let i = 1; i <= total; i++) {
+      try {
+        const respuesta = await this.facturacionOffline(dto, query); //! cambiar para las pruebas
+
+        resultados.push({
+          numero: i,
+          success: true,
+          data: respuesta,
+        });
+      } catch (error) {
+        resultados.push({
+          numero: i,
+          success: false,
+          error: error?.response || error?.message,
+        });
+      }
+
+      // Evita delay después de la última factura
+      if (i < total) {
+        await this.sleep(delayMs);
+      }
+    }
+
+    return {
+      total,
+      exitosas: resultados.filter((r) => r.success).length,
+      fallidas: resultados.filter((r) => !r.success).length,
+    };
   }
 
   //? ============================================================================================== */
@@ -420,14 +911,24 @@ export class FacturacionService {
   //?                             Anulacion_Factura                                                  */
   //? ============================================================================================== */
 
-  async anulacionFactura(dto: AnulacionFacturaDto, query: QueryDto) {
+  async anulacionFactura(dto: AnulacionFacturaDto /*query: QueryDto */) {
     // --------------------------------------------------
     // 1. Obtener códigos vigentes
     // --------------------------------------------------
 
+    const { facturaId } = dto;
+
+    const factura = await this.facturaRepository.findOne({
+      where: { id: facturaId, estado: FacturaStatusEnum.VALIDADA },
+    });
+
+    if (!factura) {
+      throw new NotFoundException('Factura no encontrada');
+    }
+
     const { cufd } = await this.getCodigos({
-      codigoPuntoVenta: query.codigoPuntoVenta,
-      codigoSucursal: query.codigoSucursal,
+      codigoPuntoVenta: factura.codigoPuntoVenta,
+      codigoSucursal: factura.codigoSucursal,
     });
 
     // --------------------------------------------------
@@ -437,8 +938,8 @@ export class FacturacionService {
     const anulacionFacturaResponse: ResponseAnulacionFactura =
       await this.request.anulacionFactura({
         codigoAmbiente: cufd.codigoAmbiente,
-        codigoDocumentoSector: dto.codigoDocumentoSector,
-        codigoEmision: dto.codigoEmision,
+        codigoDocumentoSector: factura.codigoDocumentoSector,
+        codigoEmision: factura.codigoEmision,
         codigoModalidad: cufd.codigoModalidad,
         codigoPuntoVenta: cufd.codigoPuntoVenta,
         codigoSistema: cufd.codigoSistema,
@@ -446,22 +947,22 @@ export class FacturacionService {
         codigoCufd: cufd.codigo,
         codigoCuis: cufd.codigoCuis,
         nit: cufd.nit,
-        tipoFacturaDocumento: dto.tipoFacturaDocumento,
+        tipoFacturaDocumento: factura.tipoFacturaDocumento,
         codigoMotivo: dto.codigoMotivo,
-        cuf: dto.cuf,
+        cuf: factura.cuf,
       });
     const response = anulacionFacturaResponse.data.RespuestaServicioFacturacion;
 
     if (response.transaccion) {
-      const factura = await this.facturaRepository.findOne({
+      /* const factura = await this.facturaRepository.findOne({
         where: { cuf: dto.cuf },
+      }); */
+      //if (factura)
+      await this.facturaRepository.update(factura.id, {
+        codigoDescripcion: response.codigoDescripcion,
+        codigoEstado: response.codigoEstado,
+        estado: FacturaStatusEnum.ANULADA,
       });
-      if (factura)
-        await this.facturaRepository.update(factura.id, {
-          codigoDescripcion: response.codigoDescripcion,
-          codigoEstado: response.codigoEstado,
-          estado: FacturaStatusEnum.ANULADA,
-        });
     }
     return response;
   }
@@ -470,17 +971,24 @@ export class FacturacionService {
   //?                   Reversion_Anulacion_Factura                                                  */
   //? ============================================================================================== */
 
-  async reversionAnulacionFactura(
-    dto: ReversionAnulacionFacturaDto,
-    query: QueryDto,
-  ) {
+  async reversionAnulacionFactura(dto: ReversionAnulacionFacturaDto) {
     // --------------------------------------------------
     // 1. Obtener códigos vigentes
     // --------------------------------------------------
 
+    const { facturaId } = dto;
+
+    const factura = await this.facturaRepository.findOne({
+      where: { id: facturaId, estado: FacturaStatusEnum.ANULADA },
+    });
+
+    if (!factura) {
+      throw new NotFoundException('Factura no encontrada');
+    }
+
     const { cufd } = await this.getCodigos({
-      codigoPuntoVenta: query.codigoPuntoVenta,
-      codigoSucursal: query.codigoSucursal,
+      codigoPuntoVenta: factura.codigoPuntoVenta,
+      codigoSucursal: factura.codigoSucursal,
     });
 
     // --------------------------------------------------
@@ -490,8 +998,8 @@ export class FacturacionService {
     const reversionAnulacionFacturaResponse: ResponseReversionAnulacionFactura =
       await this.request.reversionAnulacionFactura({
         codigoAmbiente: cufd.codigoAmbiente,
-        codigoDocumentoSector: dto.codigoDocumentoSector,
-        codigoEmision: dto.codigoEmision,
+        codigoDocumentoSector: factura.codigoDocumentoSector,
+        codigoEmision: factura.codigoEmision,
         codigoModalidad: cufd.codigoModalidad,
         codigoPuntoVenta: cufd.codigoPuntoVenta,
         codigoSistema: cufd.codigoSistema,
@@ -499,22 +1007,22 @@ export class FacturacionService {
         codigoCufd: cufd.codigo,
         codigoCuis: cufd.codigoCuis,
         nit: cufd.nit,
-        tipoFacturaDocumento: dto.tipoFacturaDocumento,
-        cuf: dto.cuf,
+        tipoFacturaDocumento: factura.tipoFacturaDocumento,
+        cuf: factura.cuf,
       });
     const response =
       reversionAnulacionFacturaResponse.data.RespuestaServicioFacturacion;
 
     if (response.transaccion) {
-      const factura = await this.facturaRepository.findOne({
+      /* const factura = await this.facturaRepository.findOne({
         where: { cuf: dto.cuf },
       });
-      if (factura)
-        await this.facturaRepository.update(factura.id, {
-          codigoDescripcion: response.codigoDescripcion,
-          codigoEstado: response.codigoEstado,
-          estado: FacturaStatusEnum.REVERTIDA,
-        });
+      if (factura) */
+      await this.facturaRepository.update(factura.id, {
+        codigoDescripcion: response.codigoDescripcion,
+        codigoEstado: response.codigoEstado,
+        estado: FacturaStatusEnum.REVERTIDA,
+      });
     }
     return response;
   }
@@ -530,7 +1038,7 @@ export class FacturacionService {
   //?                                generador_CufD                                                  */
   //? ============================================================================================== */
 
-  private getCuf(data: {
+  /* private getCuf(data: {
     nit: number;
     fechaHora: string;
     codigoModalidad: number;
@@ -558,7 +1066,7 @@ export class FacturacionService {
     });
 
     return cuf;
-  }
+  } */
 
   //? ============================================================================================== */
   //?                         generador_ArchivoHASH                                                  */

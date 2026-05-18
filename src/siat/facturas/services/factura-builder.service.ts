@@ -1,180 +1,171 @@
 import { Injectable } from '@nestjs/common';
 import { FacturaInterface } from '../interfaces/factura.interface';
-
 import { create } from 'xmlbuilder2';
 import { formatDateISO } from '../../helpers/date.util';
 
 @Injectable()
 export class FacturaBuilderService {
   buildFactura(data: FacturaInterface): string {
-    const xml = create({ version: '1.0', encoding: 'UTF-8' })
-      .ele('facturaComputarizadaCompraVenta', {
+    const root = create({ version: '1.0', encoding: 'UTF-8' }).ele(
+      'facturaComputarizadaCompraVenta',
+      {
         'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
         'xsi:noNamespaceSchemaLocation': 'facturaComputarizadaCompraVenta.xsd',
-      })
-      .ele('cabecera')
+      },
+    );
 
-      //* Información del Emisor
+    //* CABECERA
+    const cabecera = root.ele('cabecera');
 
-      .ele('nitEmisor')
-      .txt(data.nitEmisor.toString())
-      .up()
-      .ele('razonSocialEmisor')
-      .txt(data.razonSocialEmisor)
-      .up()
-      .ele('municipio')
-      .txt(data.municipio)
-      .up()
-      .ele('telefono')
-      .txt(data.telefono)
-      .up()
+    //* Información del Emisor
+    cabecera.ele('nitEmisor').txt(data.nitEmisor.toString()).up();
+    cabecera.ele('razonSocialEmisor').txt(data.razonSocialEmisor).up();
+    cabecera.ele('municipio').txt(data.municipio).up();
+    cabecera.ele('telefono').txt(data.telefono).up();
 
-      //* Información de la Factura
+    //* Información de la Factura
+    cabecera.ele('numeroFactura').txt(data.numeroFactura.toString()).up();
+    cabecera.ele('cuf').txt(data.cuf).up();
+    cabecera.ele('cufd').txt(data.cufd).up();
+    cabecera.ele('codigoSucursal').txt(data.codigoSucursal.toString()).up();
+    cabecera.ele('direccion').txt(data.direccion).up();
+    cabecera.ele('codigoPuntoVenta').txt(data.codigoPuntoVenta.toString()).up();
+    cabecera.ele('fechaEmision').txt(data.fechaEmision).up();
 
-      .ele('numeroFactura')
-      .txt(data.numeroFactura.toString())
-      .up()
-      .ele('cuf')
-      .txt(data.cuf)
-      .up()
-      .ele('cufd')
-      .txt(data.cufd)
-      .up()
-      .ele('codigoSucursal')
-      .txt(data.codigoSucursal.toString())
-      .up()
-      .ele('direccion')
-      .txt(data.direccion)
-      .up()
-      .ele('codigoPuntoVenta')
-      .txt(data.codigoPuntoVenta.toString())
-      .up()
-      .ele('fechaEmision')
-      .txt(formatDateISO(data.fechaEmision))
-      .up()
-
-      //* Información del Cliente
-
-      .ele('nombreRazonSocial')
-      .txt(data.nombreRazonSocial)
-      .up()
+    //* Información del Cliente
+    cabecera.ele('nombreRazonSocial').txt(data.nombreRazonSocial).up();
+    cabecera
       .ele('codigoTipoDocumentoIdentidad')
       .txt(data.codigoTipoDocumentoIdentidad.toString())
-      .up()
-      .ele('numeroDocumento')
-      .txt(data.numeroDocumento)
-      .up()
-      .ele('complemento')
-      .att('xsi:nil', data.complemento ? 'false' : 'true') //! nullable
-      .txt(data.complemento || '')
-      .up()
-      .ele('codigoCliente')
-      .txt(data.codigoCliente)
-      .up()
-      .ele('codigoMetodoPago')
-      .txt(data.codigoMetodoPago.toString())
-      .up()
-      .ele('numeroTarjeta')
-      .att('xsi:nil', data.numeroTarjeta ? 'false' : 'true') //! nullable
-      .txt(data.numeroTarjeta?.toString() || '')
-      .up()
+      .up();
+    cabecera.ele('numeroDocumento').txt(data.numeroDocumento).up();
 
-      //* Montos
+    // complemento (opcional)
+    if (data.complemento !== undefined && data.complemento !== null) {
+      cabecera.ele('complemento').txt(data.complemento).up();
+    } else {
+      cabecera.ele('complemento', { 'xsi:nil': 'true' }).up();
+    }
 
-      .ele('montoTotal')
-      .txt(data.montoTotal.toFixed(2))
-      .up()
+    cabecera.ele('codigoCliente').txt(data.codigoCliente).up();
+    cabecera.ele('codigoMetodoPago').txt(data.codigoMetodoPago.toString()).up();
+
+    // numeroTarjeta (opcional)
+    if (data.numeroTarjeta !== undefined && data.numeroTarjeta !== null) {
+      cabecera.ele('numeroTarjeta').txt(data.numeroTarjeta).up();
+    } else {
+      cabecera.ele('numeroTarjeta', { 'xsi:nil': 'true' }).up();
+    }
+
+    //* Montos
+    cabecera.ele('montoTotal').txt(data.montoTotal.toFixed(2)).up();
+    cabecera
       .ele('montoTotalSujetoIva')
-      .txt(data.montoTotal.toFixed(2))
-      .up()
-
-      //* Moneda
-
-      .ele('codigoMoneda')
-      .txt(data.codigoMoneda.toString())
-      .up()
-      .ele('tipoCambio')
-      .txt(data.tipoCambio.toString())
-      .up()
-      .ele('montoTotalMoneda')
-      .txt(data.montoTotal.toFixed(2))
-      .up()
-
-      //* Descuetnos
-      .ele('montoGiftCard')
-      .att('xsi:nil', data.montoGiftCard ? 'false' : 'true') //! nullable
-      .txt(data.montoGiftCard?.toString() || '')
-      .up()
-      .ele('descuentoAdicional')
-      .att('xsi:nil', data.descuentoAdicional ? 'false' : 'true') //! nullable
-      .txt(data.descuentoAdicional?.toString() || '')
-      .up()
-      .ele('codigoExcepcion')
-      .att('xsi:nil', data.codigoExcepcion ? 'false' : 'true') //! nullable
-      .txt(data.codigoExcepcion?.toString() || '')
-      .up()
-      .ele('cafc') //! Código de Autorización de Facturación por Contingencia
-      .att('xsi:nil', data.cafc ? 'false' : 'true') //! nullable
-      .txt(data.cafc?.toString() || '')
-      .up()
-
-      .ele('leyenda')
-      .txt(data.leyenda)
-      .up()
-      .ele('usuario')
-      .txt(data.usuario)
-      .up()
-      .ele('codigoDocumentoSector')
-      .txt(data.codigoDocumentoSector.toString())
-      .up()
+      .txt(data.montoTotalSujetoIva.toFixed(2))
       .up();
 
-    //* Agregar detalles
+    //* Moneda
+    cabecera.ele('codigoMoneda').txt(data.codigoMoneda.toString()).up();
+    cabecera.ele('tipoCambio').txt(data.tipoCambio.toString()).up();
+    cabecera.ele('montoTotalMoneda').txt(data.montoTotal.toFixed(2)).up();
+
+    // montoGiftCard (opcional)
+    if (data.montoGiftCard !== undefined && data.montoGiftCard !== null) {
+      cabecera.ele('montoGiftCard').txt(data.montoGiftCard.toString()).up();
+    } else {
+      cabecera.ele('montoGiftCard', { 'xsi:nil': 'true' }).up();
+    }
+
+    // descuentoAdicional (opcional)
+    if (
+      data.descuentoAdicional !== undefined &&
+      data.descuentoAdicional !== null
+    ) {
+      cabecera
+        .ele('descuentoAdicional')
+        .txt(data.descuentoAdicional.toString())
+        .up();
+    } else {
+      cabecera.ele('descuentoAdicional', { 'xsi:nil': 'true' }).up();
+    }
+
+    // codigoExcepcion (opcional)
+    if (data.codigoExcepcion !== undefined && data.codigoExcepcion !== null) {
+      cabecera.ele('codigoExcepcion').txt(data.codigoExcepcion.toString()).up();
+    } else {
+      cabecera.ele('codigoExcepcion', { 'xsi:nil': 'true' }).up();
+    }
+
+    // cafc (opcional)
+    if (data.cafc !== undefined && data.cafc !== null) {
+      cabecera.ele('cafc').txt(data.cafc.toString()).up();
+    } else {
+      cabecera.ele('cafc', { 'xsi:nil': 'true' }).up();
+    }
+
+    cabecera.ele('leyenda').txt(data.leyenda).up();
+    cabecera.ele('usuario').txt(data.usuario).up();
+    cabecera
+      .ele('codigoDocumentoSector')
+      .txt(data.codigoDocumentoSector.toString())
+      .up();
+
+    //* Cerrar cabecera (no es necesario hacer .up() explícito porque ya estamos fuera)
+
+    //* DETALLES
     data.detalles.forEach((d) => {
-      xml
-        .ele('detalle')
+      const detalleElement = root.ele('detalle');
+
+      detalleElement
         .ele('actividadEconomica')
         .txt(d.actividadEconomica.toString())
-        .up()
+        .up();
+      detalleElement
         .ele('codigoProductoSin')
         .txt(d.codigoProductoSin.toString())
-        .up()
-        .ele('codigoProducto')
-        .txt(d.codigoProducto)
-        .up()
-        .ele('descripcion')
-        .txt(d.descripcion)
-        .up()
-        .ele('cantidad')
-        .txt(d.cantidad.toString())
-        .up()
-        .ele('unidadMedida')
-        .txt(d.unidadMedida.toString())
-        .up()
+        .up();
+      detalleElement.ele('codigoProducto').txt(d.codigoProducto).up();
+      detalleElement.ele('descripcion').txt(d.descripcion).up();
+      detalleElement.ele('cantidad').txt(d.cantidad.toString()).up();
+      detalleElement.ele('unidadMedida').txt(d.unidadMedida.toString()).up();
+      detalleElement
         .ele('precioUnitario')
         .txt(d.precioUnitario.toFixed(2))
-        .up()
-        .ele('montoDescuento')
-        .att('xsi:nil', d.montoDescuento ? 'false' : 'true') //! nullable
-        .txt(data.montoGiftCard?.toString() || '')
-        .up()
+        .up();
+
+      // montoDescuento (opcional)
+      if (d.montoDescuento !== undefined && d.montoDescuento !== null) {
+        detalleElement
+          .ele('montoDescuento')
+          .txt(d.montoDescuento.toString())
+          .up();
+      } else {
+        detalleElement.ele('montoDescuento', { 'xsi:nil': 'true' }).up();
+      }
+
+      detalleElement
         .ele('subTotal')
         .txt((d.cantidad * d.precioUnitario).toFixed(2))
-        .up()
-        .ele('numeroSerie')
-        .att('xsi:nil', d.numeroSerie ? 'false' : 'true') //! nullable
-        .txt(data.montoGiftCard?.toString() || '')
-        .up()
-        .ele('numeroImei')
-        .att('xsi:nil', d.numeroImei ? 'false' : 'true') //! nullable
-        .txt(data.montoGiftCard?.toString() || '')
         .up();
+
+      // numeroSerie (opcional)
+      if (d.numeroSerie !== undefined && d.numeroSerie !== null) {
+        detalleElement.ele('numeroSerie').txt(d.numeroSerie.toString()).up();
+      } else {
+        detalleElement.ele('numeroSerie', { 'xsi:nil': 'true' }).up();
+      }
+
+      // numeroImei (opcional)
+      if (d.numeroImei !== undefined && d.numeroImei !== null) {
+        detalleElement.ele('numeroImei').txt(d.numeroImei.toString()).up();
+      } else {
+        detalleElement.ele('numeroImei', { 'xsi:nil': 'true' }).up();
+      }
     });
 
-    return xml.end({ prettyPrint: true });
+    return root.end({ prettyPrint: true });
   }
 }
-
 /* {
   "razonSocialEmisor": "EMPRESA DEMO S.R.L.",
   "municipio": "La Paz",
@@ -189,14 +180,10 @@ export class FacturaBuilderService {
   "complemento": "LP",
   "codigoCliente": "CLI-001",
   "codigoMetodoPago": 1,
-
-  "montoTotal": 25,
-  "montoTotalSujetoIva": 25,
   "codigoMoneda": 1,
   "tipoCambio": 1,
-  "montoTotalMoneda": 25,
-  
-  "leyenda": "Ley N° 453: Está prohibido importar, distribuir o comercializar productos expirados o prontos a expirar.",
+  "montoGiftCard": 10,
+  "descuentoAdicional": 5,
   "usuario": "admin",
   "codigoDocumentoSector": 1,
   "detalles": [
@@ -208,7 +195,7 @@ export class FacturaBuilderService {
       "cantidad": 10,
       "unidadMedida": 62,
       "precioUnitario": 2.5,
-      "subTotal": 25
+      "montoDescuento": 0
     }
   ]
 } */

@@ -28,12 +28,15 @@ import { Factura } from './facturas/entities/factura.entity';
 import { Detalle } from './facturas/entities/detalle.entity';
 import { Paquete } from './facturas/entities/paquete.entity';
 
+import { Cafc } from './facturas/entities/cafc.entity';
 import { OperacionesController } from './operaciones/operaciones.controller';
 import { PuntosVentaService } from './operaciones/puntos-venta.service';
 import { RequestsOperacionesService } from './operaciones/services/requests-operaciones.service';
 import { PuntoVenta } from './operaciones/entities/punto-venta.entity';
 import { EventoSignificativo } from './operaciones/entities/evento-significativo.entity';
 import { RequestsCatalogosService } from './catalogos/services/request-catalogos.service';
+import { CafcService } from './facturas/cafc.service';
+import { CafcController } from './facturas/cafc.controller';
 
 @Module({
   imports: [
@@ -48,6 +51,7 @@ import { RequestsCatalogosService } from './catalogos/services/request-catalogos
       Paquete,
       Factura,
       Detalle,
+      Cafc,
 
       EventoSignificativo,
       PuntoVenta,
@@ -58,6 +62,7 @@ import { RequestsCatalogosService } from './catalogos/services/request-catalogos
     CatalogosController,
     FacturacionController,
     OperacionesController,
+    CafcController,
   ],
   providers: [
     SoapClient,
@@ -76,6 +81,7 @@ import { RequestsCatalogosService } from './catalogos/services/request-catalogos
     RequestsFacturacionService,
     FacturacionService,
     PaquetesService,
+    CafcService,
 
     RequestsOperacionesService,
     EventosSignificativosService,

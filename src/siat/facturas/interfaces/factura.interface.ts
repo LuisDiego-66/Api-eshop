@@ -12,7 +12,7 @@ export interface FacturaInterface {
   codigoSucursal: number;
   direccion: string;
   codigoPuntoVenta: number;
-  fechaEmision: Date;
+  fechaEmision: string /* Date */;
 
   //* Información del Cliente
   nombreRazonSocial: string;
@@ -21,7 +21,7 @@ export interface FacturaInterface {
   complemento?: string | null;
   codigoCliente: string;
   codigoMetodoPago: number;
-  numeroTarjeta?: number | null;
+  numeroTarjeta?: string | null;
 
   //* Montos
   montoTotal: number;
@@ -36,7 +36,7 @@ export interface FacturaInterface {
   montoGiftCard?: number | null;
   descuentoAdicional?: number | null;
   codigoExcepcion?: number | null;
-  cafc?: number | null;
+  cafc?: string | null;
 
   leyenda: string;
   usuario: string;

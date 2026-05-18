@@ -4,27 +4,27 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CodigoEmisionEnum } from '../enums/codigo-emision.enum';
 
 export class ValidacionPaqueteFacturaDto {
-  @ApiProperty({
+  /* @ApiProperty({
     description: 'Codigo Documento Sector de la Factura',
     example: 1,
   })
   @IsNumber()
-  codigoDocumentoSector: number;
+  codigoDocumentoSector: number; */
 
-  @ApiProperty({
+  /* @ApiProperty({
     description: 'Codigo Emision de la Factura',
     example: CodigoEmisionEnum.OFFLINE,
     enum: CodigoEmisionEnum,
   })
   @IsEnum(CodigoEmisionEnum)
-  codigoEmision: CodigoEmisionEnum;
+  codigoEmision: CodigoEmisionEnum; */
 
-  @ApiProperty({
+  /* @ApiProperty({
     description: 'Tipo Factura Documento de la Factura',
     example: 1,
   })
   @IsNumber()
-  tipoFacturaDocumento: number;
+  tipoFacturaDocumento: number; */
 
   @ApiProperty({
     description: 'Codigo Recepcion del Paquete-Factura',
