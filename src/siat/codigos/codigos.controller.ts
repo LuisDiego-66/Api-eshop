@@ -3,6 +3,7 @@ import { CodigosService } from './codigos.service';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { QueryDto } from '../common/dto/query.dto';
+import { VerificarNitDto } from './dto/verificar-nit.dto';
 
 @ApiTags('SIAT: Codigos')
 @Controller('codigos')
@@ -28,6 +29,20 @@ export class CodigosController {
   @Post('cufd')
   async getCUFD(@Query() getcufd: QueryDto) {
     return this.codigosService.getCUFD(getcufd);
+  }
+
+  //? ============================================================================================== */
+  //?                                    Verificar_NIT                                                */
+  //? ============================================================================================== */
+
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @Post('verificar-nit')
+  async verificarNit(
+    @Query() query: QueryDto,
+    @Body() dto: VerificarNitDto,
+  ) {
+    return this.codigosService.verificarNit(dto, query);
   }
 
   //? ============================================================================================== */

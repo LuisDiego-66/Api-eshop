@@ -79,7 +79,7 @@ export class PaquetesService {
         codigoRecepcion: IsNull(),
         cafc: IsNull(), //! sin CAFC
       },
-      take: 2, //! para pruebas
+      take: 500,
 
       order: { fechaEmision: 'ASC' },
     });
@@ -286,7 +286,7 @@ export class PaquetesService {
         cafc: { codigo: dto.cafc }, //! con cafc
       },
       relations: { cafc: true },
-      take: 2, //! para pruebas
+      take: 500,
       order: { fechaEmision: 'ASC' },
     });
     if (facturasPendientes.length == 0) {
@@ -524,7 +524,7 @@ export class PaquetesService {
 
     if (response.transaccion && response.codigoRecepcion) {
       for (const factura of paquete.facturas) {
-        factura.estado = response.codigoDescripcion as FacturaStatusEnum; //FacturaStatusEnum.VALIDADA;
+        factura.estado = response.codigoDescripcion as FacturaStatusEnum;
       }
 
       await this.facturaRepository.save(paquete.facturas);

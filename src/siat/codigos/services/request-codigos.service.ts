@@ -50,6 +50,43 @@ export class RequestsCodigosService {
   }
 
   //? ============================================================================================== */
+  //?                                    Verificar_NIT                                                */
+  //? ============================================================================================== */
+
+  async verificarNit(data: {
+    codigoSucursal: number;
+    cuis: string;
+    nitParaVerificacion: number;
+  }): Promise<any> {
+    try {
+      const response = await this.client.call('verificarNit', {
+        SolicitudVerificarNit: {
+          codigoAmbiente: SIAT_CONFIG.ambiente,
+          codigoModalidad: SIAT_CONFIG.modalidad,
+          codigoSistema: SIAT_CONFIG.codigoSistema,
+          codigoSucursal: data.codigoSucursal,
+          cuis: data.cuis,
+          nit: SIAT_CONFIG.nit,
+          nitParaVerificacion: data.nitParaVerificacion,
+        },
+      });
+
+      return {
+        success: true,
+        data: response,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        details: error,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  //? ============================================================================================== */
   //?                                          CUFD                                                  */
   //? ============================================================================================== */
 

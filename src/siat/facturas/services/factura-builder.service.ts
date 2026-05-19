@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FacturaInterface } from '../interfaces/factura.interface';
 import { create } from 'xmlbuilder2';
-import { formatDateISO } from '../../helpers/date.util';
 
 @Injectable()
 export class FacturaBuilderService {
@@ -67,7 +66,7 @@ export class FacturaBuilderService {
     //* Moneda
     cabecera.ele('codigoMoneda').txt(data.codigoMoneda.toString()).up();
     cabecera.ele('tipoCambio').txt(data.tipoCambio.toString()).up();
-    cabecera.ele('montoTotalMoneda').txt(data.montoTotal.toFixed(2)).up();
+    cabecera.ele('montoTotalMoneda').txt(data.montoTotalMoneda.toFixed(2)).up();
 
     // montoGiftCard (opcional)
     if (data.montoGiftCard !== undefined && data.montoGiftCard !== null) {
@@ -143,10 +142,7 @@ export class FacturaBuilderService {
         detalleElement.ele('montoDescuento', { 'xsi:nil': 'true' }).up();
       }
 
-      detalleElement
-        .ele('subTotal')
-        .txt((d.cantidad * d.precioUnitario).toFixed(2))
-        .up();
+      detalleElement.ele('subTotal').txt(d.subTotal.toFixed(2)).up();
 
       // numeroSerie (opcional)
       if (d.numeroSerie !== undefined && d.numeroSerie !== null) {

@@ -89,7 +89,7 @@ export class Factura {
   @Column({ type: 'int' })
   codigoMetodoPago: number; //! Catalogos
 
-  @Column({ type: 'bigint', nullable: true })
+  @Column({ type: 'text', nullable: true })
   numeroTarjeta?: string | null;
 
   //* ============================================================================================== */

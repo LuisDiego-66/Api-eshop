@@ -6,6 +6,7 @@ import { SoapClient } from '../soap/soap.client';
 import { SIAT_CONFIG } from '../soap/siat.config';
 
 import { QueryDto } from '../common/dto/query.dto';
+import { VerificarNitDto } from './dto/verificar-nit.dto';
 
 import { CUISResponse } from './interfaces/response-cuis.interface';
 
@@ -158,5 +159,24 @@ export class CodigosService {
   async getAllCUFD(): Promise<Cufd[]> {
     const CUfd = await this.cufdRepository.find();
     return CUfd;
+  }
+
+  //? ============================================================================================== */
+  //?                                    Verificar_NIT                                                */
+  //? ============================================================================================== */
+
+  async verificarNit(dto: VerificarNitDto, query: QueryDto) {
+    const cuis = await this.getCUIS({
+      codigoPuntoVenta: query.codigoPuntoVenta,
+      codigoSucursal: query.codigoSucursal,
+    });
+
+    const response = await this.request.verificarNit({
+      codigoSucursal: query.codigoSucursal,
+      cuis: cuis.codigo,
+      nitParaVerificacion: dto.nitParaVerificacion,
+    });
+
+    return response;
   }
 }

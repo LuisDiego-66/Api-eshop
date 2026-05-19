@@ -2,14 +2,15 @@ import {
   IsString,
   IsNumber,
   IsArray,
+  ArrayMinSize,
   ValidateNested,
   IsOptional,
   IsNotEmpty,
   IsPositive,
   Min,
   IsInt,
-  ValidateIf,
   Matches,
+  IsNumberString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -20,7 +21,7 @@ export class CreateFacturaDto {
 
   @ApiProperty({
     description: 'Razón social del emisor',
-    example: 'EMPRESA DEMO S.R.L.',
+    example: 'EMPRESA TOAS S.R.L.',
   })
   @IsString()
   @IsNotEmpty()
@@ -28,7 +29,7 @@ export class CreateFacturaDto {
 
   @ApiProperty({
     description: 'Municipio donde se emite la factura',
-    example: 'La Paz',
+    example: 'Santa Cruz de la Sierra',
   })
   @IsString()
   @IsNotEmpty()
@@ -36,7 +37,7 @@ export class CreateFacturaDto {
 
   @ApiProperty({
     description: 'Teléfono del emisor',
-    example: '77777777',
+    example: '78407993',
   })
   @IsString()
   @IsNotEmpty()
@@ -100,7 +101,7 @@ export class CreateFacturaDto {
     description: 'Número de documento del cliente',
     example: '12345678',
   })
-  @IsString()
+  @IsNumberString({}, { message: 'El número de documento debe ser numérico' })
   @IsNotEmpty()
   numeroDocumento: string;
 
@@ -130,12 +131,9 @@ export class CreateFacturaDto {
 
   @ApiPropertyOptional({
     description: 'Número de tarjeta (si aplica)',
-    example: 4111111111111111,
+    example: '4111111111111111',
   })
-  @ValidateIf((o) => o.codigoMetodoPago === 10)
-  @IsNotEmpty({
-    message: 'numeroTarjeta es obligatorio cuando es pago con tarjeta',
-  })
+  @IsOptional()
   @Matches(/^\d{1,16}$/, {
     message: 'numeroTarjeta debe tener 1-16 dígitos numéricos',
   })
@@ -204,15 +202,14 @@ export class CreateFacturaDto {
     description: 'Monto de gift card',
     example: 10,
   })
-  @ValidateIf((o) => o.codigoMetodoPago === 27)
-  @IsNotEmpty({ message: 'montoGiftCard es obligatorio cuando es Gift Card' })
+  @IsOptional()
   @IsNumber()
   @Min(0)
   montoGiftCard?: number | null;
 
   @ApiPropertyOptional({
     description: 'Descuento adicional',
-    example: 5,
+    example: 0,
   })
   @IsOptional()
   @IsNumber()
@@ -253,6 +250,7 @@ export class CreateFacturaDto {
     isArray: true,
   })
   @IsArray()
+  @ArrayMinSize(1, { message: 'La factura debe tener al menos un ítem' })
   @ValidateNested({ each: true })
   @Type(() => FacturaDetalleDto)
   detalles: FacturaDetalleDto[];
@@ -295,11 +293,11 @@ export class FacturaDetalleDto {
 
   @ApiProperty({
     description: 'Cantidad',
-    example: 10,
+    example: 1,
   })
   @IsNumber()
   @IsPositive()
-  @Min(0.01, { message: 'La cantidad debe ser mayor a 0' })
+  @Min(1, { message: 'La cantidad debe ser al menos 1' })
   cantidad: number;
 
   @ApiProperty({
@@ -312,7 +310,7 @@ export class FacturaDetalleDto {
 
   @ApiProperty({
     description: 'Precio unitario',
-    example: 2.5,
+    example: 10,
   })
   @IsNumber()
   @IsPositive()

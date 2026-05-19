@@ -78,6 +78,7 @@ export class FacturacionService {
       codigoSucursal: query.codigoSucursal,
     });
     const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
+    const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
 
     const now = new Date();
     const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
@@ -148,6 +149,12 @@ export class FacturacionService {
           `La cantidad del producto ${detalle.codigoProducto} debe ser mayor a 0`,
         );
       }
+      const precioItem = detalle.cantidad * detalle.precioUnitario;
+      if ((detalle.montoDescuento ?? 0) >= precioItem) {
+        throw new BadRequestException(
+          `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
+        );
+      }
       if (detalle.subTotal <= 0) {
         throw new BadRequestException(
           `El subtotal del producto ${detalle.codigoProducto} debe ser mayor a 0`,
@@ -161,6 +168,13 @@ export class FacturacionService {
       0,
     );
     const descuentoAdicional = data.descuentoAdicional ?? 0;
+
+    if (descuentoAdicional > sumaSubTotal) {
+      throw new BadRequestException(
+        'El descuento adicional no puede superar el monto total de los ítems',
+      );
+    }
+
     const montoTotal = sumaSubTotal - descuentoAdicional;
 
     //! Calculo de montoTotalMoneda
@@ -170,10 +184,13 @@ export class FacturacionService {
     let montoTotalSujetoIva = montoTotal;
 
     //!validar si el pago es con gifcard
-    if (data.montoGiftCard && data.codigoMetodoPago === 27) {
+    if (data.montoGiftCard) {
+      if (data.montoGiftCard > montoTotal) {
+        throw new BadRequestException(
+          'El monto Gift Card no puede superar el monto total',
+        );
+      }
       montoTotalSujetoIva = montoTotal - data.montoGiftCard;
-    } else {
-      data.montoGiftCard = null;
     }
 
     //! Leyenda aleatoria
@@ -190,11 +207,6 @@ export class FacturacionService {
           .listaLeyendas;
       const randomIndex = Math.floor(Math.random() * lista.length);
       leyendaObject = lista[randomIndex];
-    }
-
-    //! validar la tarjeta solo si el metodo de pago es con tarjeta
-    if (dto.codigoMetodoPago != 2) {
-      dto.numeroTarjeta = null;
     }
 
     // --------------------------------------------------
@@ -221,7 +233,7 @@ export class FacturacionService {
       complemento: data.complemento,
       codigoCliente: data.codigoCliente,
       codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: data.numeroTarjeta,
+      numeroTarjeta: numeroTarjeta,
 
       montoTotal: montoTotal,
       montoTotalSujetoIva: montoTotalSujetoIva,
@@ -274,7 +286,7 @@ export class FacturacionService {
       complemento: data.complemento,
       codigoCliente: data.codigoCliente,
       codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: data.numeroTarjeta,
+      numeroTarjeta: numeroTarjeta,
 
       montoTotal: montoTotal,
       montoTotalSujetoIva: montoTotalSujetoIva,
@@ -341,9 +353,7 @@ export class FacturacionService {
         transaccion: response.transaccion,
         mensajesList: response.mensajesList ?? null,
         fechaRespuesta: recepcionFacturaResponse.timestamp,
-        estado: response.transaccion
-          ? FacturaStatusEnum.VALIDADA
-          : FacturaStatusEnum.RECHAZADA,
+        estado: response.codigoDescripcion as FacturaStatusEnum,
       });
 
       return response;
@@ -374,6 +384,7 @@ export class FacturacionService {
     });
     const { tipoDocumentoSector, tipoEmision, tipoFactura, cafc, ...data } =
       dto;
+    const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
 
     const now = new Date();
     const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
@@ -446,12 +457,38 @@ export class FacturacionService {
       };
     });
 
+    for (const detalle of detallesCalculados) {
+      if (detalle.cantidad <= 0) {
+        throw new BadRequestException(
+          `La cantidad del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+      const precioItem = detalle.cantidad * detalle.precioUnitario;
+      if ((detalle.montoDescuento ?? 0) >= precioItem) {
+        throw new BadRequestException(
+          `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
+        );
+      }
+      if (detalle.subTotal <= 0) {
+        throw new BadRequestException(
+          `El subtotal del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+    }
+
     //! Calculo de montoTolta
     const sumaSubTotal = detallesCalculados.reduce(
       (acc, d) => acc + d.subTotal,
       0,
     );
     const descuentoAdicional = data.descuentoAdicional ?? 0;
+
+    if (descuentoAdicional > sumaSubTotal) {
+      throw new BadRequestException(
+        'El descuento adicional no puede superar el monto total de los ítems',
+      );
+    }
+
     const montoTotal = sumaSubTotal - descuentoAdicional;
 
     //! Calculo de montoTotalMoneda
@@ -461,7 +498,12 @@ export class FacturacionService {
     let montoTotalSujetoIva = montoTotal;
 
     //!validar si el pago es con gifcard
-    if (data.montoGiftCard && data.codigoMetodoPago === 27) {
+    if (data.montoGiftCard) {
+      if (data.montoGiftCard > montoTotal) {
+        throw new BadRequestException(
+          'El monto Gift Card no puede superar el monto total',
+        );
+      }
       montoTotalSujetoIva = montoTotal - data.montoGiftCard;
     }
 
@@ -479,11 +521,6 @@ export class FacturacionService {
           .listaLeyendas;
       const randomIndex = Math.floor(Math.random() * lista.length);
       leyendaObject = lista[randomIndex];
-    }
-
-    //! validar la tarjeta solo si el metodo de pago es con tarjeta
-    if (dto.codigoMetodoPago != 2) {
-      dto.numeroTarjeta = null;
     }
 
     // --------------------------------------------------
@@ -510,7 +547,7 @@ export class FacturacionService {
       complemento: data.complemento,
       codigoCliente: data.codigoCliente,
       codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: data.numeroTarjeta,
+      numeroTarjeta: numeroTarjeta,
 
       montoTotal: montoTotal,
       montoTotalSujetoIva: montoTotalSujetoIva,
@@ -559,7 +596,7 @@ export class FacturacionService {
       complemento: data.complemento,
       codigoCliente: data.codigoCliente,
       codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: data.numeroTarjeta,
+      numeroTarjeta: numeroTarjeta,
 
       montoTotal: montoTotal,
       montoTotalSujetoIva: montoTotalSujetoIva,
@@ -608,6 +645,7 @@ export class FacturacionService {
       codigoSucursal: query.codigoSucursal,
     });
     const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
+    const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
 
     const now = new Date();
     const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
@@ -671,12 +709,38 @@ export class FacturacionService {
       };
     });
 
+    for (const detalle of detallesCalculados) {
+      if (detalle.cantidad <= 0) {
+        throw new BadRequestException(
+          `La cantidad del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+      const precioItem = detalle.cantidad * detalle.precioUnitario;
+      if ((detalle.montoDescuento ?? 0) >= precioItem) {
+        throw new BadRequestException(
+          `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
+        );
+      }
+      if (detalle.subTotal <= 0) {
+        throw new BadRequestException(
+          `El subtotal del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+    }
+
     //! Calculo de montoTolta
     const sumaSubTotal = detallesCalculados.reduce(
       (acc, d) => acc + d.subTotal,
       0,
     );
     const descuentoAdicional = data.descuentoAdicional ?? 0;
+
+    if (descuentoAdicional > sumaSubTotal) {
+      throw new BadRequestException(
+        'El descuento adicional no puede superar el monto total de los ítems',
+      );
+    }
+
     const montoTotal = sumaSubTotal - descuentoAdicional;
 
     //! Calculo de montoTotalMoneda
@@ -686,7 +750,12 @@ export class FacturacionService {
     let montoTotalSujetoIva = montoTotal;
 
     //!validar si el pago es con gifcard
-    if (data.montoGiftCard && data.codigoMetodoPago === 27) {
+    if (data.montoGiftCard) {
+      if (data.montoGiftCard > montoTotal) {
+        throw new BadRequestException(
+          'El monto Gift Card no puede superar el monto total',
+        );
+      }
       montoTotalSujetoIva = montoTotal - data.montoGiftCard;
     }
 
@@ -706,11 +775,6 @@ export class FacturacionService {
 
       const randomIndex = Math.floor(Math.random() * lista.length);
       leyendaObject = lista[randomIndex];
-    }
-
-    //! validar la tarjeta solo si el metodo de pago es con tarjeta
-    if (dto.codigoMetodoPago != 2) {
-      dto.numeroTarjeta = null;
     }
 
     // --------------------------------------------------
@@ -737,7 +801,7 @@ export class FacturacionService {
       complemento: data.complemento,
       codigoCliente: data.codigoCliente,
       codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: data.numeroTarjeta,
+      numeroTarjeta: numeroTarjeta,
 
       montoTotal: montoTotal,
       montoTotalSujetoIva: montoTotalSujetoIva,
@@ -778,7 +842,7 @@ export class FacturacionService {
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
-      fechaEmision: new Date(fechaHora),
+      fechaEmision: fechaHora,
 
       nombreRazonSocial: data.nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -786,7 +850,7 @@ export class FacturacionService {
       complemento: data.complemento,
       codigoCliente: data.codigoCliente,
       codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: data.numeroTarjeta,
+      numeroTarjeta: numeroTarjeta,
 
       montoTotal: montoTotal,
       montoTotalSujetoIva: montoTotalSujetoIva,
@@ -1067,6 +1131,19 @@ export class FacturacionService {
 
     return cuf;
   } */
+
+  //? ============================================================================================== */
+  //?                              Mascara_Tarjeta                                                    */
+  //? ============================================================================================== */
+
+  private mascararTarjeta(numeroTarjeta?: string | null): string | null {
+    if (!numeroTarjeta) return null;
+    return (
+      numeroTarjeta.slice(0, 4) +
+      '0'.repeat(numeroTarjeta.length - 8) +
+      numeroTarjeta.slice(-4)
+    );
+  }
 
   //? ============================================================================================== */
   //?                         generador_ArchivoHASH                                                  */
