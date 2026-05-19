@@ -131,6 +131,7 @@ export class CreateFacturaDto {
 
   @ApiPropertyOptional({
     description: 'Número de tarjeta (si aplica)',
+    type: 'string',
     example: '4111111111111111',
   })
   @IsOptional()
