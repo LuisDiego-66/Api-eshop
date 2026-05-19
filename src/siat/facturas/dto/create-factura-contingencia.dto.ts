@@ -101,13 +101,14 @@ export class CreateFacturaContingenciaDto {
     description: 'Número de documento del cliente',
     example: '12345678',
   })
-  @IsNumberString({}, { message: 'El número de documento debe ser numérico' })
+  //@IsNumberString({}, { message: 'El número de documento debe ser numérico' })
+  @IsString()
   @IsNotEmpty()
   numeroDocumento: string;
 
   @ApiPropertyOptional({
     description: 'Complemento del documento',
-    example: 'LP',
+    example: '9K',
   })
   @IsOptional()
   @IsString()
