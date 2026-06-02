@@ -103,8 +103,8 @@ export class Order {
   @OneToMany(() => Transaction, (transaction) => transaction.order)
   transactions: Transaction[];
 
-  @ManyToOne(() => Billing, (billing) => billing.orders)
-  billing: Billing;
+  @ManyToOne(() => Billing, (billing) => billing.orders, { nullable: true })
+  billing: Billing | null;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */
