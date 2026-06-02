@@ -15,7 +15,12 @@ export class BillingService {
     private readonly billingRepository: Repository<Billing>,
   ) {}
 
-  async createOrUpdate(dto: BillingDto, manager?: EntityManager) {
+  async createOrUpdate(
+    dto: BillingDto | null | undefined,
+    manager?: EntityManager,
+  ) {
+    if (!dto) return null;
+
     const repo = manager
       ? manager.getRepository(Billing)
       : this.billingRepository;
