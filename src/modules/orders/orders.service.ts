@@ -493,6 +493,17 @@ export class OrdersService {
       const from = new Date(`${startDate}T00:00:00-04:00`);
       const to = new Date(`${endDate}T23:59:59.999-04:00`);
       options.where.createdAt = Between(from, to);
+
+      if (startDate === endDate) {
+        const dailyCash = await this.dailyCashRepository.findOne({
+          where: {
+            createdAt: Between(from, to),
+          },
+        });
+        if (dailyCash) {
+          dailyCashQuantity = Number(dailyCash.quantity);
+        }
+      }
     }
 
     // --------------------------------------------
