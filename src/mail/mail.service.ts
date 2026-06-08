@@ -8,6 +8,40 @@ import { SendMailPaymentConfirmationDto } from './dto/sendmail-payment-confirmat
 export class MailService {
   constructor(private readonly mailerService: MailerService) {}
 
+  async sendFacturaEmail(
+    to: string,
+    numeroFactura: number,
+    razonSocial: string,
+    xmlBuffer: Buffer,
+    pdfBuffer: Buffer,
+  ) {
+    return this.mailerService.sendMail({
+      to,
+      subject: `Factura N° ${numeroFactura} - ${razonSocial}`,
+      html: `
+        <p>Estimado equipo,</p>
+        <p>Se adjunta la <strong>Factura N° ${numeroFactura}</strong> para revisión y pruebas con el SIAT.</p>
+        <p>Los archivos adjuntos son:</p>
+        <ul>
+          <li><b>factura-${numeroFactura}.pdf</b> — Representación gráfica</li>
+          <li><b>factura-${numeroFactura}.xml</b> — Archivo XML</li>
+        </ul>
+      `,
+      attachments: [
+        {
+          filename: `factura-${numeroFactura}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+        {
+          filename: `factura-${numeroFactura}.xml`,
+          content: xmlBuffer,
+          contentType: 'application/xml',
+        },
+      ],
+    });
+  }
+
   async sendMail(dto: SendMailPaymentConfirmationDto) {
     const { to } = dto;
 

@@ -7,6 +7,8 @@
 .env
 *.txt
 structure.json
+tipoPagos.json
+documentoIdentidad.json
 
 /static/uploads/*
 !/static/uploads/.gitkeep

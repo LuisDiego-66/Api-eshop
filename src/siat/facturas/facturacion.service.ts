@@ -34,12 +34,15 @@ import {
 import { CodigosService } from '../codigos/codigos.service';
 import { ListasService } from '../catalogos/Listas.service';
 import { FacturaBuilderService } from './services/factura-builder.service';
+import { FacturaPdfService } from './services/factura-pdf.service';
 import { SincronizacionService } from '../catalogos/services/sincronizacion.service';
 import { RequestsFacturacionService } from './services/requests-facturacion.service';
+import { MailService } from 'src/mail/mail.service';
 
+import { Cafc } from './entities/cafc.entity';
 import { Factura } from './entities/factura.entity';
 import { Detalle } from './entities/detalle.entity';
-import { Cafc } from './entities/cafc.entity';
+import { SendFacturaEmailDto } from './dto/send-factura-email.dto';
 
 @Injectable()
 export class FacturacionService {
@@ -59,9 +62,13 @@ export class FacturacionService {
 
     private readonly facturaBuilderService: FacturaBuilderService,
 
+    private readonly facturaPdfService: FacturaPdfService,
+
     private readonly sincronizacionService: SincronizacionService,
 
     private readonly listasService: ListasService,
+
+    private readonly mailService: MailService,
   ) {}
 
   //? ============================================================================================== */
@@ -169,9 +176,9 @@ export class FacturacionService {
     );
     const descuentoAdicional = data.descuentoAdicional ?? 0;
 
-    if (descuentoAdicional > sumaSubTotal) {
+    if (descuentoAdicional >= sumaSubTotal) {
       throw new BadRequestException(
-        'El descuento adicional no puede superar el monto total de los ítems',
+        'El descuento adicional no puede igualar ni superar el monto total de los ítems',
       );
     }
 
@@ -483,9 +490,9 @@ export class FacturacionService {
     );
     const descuentoAdicional = data.descuentoAdicional ?? 0;
 
-    if (descuentoAdicional > sumaSubTotal) {
+    if (descuentoAdicional >= sumaSubTotal) {
       throw new BadRequestException(
-        'El descuento adicional no puede superar el monto total de los ítems',
+        'El descuento adicional no puede igualar ni superar el monto total de los ítems',
       );
     }
 
@@ -735,9 +742,9 @@ export class FacturacionService {
     );
     const descuentoAdicional = data.descuentoAdicional ?? 0;
 
-    if (descuentoAdicional > sumaSubTotal) {
+    if (descuentoAdicional >= sumaSubTotal) {
       throw new BadRequestException(
-        'El descuento adicional no puede superar el monto total de los ítems',
+        'El descuento adicional no puede igualar ni superar el monto total de los ítems',
       );
     }
 
@@ -1089,6 +1096,40 @@ export class FacturacionService {
       });
     }
     return response;
+  }
+
+  //? ============================================================================================== */
+  //?                                  Enviar_Email_Factura                                         */
+  //? ============================================================================================== */
+
+  async sendFacturaEmail(dto: SendFacturaEmailDto) {
+    const factura = await this.facturaRepository.findOne({
+      where: { id: dto.facturaId },
+      relations: ['detalles'],
+    });
+
+    if (!factura) {
+      throw new NotFoundException(`Factura con id ${dto.facturaId} no encontrada`);
+    }
+
+    if (!factura.xml) {
+      throw new BadRequestException('La factura no tiene XML generado');
+    }
+
+    const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
+    const pdfBuffer = await this.facturaPdfService.generate(factura);
+
+    await this.mailService.sendFacturaEmail(
+      dto.email,
+      factura.numeroFactura,
+      factura.razonSocialEmisor,
+      xmlBuffer,
+      pdfBuffer,
+    );
+
+    return {
+      message: `Factura N° ${factura.numeroFactura} enviada a ${dto.email}`,
+    };
   }
 
   //? ============================================================================================== */

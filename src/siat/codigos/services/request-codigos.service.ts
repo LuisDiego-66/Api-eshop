@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadGatewayException } from '@nestjs/common';
 
 import { SoapClient } from '../../soap/soap.client';
 import { SIAT_CONFIG } from '../../soap/siat.config';
@@ -40,12 +40,7 @@ export class RequestsCodigosService {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        details: error,
-        timestamp: new Date().toISOString(),
-      };
+      throw new BadGatewayException(error.message ?? error);
     }
   }
 
@@ -77,12 +72,7 @@ export class RequestsCodigosService {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        details: error,
-        timestamp: new Date().toISOString(),
-      };
+      throw new BadGatewayException(error.message ?? error);
     }
   }
 
@@ -114,12 +104,7 @@ export class RequestsCodigosService {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        details: error,
-        timestamp: new Date().toISOString(),
-      };
+      throw new BadGatewayException(error.message ?? error);
     }
   }
 }

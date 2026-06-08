@@ -1,5 +1,7 @@
 import {
   Min,
+  Max,
+  MaxLength,
   IsInt,
   IsArray,
   IsString,
@@ -10,7 +12,7 @@ import {
   ValidateNested,
   ArrayMinSize,
   Matches,
-  IsNumberString,
+  Equals,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -25,6 +27,7 @@ export class CreateFacturaContingenciaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   razonSocialEmisor: string;
 
   @ApiProperty({
@@ -33,6 +36,7 @@ export class CreateFacturaContingenciaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(25)
   municipio: string;
 
   @ApiProperty({
@@ -41,6 +45,7 @@ export class CreateFacturaContingenciaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(25)
   telefono: string;
 
   //* ============================================================================================== */
@@ -87,6 +92,7 @@ export class CreateFacturaContingenciaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   nombreRazonSocial: string;
 
   @ApiProperty({
@@ -95,15 +101,17 @@ export class CreateFacturaContingenciaDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(5)
   codigoTipoDocumentoIdentidad: number;
 
   @ApiProperty({
     description: 'Número de documento del cliente',
     example: '12345678',
   })
-  //@IsNumberString({}, { message: 'El número de documento debe ser numérico' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(20)
   numeroDocumento: string;
 
   @ApiPropertyOptional({
@@ -112,6 +120,7 @@ export class CreateFacturaContingenciaDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(5)
   complemento?: string | null;
 
   @ApiProperty({
@@ -120,6 +129,7 @@ export class CreateFacturaContingenciaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   codigoCliente: string;
 
   @ApiProperty({
@@ -128,6 +138,8 @@ export class CreateFacturaContingenciaDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(308)
   codigoMetodoPago: number;
 
   @ApiPropertyOptional({
@@ -151,6 +163,8 @@ export class CreateFacturaContingenciaDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(154)
   codigoMoneda: number;
 
   @ApiProperty({
@@ -189,6 +203,8 @@ export class CreateFacturaContingenciaDto {
   @IsOptional()
   @IsNumber()
   @IsInt()
+  @Min(0)
+  @Max(1)
   codigoExcepcion?: number | null;
 
   @ApiPropertyOptional({
@@ -196,6 +212,7 @@ export class CreateFacturaContingenciaDto {
     example: '101A194B4341C',
   })
   @IsString()
+  @MaxLength(50)
   cafc: string;
 
   @ApiProperty({
@@ -204,14 +221,16 @@ export class CreateFacturaContingenciaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   usuario: string;
 
   @ApiProperty({
-    description: 'Código documento sector',
+    description: 'Código documento sector (debe ser 1 para compra-venta)',
     example: 1,
   })
   @IsNumber()
   @IsInt()
+  @Equals(1)
   codigoDocumentoSector: number;
 
   //* ============================================================================================== */
@@ -238,6 +257,7 @@ export class FacturaDetalleDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(10)
   actividadEconomica: string;
 
   @ApiProperty({
@@ -246,6 +266,7 @@ export class FacturaDetalleDto {
   })
   @IsNumber()
   @IsPositive()
+  @Max(99999999)
   codigoProductoSin: number;
 
   @ApiProperty({
@@ -254,6 +275,7 @@ export class FacturaDetalleDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50)
   codigoProducto: string;
 
   @ApiProperty({
@@ -262,6 +284,7 @@ export class FacturaDetalleDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   descripcion: string;
 
   @ApiProperty({
@@ -279,6 +302,8 @@ export class FacturaDetalleDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(200)
   unidadMedida: number;
 
   @ApiProperty({

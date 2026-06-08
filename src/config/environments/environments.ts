@@ -34,6 +34,9 @@ interface IEnvironmentVariables {
   //CONSTANTS
   RESERVATION_EXPIRE_MINUTES: number;
   EXPIRE_MINUTES_QR: number;
+
+  //SIAT
+  SIAT_QR_URL: string;
 }
 
 const environmentsSchema = joi
@@ -82,4 +85,7 @@ export const envs = {
   //CONSTANTS
   RESERVATION_EXPIRE_MINUTES: envVariables.RESERVATION_EXPIRE_MINUTES,
   EXPIRE_MINUTES_QR: envVariables.EXPIRE_MINUTES_QR,
+
+  //SIAT
+  SIAT_QR_URL: envVariables.SIAT_QR_URL,
 };

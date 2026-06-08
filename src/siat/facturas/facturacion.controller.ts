@@ -8,6 +8,7 @@ import {
   ValidacionPaqueteFacturaDto,
   ReversionAnulacionFacturaDto,
 } from './dto';
+import { SendFacturaEmailDto } from './dto/send-factura-email.dto';
 import { QueryDto } from '../common/dto/query.dto';
 import { CreatePaqueteContingenciaDto } from './dto/create-paquete-contingencia.dto';
 import { CreateFacturaContingenciaDto } from './dto/create-factura-contingencia.dto';
@@ -118,6 +119,15 @@ export class FacturacionController {
   @Get('facturacion')
   async FindAllFacturas() {
     return this.facturacionService.FindAll();
+  }
+
+  //? ============================================================================================== */
+  //?                             Enviar_Email_Factura                                               */
+  //? ============================================================================================== */
+
+  @Post('facturacion/send-email')
+  async sendFacturaEmail(@Body() dto: SendFacturaEmailDto) {
+    return this.facturacionService.sendFacturaEmail(dto);
   }
 
   //? ============================================================================================== */

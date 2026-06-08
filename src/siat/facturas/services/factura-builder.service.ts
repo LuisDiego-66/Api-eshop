@@ -65,12 +65,12 @@ export class FacturaBuilderService {
 
     //* Moneda
     cabecera.ele('codigoMoneda').txt(data.codigoMoneda.toString()).up();
-    cabecera.ele('tipoCambio').txt(data.tipoCambio.toString()).up();
+    cabecera.ele('tipoCambio').txt(data.tipoCambio.toFixed(2)).up();
     cabecera.ele('montoTotalMoneda').txt(data.montoTotalMoneda.toFixed(2)).up();
 
     // montoGiftCard (opcional)
     if (data.montoGiftCard !== undefined && data.montoGiftCard !== null) {
-      cabecera.ele('montoGiftCard').txt(data.montoGiftCard.toString()).up();
+      cabecera.ele('montoGiftCard').txt(data.montoGiftCard.toFixed(2)).up();
     } else {
       cabecera.ele('montoGiftCard', { 'xsi:nil': 'true' }).up();
     }
@@ -82,7 +82,7 @@ export class FacturaBuilderService {
     ) {
       cabecera
         .ele('descuentoAdicional')
-        .txt(data.descuentoAdicional.toString())
+        .txt(data.descuentoAdicional.toFixed(2))
         .up();
     } else {
       cabecera.ele('descuentoAdicional', { 'xsi:nil': 'true' }).up();
@@ -125,7 +125,7 @@ export class FacturaBuilderService {
         .up();
       detalleElement.ele('codigoProducto').txt(d.codigoProducto).up();
       detalleElement.ele('descripcion').txt(d.descripcion).up();
-      detalleElement.ele('cantidad').txt(d.cantidad.toString()).up();
+      detalleElement.ele('cantidad').txt(d.cantidad.toFixed(2)).up();
       detalleElement.ele('unidadMedida').txt(d.unidadMedida.toString()).up();
       detalleElement
         .ele('precioUnitario')
@@ -136,7 +136,7 @@ export class FacturaBuilderService {
       if (d.montoDescuento !== undefined && d.montoDescuento !== null) {
         detalleElement
           .ele('montoDescuento')
-          .txt(d.montoDescuento.toString())
+          .txt(d.montoDescuento.toFixed(2))
           .up();
       } else {
         detalleElement.ele('montoDescuento', { 'xsi:nil': 'true' }).up();

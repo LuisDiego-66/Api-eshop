@@ -22,6 +22,7 @@ import { FacturacionController } from './facturas/facturacion.controller';
 import { PaquetesService } from './facturas/paquetes.service';
 import { FacturacionService } from './facturas/facturacion.service';
 import { FacturaBuilderService } from './facturas/services/factura-builder.service';
+import { FacturaPdfService } from './facturas/services/factura-pdf.service';
 import { EventosSignificativosService } from './operaciones/eventos-significativos.service';
 import { RequestsFacturacionService } from './facturas/services/requests-facturacion.service';
 import { Factura } from './facturas/entities/factura.entity';
@@ -77,6 +78,7 @@ import { CafcController } from './facturas/cafc.controller';
     ParametricasService,
 
     FacturaBuilderService,
+    FacturaPdfService,
 
     RequestsFacturacionService,
     FacturacionService,

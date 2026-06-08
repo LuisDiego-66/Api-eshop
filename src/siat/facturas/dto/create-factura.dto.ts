@@ -8,9 +8,11 @@ import {
   IsNotEmpty,
   IsPositive,
   Min,
+  Max,
+  MaxLength,
   IsInt,
   Matches,
-  IsNumberString,
+  Equals,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -25,6 +27,7 @@ export class CreateFacturaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   razonSocialEmisor: string;
 
   @ApiProperty({
@@ -33,6 +36,7 @@ export class CreateFacturaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(25)
   municipio: string;
 
   @ApiProperty({
@@ -41,6 +45,7 @@ export class CreateFacturaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(25)
   telefono: string;
 
   //* ============================================================================================== */
@@ -87,6 +92,7 @@ export class CreateFacturaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   nombreRazonSocial: string;
 
   @ApiProperty({
@@ -95,6 +101,8 @@ export class CreateFacturaDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(5)
   codigoTipoDocumentoIdentidad: number;
 
   @ApiProperty({
@@ -104,6 +112,7 @@ export class CreateFacturaDto {
   //@IsNumberString({}, { message: 'El número de documento debe ser numérico' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(20)
   numeroDocumento: string;
 
   @ApiPropertyOptional({
@@ -112,6 +121,7 @@ export class CreateFacturaDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(5)
   complemento?: string | null;
 
   @ApiProperty({
@@ -120,6 +130,7 @@ export class CreateFacturaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   codigoCliente: string;
 
   @ApiProperty({
@@ -128,6 +139,8 @@ export class CreateFacturaDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(308)
   codigoMetodoPago: number;
 
   @ApiPropertyOptional({
@@ -170,6 +183,8 @@ export class CreateFacturaDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(154)
   codigoMoneda: number;
 
   @ApiProperty({
@@ -225,6 +240,8 @@ export class CreateFacturaDto {
   @IsOptional()
   @IsNumber()
   @IsInt()
+  @Min(0)
+  @Max(1)
   codigoExcepcion?: number | null;
 
   @ApiProperty({
@@ -233,14 +250,16 @@ export class CreateFacturaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   usuario: string;
 
   @ApiProperty({
-    description: 'Código documento sector',
+    description: 'Código documento sector (debe ser 1 para compra-venta)',
     example: 1,
   })
   @IsNumber()
   @IsInt()
+  @Equals(1)
   codigoDocumentoSector: number;
 
   //* ============================================================================================== */
@@ -267,6 +286,7 @@ export class FacturaDetalleDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(10)
   actividadEconomica: string;
 
   @ApiProperty({
@@ -275,6 +295,7 @@ export class FacturaDetalleDto {
   })
   @IsNumber()
   @IsPositive()
+  @Max(99999999)
   codigoProductoSin: number;
 
   @ApiProperty({
@@ -283,6 +304,7 @@ export class FacturaDetalleDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50)
   codigoProducto: string;
 
   @ApiProperty({
@@ -291,6 +313,7 @@ export class FacturaDetalleDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   descripcion: string;
 
   @ApiProperty({
@@ -308,6 +331,8 @@ export class FacturaDetalleDto {
   })
   @IsNumber()
   @IsInt()
+  @Min(1)
+  @Max(200)
   unidadMedida: number;
 
   @ApiProperty({
