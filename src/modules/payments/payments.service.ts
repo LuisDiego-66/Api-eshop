@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, MoreThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
 
@@ -15,6 +15,8 @@ import { Order } from '../orders/entities/order.entity';
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     private httpService: HttpService,
 
@@ -50,7 +52,12 @@ export class PaymentsService {
       );
     }
 
-    const { message: token } = await this.authentication();
+    const authResult = await this.authentication();
+    if (authResult.status) {
+      this.logger.error(`BNB auth failed: ${JSON.stringify(authResult)}`);
+      throw new InternalServerErrorException('Error al autenticar con el banco');
+    }
+    const token = authResult.message;
 
     // --------------------------------------------
     // 2. Generar QR
@@ -73,6 +80,7 @@ export class PaymentsService {
       })
       .catch((err) => {
         const axiosResp = err.response;
+        this.logger.error(`GenerateQr error: ${err.message}`, axiosResp?.data);
 
         return {
           status: axiosResp?.status,
@@ -130,12 +138,20 @@ export class PaymentsService {
   //? ============================================================================================== */
 
   async qrStatus(idQr: string) {
-    const { message: token } = await this.authentication();
+    const authResult = await this.authentication();
+    if (authResult.status) {
+      this.logger.error(`BNB auth failed: ${JSON.stringify(authResult)}`);
+      throw new InternalServerErrorException('Error al autenticar con el banco');
+    }
+    const token = authResult.message;
+
     return await this.httpService
       .QrStatus(token, idQr)
       .then((res) => res.data)
       .catch((err) => {
         const axiosResp = err.response;
+        this.logger.error(`QrStatus error: ${err.message}`, axiosResp?.data);
+
         return {
           status: axiosResp?.status,
           data: axiosResp?.data,
@@ -154,6 +170,8 @@ export class PaymentsService {
       .then((res) => res.data)
       .catch((err) => {
         const axiosResp = err.response;
+        this.logger.error(`Authentication error: ${err.message}`, axiosResp?.data);
+
         return {
           status: axiosResp?.status,
           data: axiosResp?.data,

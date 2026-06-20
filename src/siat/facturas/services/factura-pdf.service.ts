@@ -234,6 +234,17 @@ export class FacturaPdfService {
       y += 14;
     }
 
+    doc
+      .fontSize(7)
+      .font('Helvetica')
+      .text(
+        'Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación en línea',
+        LX,
+        y,
+        { width: PW, align: 'center' },
+      );
+    y += 14;
+
     doc.image(qrBuffer, LX, y, { width: 80, height: 80 });
     doc
       .fontSize(7)

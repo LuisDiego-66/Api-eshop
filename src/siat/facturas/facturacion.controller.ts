@@ -9,6 +9,9 @@ import {
   ReversionAnulacionFacturaDto,
 } from './dto';
 import { SendFacturaEmailDto } from './dto/send-factura-email.dto';
+import { SendPaqueteEmailDto } from './dto/send-paquete-email.dto';
+import { SendAnulacionEmailDto } from './dto/send-anulacion-email.dto';
+import { SendReversionEmailDto } from './dto/send-reversion-email.dto';
 import { QueryDto } from '../common/dto/query.dto';
 import { CreatePaqueteContingenciaDto } from './dto/create-paquete-contingencia.dto';
 import { CreateFacturaContingenciaDto } from './dto/create-factura-contingencia.dto';
@@ -128,6 +131,33 @@ export class FacturacionController {
   @Post('facturacion/send-email')
   async sendFacturaEmail(@Body() dto: SendFacturaEmailDto) {
     return this.facturacionService.sendFacturaEmail(dto);
+  }
+
+  //? ============================================================================================== */
+  //?                          Enviar_Email_Anulacion                                                */
+  //? ============================================================================================== */
+
+  @Post('facturacion/send-email/anulacion')
+  async sendAnulacionEmail(@Body() dto: SendAnulacionEmailDto) {
+    return this.facturacionService.sendAnulacionEmail(dto);
+  }
+
+  //? ============================================================================================== */
+  //?                          Enviar_Email_Reversion                                                */
+  //? ============================================================================================== */
+
+  @Post('facturacion/send-email/reversion')
+  async sendReversionEmail(@Body() dto: SendReversionEmailDto) {
+    return this.facturacionService.sendReversionEmail(dto);
+  }
+
+  //? ============================================================================================== */
+  //?                           Enviar_Email_Paquete                                                 */
+  //? ============================================================================================== */
+
+  @Post('paquetes/send-email')
+  async sendPaqueteEmail(@Body() dto: SendPaqueteEmailDto) {
+    return this.facturacionService.sendPaqueteEmail(dto);
   }
 
   //? ============================================================================================== */

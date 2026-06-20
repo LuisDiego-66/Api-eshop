@@ -12,6 +12,7 @@ export class HttpService {
   constructor() {
     this.axios = axios.create({
       baseURL: this.urlBase,
+      timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -30,6 +31,10 @@ export class HttpService {
   //------------------------------------------------------------------------------- GetQR
 
   GenerateQr = (token: string, payload: QrDataDto) => {
+    const minutes = envs.RESERVATION_EXPIRE_MINUTES || 25;
+    const expires = new Date(Date.now() + minutes * 60 * 1000);
+    const expirationDate = expires.toISOString().split('T')[0];
+
     return this.axios.post(
       '/QRSimple.API/api/v1/main/getQRWithImageAsync',
 
@@ -38,7 +43,7 @@ export class HttpService {
         gloss: payload.gloss,
         amount: payload.amount,
         singleUse: true,
-        expirationDate: '2026-06-15',
+        expirationDate,
         additionalData: payload.additionalData,
         destinationAccountId: 1,
       },

@@ -42,6 +42,61 @@ export class MailService {
     });
   }
 
+  async sendAnulacionEmail(to: string, numeroFactura: number) {
+    return this.mailerService.sendMail({
+      to,
+      subject: `Anulación de Factura N° ${numeroFactura}`,
+      html: `
+        <p>Mediante la presente comunicamos a ud(s). que fue <strong>ANULADA</strong> la factura:</p>
+        <p><strong>N° ${numeroFactura}</strong></p>
+      `,
+    });
+  }
+
+  async sendReversionEmail(to: string, numeroFactura: number) {
+    return this.mailerService.sendMail({
+      to,
+      subject: `Reversión de Anulación - Factura N° ${numeroFactura}`,
+      html: `
+        <p>Mediante la presente comunicamos a ud(s). que fue <strong>REVERTIDA LA ANULACIÓN</strong> de la factura:</p>
+        <p><strong>N° ${numeroFactura}</strong></p>
+      `,
+    });
+  }
+
+  async sendPaqueteEmail(
+    to: string,
+    paqueteId: number,
+    razonSocial: string,
+    attachments: { numeroFactura: number; pdfBuffer: Buffer; xmlBuffer: Buffer }[],
+  ) {
+    const facturasList = attachments
+      .map((a) => `<li>Factura N° ${a.numeroFactura}</li>`)
+      .join('');
+
+    return this.mailerService.sendMail({
+      to,
+      subject: `Paquete N° ${paqueteId} - ${razonSocial} (${attachments.length} facturas)`,
+      html: `
+        <p>Se adjuntan las facturas del <strong>Paquete N° ${paqueteId}</strong>:</p>
+        <ul>${facturasList}</ul>
+        <p>Por cada factura se incluye el PDF (representación gráfica) y el XML.</p>
+      `,
+      attachments: attachments.flatMap((a) => [
+        {
+          filename: `factura-${a.numeroFactura}.pdf`,
+          content: a.pdfBuffer,
+          contentType: 'application/pdf',
+        },
+        {
+          filename: `factura-${a.numeroFactura}.xml`,
+          content: a.xmlBuffer,
+          contentType: 'application/xml',
+        },
+      ]),
+    });
+  }
+
   async sendMail(dto: SendMailPaymentConfirmationDto) {
     const { to } = dto;
 

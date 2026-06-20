@@ -42,7 +42,11 @@ import { MailService } from 'src/mail/mail.service';
 import { Cafc } from './entities/cafc.entity';
 import { Factura } from './entities/factura.entity';
 import { Detalle } from './entities/detalle.entity';
+import { Paquete } from './entities/paquete.entity';
 import { SendFacturaEmailDto } from './dto/send-factura-email.dto';
+import { SendPaqueteEmailDto } from './dto/send-paquete-email.dto';
+import { SendAnulacionEmailDto } from './dto/send-anulacion-email.dto';
+import { SendReversionEmailDto } from './dto/send-reversion-email.dto';
 
 @Injectable()
 export class FacturacionService {
@@ -55,6 +59,9 @@ export class FacturacionService {
 
     @InjectRepository(Cafc)
     private readonly cafcRepository: Repository<Cafc>,
+
+    @InjectRepository(Paquete)
+    private readonly paqueteRepository: Repository<Paquete>,
 
     private readonly codigosService: CodigosService,
 
@@ -157,7 +164,7 @@ export class FacturacionService {
         );
       }
       const precioItem = detalle.cantidad * detalle.precioUnitario;
-      if ((detalle.montoDescuento ?? 0) >= precioItem) {
+      if (precioItem > 0 && (detalle.montoDescuento ?? 0) >= precioItem) {
         throw new BadRequestException(
           `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
         );
@@ -471,7 +478,7 @@ export class FacturacionService {
         );
       }
       const precioItem = detalle.cantidad * detalle.precioUnitario;
-      if ((detalle.montoDescuento ?? 0) >= precioItem) {
+      if (precioItem > 0 && (detalle.montoDescuento ?? 0) >= precioItem) {
         throw new BadRequestException(
           `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
         );
@@ -723,7 +730,7 @@ export class FacturacionService {
         );
       }
       const precioItem = detalle.cantidad * detalle.precioUnitario;
-      if ((detalle.montoDescuento ?? 0) >= precioItem) {
+      if (precioItem > 0 && (detalle.montoDescuento ?? 0) >= precioItem) {
         throw new BadRequestException(
           `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
         );
@@ -1010,7 +1017,7 @@ export class FacturacionService {
       await this.request.anulacionFactura({
         codigoAmbiente: cufd.codigoAmbiente,
         codigoDocumentoSector: factura.codigoDocumentoSector,
-        codigoEmision: factura.codigoEmision,
+        codigoEmision: CodigoEmisionEnum.ONLINE,
         codigoModalidad: cufd.codigoModalidad,
         codigoPuntoVenta: cufd.codigoPuntoVenta,
         codigoSistema: cufd.codigoSistema,
@@ -1070,7 +1077,7 @@ export class FacturacionService {
       await this.request.reversionAnulacionFactura({
         codigoAmbiente: cufd.codigoAmbiente,
         codigoDocumentoSector: factura.codigoDocumentoSector,
-        codigoEmision: factura.codigoEmision,
+        codigoEmision: CodigoEmisionEnum.ONLINE,
         codigoModalidad: cufd.codigoModalidad,
         codigoPuntoVenta: cufd.codigoPuntoVenta,
         codigoSistema: cufd.codigoSistema,
@@ -1109,7 +1116,9 @@ export class FacturacionService {
     });
 
     if (!factura) {
-      throw new NotFoundException(`Factura con id ${dto.facturaId} no encontrada`);
+      throw new NotFoundException(
+        `Factura con id ${dto.facturaId} no encontrada`,
+      );
     }
 
     if (!factura.xml) {
@@ -1129,6 +1138,89 @@ export class FacturacionService {
 
     return {
       message: `Factura N° ${factura.numeroFactura} enviada a ${dto.email}`,
+    };
+  }
+
+  //? ============================================================================================== */
+  //?                              Enviar_Email_Paquete                                              */
+  //? ============================================================================================== */
+
+  async sendPaqueteEmail(dto: SendPaqueteEmailDto) {
+    const paquete = await this.paqueteRepository.findOne({
+      where: { id: dto.paqueteId },
+      relations: ['facturas', 'facturas.detalles'],
+    });
+
+    if (!paquete) {
+      throw new NotFoundException(`Paquete con id ${dto.paqueteId} no encontrado`);
+    }
+
+    if (!paquete.facturas?.length) {
+      throw new BadRequestException('El paquete no tiene facturas asociadas');
+    }
+
+    const attachments = await Promise.all(
+      paquete.facturas.map(async (factura) => {
+        if (!factura.xml) {
+          throw new BadRequestException(
+            `La factura N° ${factura.numeroFactura} no tiene XML generado`,
+          );
+        }
+        const pdfBuffer = await this.facturaPdfService.generate(factura);
+        const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
+        return { numeroFactura: factura.numeroFactura, pdfBuffer, xmlBuffer };
+      }),
+    );
+
+    await this.mailService.sendPaqueteEmail(
+      dto.email,
+      paquete.id,
+      paquete.facturas[0].razonSocialEmisor,
+      attachments,
+    );
+
+    return {
+      message: `Paquete N° ${paquete.id} enviado a ${dto.email} (${attachments.length} facturas)`,
+    };
+  }
+
+  //? ============================================================================================== */
+  //?                           Enviar_Email_Anulacion                                               */
+  //? ============================================================================================== */
+
+  async sendAnulacionEmail(dto: SendAnulacionEmailDto) {
+    const facturas = await this.facturaRepository.findByIds(dto.facturaIds);
+
+    if (!facturas.length) {
+      throw new NotFoundException('No se encontraron facturas con los IDs proporcionados');
+    }
+
+    await Promise.all(
+      facturas.map((f) => this.mailService.sendAnulacionEmail(dto.email, f.numeroFactura)),
+    );
+
+    return {
+      message: `Notificación de anulación enviada a ${dto.email} (${facturas.length} facturas)`,
+    };
+  }
+
+  //? ============================================================================================== */
+  //?                           Enviar_Email_Reversion                                               */
+  //? ============================================================================================== */
+
+  async sendReversionEmail(dto: SendReversionEmailDto) {
+    const facturas = await this.facturaRepository.findByIds(dto.facturaIds);
+
+    if (!facturas.length) {
+      throw new NotFoundException('No se encontraron facturas con los IDs proporcionados');
+    }
+
+    await Promise.all(
+      facturas.map((f) => this.mailService.sendReversionEmail(dto.email, f.numeroFactura)),
+    );
+
+    return {
+      message: `Notificación de reversión enviada a ${dto.email} (${facturas.length} facturas)`,
     };
   }
 
@@ -1219,3 +1311,7 @@ export class FacturacionService {
     return { cufd };
   }
 }
+
+//FBQT5CSnYxSEE=E0QkM2NjUxNUJFQ3xFVkpJSkdhVUMjEzRjRCRkRGRk
+//FBQT5CSnYxSEE=E0QkM2NjUxNUJFQ3xFVkpJSkdhVUMjEzRjRCRkRGRk
+//FBQT5CSnYxSEE=E0QkM2NjUxNUJFQ3xFVkpJSkdhVUMjEzRjRCRkRGRk

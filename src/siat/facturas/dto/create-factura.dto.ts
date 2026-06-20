@@ -340,7 +340,7 @@ export class FacturaDetalleDto {
     example: 10,
   })
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   precioUnitario: number;
 
   @ApiPropertyOptional({
