@@ -30,6 +30,7 @@ import { Detalle } from './facturas/entities/detalle.entity';
 import { Paquete } from './facturas/entities/paquete.entity';
 
 import { Cafc } from './facturas/entities/cafc.entity';
+import { FacturaCounter } from './facturas/entities/factura-counter.entity';
 import { OperacionesController } from './operaciones/operaciones.controller';
 import { PuntosVentaService } from './operaciones/puntos-venta.service';
 import { RequestsOperacionesService } from './operaciones/services/requests-operaciones.service';
@@ -53,6 +54,7 @@ import { CafcController } from './facturas/cafc.controller';
       Factura,
       Detalle,
       Cafc,
+      FacturaCounter,
 
       EventoSignificativo,
       PuntoVenta,

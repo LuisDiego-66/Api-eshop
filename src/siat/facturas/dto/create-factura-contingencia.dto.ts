@@ -4,6 +4,7 @@ import {
   MaxLength,
   IsInt,
   IsArray,
+  IsEmail,
   IsString,
   IsNumber,
   IsOptional,
@@ -50,6 +51,15 @@ export class CreateFacturaContingenciaDto {
 
   //* ============================================================================================== */
   //* Información de la Factura
+
+  @ApiProperty({
+    description: 'ID del CUFD vigente al inicio del evento significativo',
+    example: 1,
+  })
+  @IsNumber()
+  @IsInt()
+  @IsPositive()
+  cufdId: number;
 
   @ApiProperty({
     description: 'Tipo de documento sector (catálogo SIAT)',
@@ -196,18 +206,7 @@ export class CreateFacturaContingenciaDto {
   @Min(0)
   descuentoAdicional?: number | null;
 
-  @ApiPropertyOptional({
-    description: 'Código de excepción',
-    example: 1,
-  })
-  @IsOptional()
-  @IsNumber()
-  @IsInt()
-  @Min(0)
-  @Max(1)
-  codigoExcepcion?: number | null;
-
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'CAFC (solo emisión fuera de línea)',
     example: '101A194B4341C',
   })
@@ -223,6 +222,17 @@ export class CreateFacturaContingenciaDto {
   @IsNotEmpty()
   @MaxLength(100)
   usuario: string;
+
+  @ApiPropertyOptional({
+    description: 'Correos electrónicos para notificar al receptor cuando el paquete sea validado',
+    example: ['cliente@example.com'],
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsEmail({}, { each: true })
+  emails?: string[];
 
   @ApiProperty({
     description: 'Código documento sector (debe ser 1 para compra-venta)',

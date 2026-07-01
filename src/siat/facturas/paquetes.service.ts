@@ -24,6 +24,8 @@ import {
 import { CodigosService } from '../codigos/codigos.service';
 import { RequestsFacturacionService } from './services/requests-facturacion.service';
 import { EventosSignificativosService } from '../operaciones/eventos-significativos.service';
+import { FacturaPdfService } from './services/factura-pdf.service';
+import { MailService } from 'src/mail/mail.service';
 
 import { Paquete } from './entities/paquete.entity';
 import { Factura } from './entities/factura.entity';
@@ -42,6 +44,10 @@ export class PaquetesService {
     private readonly eventosSignificativosService: EventosSignificativosService,
 
     private readonly request: RequestsFacturacionService,
+
+    private readonly facturaPdfService: FacturaPdfService,
+
+    private readonly mailService: MailService,
   ) {}
 
   //? ============================================================================================== */
@@ -79,6 +85,7 @@ export class PaquetesService {
         codigoRecepcion: IsNull(),
         cafc: IsNull(), //! sin CAFC
       },
+      relations: { detalles: true },
       take: 500,
 
       order: { fechaEmision: 'ASC' },
@@ -239,16 +246,6 @@ export class PaquetesService {
     return resultados;
   }
 
-  // --------------------------------------------------
-  // 7. Validar existencia Codigo-Recepcion
-  // --------------------------------------------------
-
-  /* if (response.codigoRecepcion) {
-      return await this.validacionPaqueteFactura({
-        codigoRecepcion: response.codigoRecepcion,
-      });
-    } */
-
   //? ============================================================================================== */
   //?                   Enviar_Paquete_Contingencia                                                  */
   //? ============================================================================================== */
@@ -285,7 +282,7 @@ export class PaquetesService {
         paquete: IsNull(),
         cafc: { codigo: dto.cafc }, //! con cafc
       },
-      relations: { cafc: true },
+      relations: { cafc: true, detalles: true },
       take: 500,
       order: { fechaEmision: 'ASC' },
     });
@@ -441,16 +438,6 @@ export class PaquetesService {
     return resultados;
   }
 
-  // --------------------------------------------------
-  // 7. Validar existencia Codigo-Recepcion
-  // --------------------------------------------------
-
-  /* if (response.codigoRecepcion) {
-      return await this.validacionPaqueteFactura({
-        codigoRecepcion: response.codigoRecepcion,
-      });
-    } */
-
   //? ============================================================================================== */
 
   private formatFechaSIAT(date: Date): string {
@@ -484,7 +471,7 @@ export class PaquetesService {
 
     const paquete = await this.paqueteRepository.findOne({
       where: { codigoRecepcion },
-      relations: { facturas: true },
+      relations: { facturas: { detalles: true } },
     });
 
     if (!paquete) {
@@ -533,6 +520,39 @@ export class PaquetesService {
         codigoDescripcion: response.codigoDescripcion,
         codigoEstado: response.codigoEstado,
       });
+
+      const emailToFacturas = new Map<string, typeof paquete.facturas>();
+      for (const factura of paquete.facturas) {
+        if (!factura.emails?.length) continue;
+        for (const email of factura.emails) {
+          if (!emailToFacturas.has(email)) emailToFacturas.set(email, []);
+          emailToFacturas.get(email)!.push(factura);
+        }
+      }
+
+      if (emailToFacturas.size > 0) {
+        const pdfCache = new Map<number, Buffer>();
+        for (const [email, facturas] of emailToFacturas) {
+          const attachments = await Promise.all(
+            facturas.map(async (factura) => {
+              if (!pdfCache.has(factura.id)) {
+                pdfCache.set(factura.id, await this.facturaPdfService.generate(factura));
+              }
+              return {
+                numeroFactura: factura.numeroFactura,
+                pdfBuffer: pdfCache.get(factura.id)!,
+                xmlBuffer: Buffer.from(factura.xml, 'utf-8'),
+              };
+            }),
+          );
+          await this.mailService.sendPaqueteEmail(
+            email,
+            paquete.id,
+            paquete.facturas[0].razonSocialEmisor,
+            attachments,
+          );
+        }
+      }
     } else {
       for (const factura of paquete.facturas) {
         factura.estado = FacturaStatusEnum.RECHAZADA;

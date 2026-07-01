@@ -13,7 +13,9 @@ import {
   IsInt,
   Matches,
   Equals,
+  IsEmail,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -233,17 +235,6 @@ export class CreateFacturaDto {
   @Min(0)
   descuentoAdicional?: number | null;
 
-  @ApiPropertyOptional({
-    description: 'Código de excepción',
-    example: 1,
-  })
-  @IsOptional()
-  @IsNumber()
-  @IsInt()
-  @Min(0)
-  @Max(1)
-  codigoExcepcion?: number | null;
-
   @ApiProperty({
     description: 'Usuario que emite la factura',
     example: 'admin',
@@ -252,6 +243,17 @@ export class CreateFacturaDto {
   @IsNotEmpty()
   @MaxLength(100)
   usuario: string;
+
+  @ApiPropertyOptional({
+    description: 'Correos electrónicos para envío automático de la factura',
+    example: ['cliente@example.com', 'otro@example.com'],
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsEmail({}, { each: true })
+  emails?: string[];
 
   @ApiProperty({
     description: 'Código documento sector (debe ser 1 para compra-venta)',

@@ -134,6 +134,9 @@ export class Factura {
   @Column({ type: 'text' })
   usuario: string;
 
+  @Column({ type: 'simple-array', nullable: true })
+  emails?: string[] | null;
+
   @Column({ type: 'int' })
   codigoDocumentoSector: number; //! Catalogos
 

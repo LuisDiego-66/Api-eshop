@@ -4,14 +4,11 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import {
   CreateFacturaDto,
   AnulacionFacturaDto,
-  VerificacionEstadoFacturaDto,
   ValidacionPaqueteFacturaDto,
+  VerificacionEstadoFacturaDto,
   ReversionAnulacionFacturaDto,
 } from './dto';
-import { SendFacturaEmailDto } from './dto/send-factura-email.dto';
-import { SendPaqueteEmailDto } from './dto/send-paquete-email.dto';
-import { SendAnulacionEmailDto } from './dto/send-anulacion-email.dto';
-import { SendReversionEmailDto } from './dto/send-reversion-email.dto';
+
 import { QueryDto } from '../common/dto/query.dto';
 import { CreatePaqueteContingenciaDto } from './dto/create-paquete-contingencia.dto';
 import { CreateFacturaContingenciaDto } from './dto/create-factura-contingencia.dto';
@@ -47,7 +44,7 @@ export class FacturacionController {
 
   @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
-  @Post('facturacion/online/contingencia')
+  @Post('facturacion/contingencia')
   async recepcionFacturaOnlineContingencia(
     @Query() query: QueryDto,
     @Body() dto: CreateFacturaContingenciaDto,
@@ -73,7 +70,7 @@ export class FacturacionController {
   //?                      Facturacion_Offline_Lote                                                  */
   //? ============================================================================================== */
 
-  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  /* @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/offline/lote')
   async facturacionOfflineLote(
@@ -81,20 +78,15 @@ export class FacturacionController {
     @Body() dto: CreateFacturaDto,
   ) {
     return this.facturacionService.facturacionOfflineLote(dto, query);
-  }
+  } */
 
   //? ============================================================================================== */
   //?                     Verificacion_Estado_Factura                                                */
   //? ============================================================================================== */
 
-  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
-  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/verificacion')
-  async verificacionEstadoFactura(
-    @Query() query: QueryDto,
-    @Body() dto: VerificacionEstadoFacturaDto,
-  ) {
-    return this.facturacionService.verificacionEstadoFactura(dto, query);
+  async verificacionEstadoFactura(@Body() dto: VerificacionEstadoFacturaDto) {
+    return this.facturacionService.verificacionEstadoFactura(dto);
   }
 
   //? ============================================================================================== */
@@ -128,37 +120,37 @@ export class FacturacionController {
   //?                             Enviar_Email_Factura                                               */
   //? ============================================================================================== */
 
-  @Post('facturacion/send-email')
+  /* @Post('facturacion/send-email')
   async sendFacturaEmail(@Body() dto: SendFacturaEmailDto) {
     return this.facturacionService.sendFacturaEmail(dto);
-  }
+  } */
 
   //? ============================================================================================== */
   //?                          Enviar_Email_Anulacion                                                */
   //? ============================================================================================== */
 
-  @Post('facturacion/send-email/anulacion')
+  /* @Post('facturacion/send-email/anulacion')
   async sendAnulacionEmail(@Body() dto: SendAnulacionEmailDto) {
     return this.facturacionService.sendAnulacionEmail(dto);
-  }
+  } */
 
   //? ============================================================================================== */
   //?                          Enviar_Email_Reversion                                                */
   //? ============================================================================================== */
 
-  @Post('facturacion/send-email/reversion')
+  /* @Post('facturacion/send-email/reversion')
   async sendReversionEmail(@Body() dto: SendReversionEmailDto) {
     return this.facturacionService.sendReversionEmail(dto);
-  }
+  } */
 
   //? ============================================================================================== */
   //?                           Enviar_Email_Paquete                                                 */
   //? ============================================================================================== */
 
-  @Post('paquetes/send-email')
+  /* @Post('paquetes/send-email')
   async sendPaqueteEmail(@Body() dto: SendPaqueteEmailDto) {
     return this.facturacionService.sendPaqueteEmail(dto);
-  }
+  } */
 
   //? ============================================================================================== */
   //?                                Enviar_Paquete                                                  */

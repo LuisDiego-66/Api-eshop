@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import PDFDocument = require('pdfkit');
 import * as QRCode from 'qrcode';
 import { Factura } from '../entities/factura.entity';
+import { CodigoEmisionEnum } from '../enums/codigo-emision.enum';
 import { envs } from 'src/config/environments/environments';
 
 @Injectable()
@@ -234,15 +235,15 @@ export class FacturaPdfService {
       y += 14;
     }
 
+    const modalidadText =
+      Number(f.codigoEmision) === CodigoEmisionEnum.OFFLINE
+        ? 'Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación fuera de línea'
+        : 'Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación en línea';
+
     doc
       .fontSize(7)
       .font('Helvetica')
-      .text(
-        'Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación en línea',
-        LX,
-        y,
-        { width: PW, align: 'center' },
-      );
+      .text(modalidadText, LX, y, { width: PW, align: 'center' });
     y += 14;
 
     doc.image(qrBuffer, LX, y, { width: 80, height: 80 });

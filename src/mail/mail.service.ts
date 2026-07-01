@@ -9,7 +9,7 @@ export class MailService {
   constructor(private readonly mailerService: MailerService) {}
 
   async sendFacturaEmail(
-    to: string,
+    to: string | string[],
     numeroFactura: number,
     razonSocial: string,
     xmlBuffer: Buffer,
@@ -42,7 +42,7 @@ export class MailService {
     });
   }
 
-  async sendAnulacionEmail(to: string, numeroFactura: number) {
+  async sendAnulacionEmail(to: string | string[], numeroFactura: number) {
     return this.mailerService.sendMail({
       to,
       subject: `Anulación de Factura N° ${numeroFactura}`,
@@ -53,7 +53,7 @@ export class MailService {
     });
   }
 
-  async sendReversionEmail(to: string, numeroFactura: number) {
+  async sendReversionEmail(to: string | string[], numeroFactura: number) {
     return this.mailerService.sendMail({
       to,
       subject: `Reversión de Anulación - Factura N° ${numeroFactura}`,
@@ -65,7 +65,7 @@ export class MailService {
   }
 
   async sendPaqueteEmail(
-    to: string,
+    to: string | string[],
     paqueteId: number,
     razonSocial: string,
     attachments: { numeroFactura: number; pdfBuffer: Buffer; xmlBuffer: Buffer }[],

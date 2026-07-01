@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsEnum, IsNumber, IsString } from 'class-validator';
-import { CodigoEmisionEnum } from '../enums/codigo-emision.enum';
+import { IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AnulacionFacturaDto {
