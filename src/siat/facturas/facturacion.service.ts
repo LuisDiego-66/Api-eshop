@@ -92,6 +92,10 @@ export class FacturacionService {
     });
     const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
     const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
+    const nombreRazonSocial = this.normalizarNombreRazonSocial(
+      data.numeroDocumento,
+      data.nombreRazonSocial,
+    );
 
     const now = new Date();
     const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
@@ -237,7 +241,7 @@ export class FacturacionService {
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       fechaEmision: fechaHora,
 
-      nombreRazonSocial: data.nombreRazonSocial,
+      nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
       numeroDocumento: data.numeroDocumento,
       complemento: data.complemento,
@@ -294,7 +298,7 @@ export class FacturacionService {
       tipoFacturaDocumento: data.tipoFacturaDocumento,
       fechaEmision: fechaHora,
 
-      nombreRazonSocial: data.nombreRazonSocial,
+      nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
       numeroDocumento: data.numeroDocumento,
       complemento: data.complemento,
@@ -447,6 +451,10 @@ export class FacturacionService {
       );
     }
     const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
+    const nombreRazonSocial = this.normalizarNombreRazonSocial(
+      data.numeroDocumento,
+      data.nombreRazonSocial,
+    );
 
     const now = new Date();
     const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
@@ -592,7 +600,7 @@ export class FacturacionService {
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       fechaEmision: fechaHora, // new Date(fechaHora),
 
-      nombreRazonSocial: data.nombreRazonSocial,
+      nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
       numeroDocumento: data.numeroDocumento,
       complemento: data.complemento,
@@ -645,7 +653,7 @@ export class FacturacionService {
       tipoFacturaDocumento: data.tipoFacturaDocumento,
       fechaEmision: fechaHora,
 
-      nombreRazonSocial: data.nombreRazonSocial,
+      nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
       numeroDocumento: data.numeroDocumento,
       complemento: data.complemento,
@@ -689,7 +697,21 @@ export class FacturacionService {
         }),
       ),
     });
-    return await this.facturaRepository.save(newFactura);
+    const factura = await this.facturaRepository.save(newFactura);
+
+    if (data.emails?.length) {
+      const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
+      const pdfBuffer = await this.facturaPdfService.generate(factura);
+      await this.mailService.sendFacturaEmail(
+        data.emails,
+        factura.numeroFactura,
+        factura.razonSocialEmisor,
+        xmlBuffer,
+        pdfBuffer,
+      );
+    }
+
+    return factura;
   }
 
   //? ============================================================================================== */
@@ -707,6 +729,10 @@ export class FacturacionService {
     });
     const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
     const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
+    const nombreRazonSocial = this.normalizarNombreRazonSocial(
+      data.numeroDocumento,
+      data.nombreRazonSocial,
+    );
 
     const now = new Date();
     const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
@@ -849,7 +875,7 @@ export class FacturacionService {
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       fechaEmision: fechaHora, // new Date(fechaHora),
 
-      nombreRazonSocial: data.nombreRazonSocial,
+      nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
       numeroDocumento: data.numeroDocumento,
       complemento: data.complemento,
@@ -902,7 +928,7 @@ export class FacturacionService {
       tipoFacturaDocumento: data.tipoFacturaDocumento,
       fechaEmision: fechaHora,
 
-      nombreRazonSocial: data.nombreRazonSocial,
+      nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
       numeroDocumento: data.numeroDocumento,
       complemento: data.complemento,
@@ -944,7 +970,21 @@ export class FacturacionService {
         }),
       ),
     });
-    return await this.facturaRepository.save(newFactura);
+    const factura = await this.facturaRepository.save(newFactura);
+
+    if (data.emails?.length) {
+      const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
+      const pdfBuffer = await this.facturaPdfService.generate(factura);
+      await this.mailService.sendFacturaEmail(
+        data.emails,
+        factura.numeroFactura,
+        factura.razonSocialEmisor,
+        xmlBuffer,
+        pdfBuffer,
+      );
+    }
+
+    return factura;
   }
 
   //? ============================================================================================== */
@@ -1292,6 +1332,28 @@ export class FacturacionService {
   }
 
   //? ============================================================================================== */
+  //?                          Representacion_Grafica_Factura (PDF)                                  */
+  //? ============================================================================================== */
+
+  async getRepresentacionGrafica(facturaId: number): Promise<{
+    pdfBuffer: Buffer;
+    numeroFactura: number;
+  }> {
+    const factura = await this.facturaRepository.findOne({
+      where: { id: facturaId },
+      relations: ['detalles', 'cafc'],
+    });
+
+    if (!factura) {
+      throw new NotFoundException(`Factura con id ${facturaId} no encontrada`);
+    }
+
+    const pdfBuffer = await this.facturaPdfService.generate(factura);
+
+    return { pdfBuffer, numeroFactura: factura.numeroFactura };
+  }
+
+  //? ============================================================================================== */
   //?                         Numero_Factura_Atomico                                                  */
   //? ============================================================================================== */
 
@@ -1372,6 +1434,30 @@ export class FacturacionService {
     if (NITS_ESPECIALES.includes(numeroDocumento)) return 1;
     if (esOffline) return 1;
     return 0;
+  }
+
+  //? ============================================================================================== */
+  //?                      Nombre_Razon_Social_NIT_Especiales                                        */
+  //? ============================================================================================== */
+
+  //! RND: Nombre/Razón Social obligatorio según NIT/CI especial consignado
+  private static readonly NOMBRE_RAZON_SOCIAL_POR_NIT_ESPECIAL: Record<
+    string,
+    string
+  > = {
+    '99002': 'Control Tributario',
+    '99003': 'VENTAS MENORES DEL DÍA',
+  };
+
+  private normalizarNombreRazonSocial(
+    numeroDocumento: string,
+    nombreRazonSocial: string,
+  ): string {
+    return (
+      FacturacionService.NOMBRE_RAZON_SOCIAL_POR_NIT_ESPECIAL[
+        numeroDocumento
+      ] ?? nombreRazonSocial
+    );
   }
 
   private mascararTarjeta(numeroTarjeta?: string | null): string | null {

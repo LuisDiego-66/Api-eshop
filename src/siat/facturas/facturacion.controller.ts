@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
+import { ApiParam, ApiProduces, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 
 import {
   CreateFacturaDto,
@@ -114,6 +115,28 @@ export class FacturacionController {
   @Get('facturacion')
   async FindAllFacturas() {
     return this.facturacionService.FindAll();
+  }
+
+  //? ============================================================================================== */
+  //?                          Representacion_Grafica_Factura (PDF)                                  */
+  //? ============================================================================================== */
+
+  @ApiParam({ name: 'id', required: true, type: Number })
+  @ApiProduces('application/pdf')
+  @Get('facturacion/:id/representacion-grafica')
+  async representacionGraficaFactura(
+    @Param('id') id: number,
+    @Res() res: Response,
+  ) {
+    const { pdfBuffer, numeroFactura } =
+      await this.facturacionService.getRepresentacionGrafica(id);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="factura-${numeroFactura}.pdf"`,
+    );
+    res.send(pdfBuffer);
   }
 
   //? ============================================================================================== */

@@ -67,6 +67,9 @@ export class FacturaPdfService {
     addRightRow('NIT', String(f.nitEmisor));
     addRightRow('FACTURA N°', String(f.numeroFactura));
     addRightRow('CUF', f.cuf);
+    if (f.cafc) {
+      addRightRow('CAFC', f.cafc.codigo);
+    }
 
     // ── SEPARADOR ────────────────────────────────────────────────────────
     let y = Math.max(doc.y, ry) + 8;
