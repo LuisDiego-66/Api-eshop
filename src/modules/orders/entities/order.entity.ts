@@ -40,6 +40,9 @@ export class Order {
   @Column({ type: 'text', default: PaymentType.CASH })
   payment_type: PaymentType;
 
+  @Column({ type: 'int', nullable: true })
+  codigoMetodoPago: number | null;
+
   @Column('boolean', { default: true })
   enabled: boolean;
 

@@ -48,4 +48,13 @@ export class BillingService {
       throw error;
     }
   }
+
+  //? ============================================================================================== */
+  //?                                       Find_By_Ci                                               */
+  //? ============================================================================================== */
+
+  //! para autocompletado en el frontend: null si no hay registro previo (no es un error)
+  async findByCi(ci: string) {
+    return this.billingRepository.findOne({ where: { ci } });
+  }
 }

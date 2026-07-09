@@ -21,7 +21,7 @@ import {
   UpdateOrderDto,
 } from './dto';
 
-import { Auth, GetCustomer } from 'src/auth/decorators';
+import { Auth, GetCustomer, GetUser } from 'src/auth/decorators';
 
 import { OrderStatus, OrderType, PaymentType } from './enums';
 import { Roles } from 'src/auth/enums';
@@ -31,7 +31,10 @@ import { PricingService } from './pricing.service';
 import { ExelService } from 'src/exel/exel.service';
 
 import { Customer } from '../customers/entities/customer.entity';
+import { User } from '../users/entities/user.entity';
 import { SearchBillingDto } from './pagination/search-billing-filter.dto';
+
+import { QueryDto } from 'src/siat/common/dto/query.dto';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -83,6 +86,29 @@ export class OrdersController {
   confirmManual(@Param('id') id: number) {
     return this.ordersService.confirmOrderManual(id);
   }
+
+  //? ============================================================================================== */
+  //?                                  Facturar_Order                                                */
+  //? ============================================================================================== */
+
+  /* //!
+  @Auth(Roles.ADMIN)
+  @ApiBearerAuth('access-token')
+  //!
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @Post(':id/facturar')
+  facturar(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: QueryDto,
+    @GetUser() user: User,
+  ) {
+    return this.orderFacturaService.generarFacturaDesdeOrden(
+      id,
+      query,
+      user.name,
+    );
+  } */
 
   //? ============================================================================================== */
   //?                                   Cancel_Order                                                 */

@@ -30,6 +30,15 @@ export class Product {
   @Column('boolean', { default: true })
   enabled: boolean;
 
+  /* @Column({ type: 'int', nullable: true })
+  codigoProductoSin?: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  actividadEconomica?: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  unidadMedida?: number | null; */
+
   @CreateDateColumn({
     type: 'timestamptz',
   })

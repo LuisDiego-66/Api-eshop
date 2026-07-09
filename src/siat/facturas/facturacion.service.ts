@@ -42,8 +42,9 @@ import { RequestsFacturacionService } from './services/requests-facturacion.serv
 import { Cafc } from './entities/cafc.entity';
 import { Factura } from './entities/factura.entity';
 import { Detalle } from './entities/detalle.entity';
-import { FacturaCounter } from './entities/factura-counter.entity';
 import { Cufd } from '../codigos/entities/cufd.entity';
+import { Order } from 'src/modules/orders/entities/order.entity';
+import { FacturaCounter } from './entities/factura-counter.entity';
 
 @Injectable()
 export class FacturacionService {
@@ -81,7 +82,11 @@ export class FacturacionService {
   //?                            Facturacion_Online                                                  */
   //? ============================================================================================== */
 
-  async facturacionOnline(dto: CreateFacturaDto, query: QueryDto) {
+  async facturacionOnline(
+    dto: CreateFacturaDto,
+    query: QueryDto,
+    order?: Order,
+  ) {
     // --------------------------------------------------
     // 1. Obtener códigos vigentes
     // --------------------------------------------------
@@ -341,6 +346,8 @@ export class FacturacionService {
           ...detalle,
         }),
       ),
+
+      //order: order ?? null,
     });
     const factura = await this.facturaRepository.save(newFactura);
 
@@ -1330,6 +1337,15 @@ export class FacturacionService {
   async FindAll() {
     return this.facturaRepository.find({ order: { fechaEmision: 'DESC' } });
   }
+
+  //? ============================================================================================== */
+  //?                              Find_Factura_By_Order_Id                                          */
+  //? ============================================================================================== */
+  /* async findFacturaByOrderId(orderId: number) {
+    return this.facturaRepository.findOne({
+      where: { order: { id: orderId } },
+    });
+  } */
 
   //? ============================================================================================== */
   //?                          Representacion_Grafica_Factura (PDF)                                  */

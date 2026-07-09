@@ -79,6 +79,7 @@ export class OrdersService {
       dto,
       type: OrderType.IN_STORE,
       payment_type: dto.payment_type,
+      //codigoMetodoPago: dto.codigoMetodoPago,
     });
   }
 

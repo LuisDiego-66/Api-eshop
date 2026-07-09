@@ -3,9 +3,12 @@ import { Type } from 'class-transformer';
 import {
   IsDefined,
   IsEmail,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -62,4 +65,13 @@ export class CreateOrderOnlineDto {
   @Type(() => BillingDto)
   @IsDefined()
   billing: BillingDto;
+
+  /* @ApiProperty({
+    description: 'Código Método de Pago (catálogo SIAT)',
+    example: 1,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(308)
+  codigoMetodoPago: number; */
 }

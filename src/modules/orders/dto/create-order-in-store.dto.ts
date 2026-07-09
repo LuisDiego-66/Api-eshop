@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDefined, IsEnum, IsString, ValidateNested } from 'class-validator';
+import {
+  IsDefined,
+  IsEnum,
+  IsInt,
+  IsString,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 import { PaymentType } from '../enums';
 import { BillingDto } from '../../billings/dto/billing.dto';
@@ -21,6 +29,15 @@ export class CreateOrderInStoreDto {
   @IsString()
   @IsEnum(PaymentType)
   payment_type: PaymentType;
+
+  /*   @ApiProperty({
+    description: 'Código Método de Pago (catálogo SIAT)',
+    example: 1,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(308)
+  codigoMetodoPago: number; */
 
   @ApiProperty({
     type: BillingDto,

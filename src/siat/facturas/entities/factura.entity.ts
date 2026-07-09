@@ -2,8 +2,10 @@ import {
   Index,
   Entity,
   Column,
+  OneToOne,
   OneToMany,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -17,6 +19,7 @@ import { Detalle } from './detalle.entity';
 import { Paquete } from './paquete.entity';
 import { SiatSync } from 'src/siat/catalogos/entities/siat_sync.entity';
 import { Cafc } from './cafc.entity';
+import { Order } from 'src/modules/orders/entities/order.entity';
 
 @Entity('facturas')
 export class Factura {
@@ -200,4 +203,9 @@ export class Factura {
 
   @ManyToOne(() => Cafc, (cafc) => cafc.facturas, { nullable: true })
   cafc: Cafc | null;
+
+  /* //! nullable: las facturas creadas por el flujo standalone no tienen orden asociada
+  @OneToOne(() => Order, { nullable: true })
+  @JoinColumn()
+  order?: Order | null; */
 }

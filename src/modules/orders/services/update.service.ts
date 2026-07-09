@@ -63,6 +63,7 @@ export class UpdateService {
               items,
               billing: orderOld.billing,
               payment_type: PaymentType.CASH,
+              //codigoMetodoPago: orderOld.codigoMetodoPago,
             } as CreateOrderInStoreDto,
             type: OrderType.IN_STORE,
             payment_type: PaymentType.CASH,
@@ -94,6 +95,7 @@ export class UpdateService {
 
               address: orderOld.address.id,
               shipment: orderOld.shipment.id,
+              //codigoMetodoPago: orderOld.codigoMetodoPago,
             } as CreateOrderOnlineDto,
             buyer: orderOld.customer,
             type: OrderType.ONLINE,

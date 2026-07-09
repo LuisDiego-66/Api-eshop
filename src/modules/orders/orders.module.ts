@@ -24,6 +24,7 @@ import { DailyCashService } from './daily-cash.service';
 import { DailyCashController } from './daily-cash.controller';
 
 import { BillingModule } from '../billings/billing.module';
+import { SiatModule } from 'src/siat/siat.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { BillingModule } from '../billings/billing.module';
     forwardRef(() => CustomersModule),
     ExelModule,
     BillingModule,
+    forwardRef(() => SiatModule),
   ],
   controllers: [OrdersController, DailyCashController],
   providers: [
@@ -45,7 +47,6 @@ import { BillingModule } from '../billings/billing.module';
     CancelService,
     UpdateService,
     ConfirmService,
-
     DailyCashService,
   ],
   exports: [TypeOrmModule, OrdersService],

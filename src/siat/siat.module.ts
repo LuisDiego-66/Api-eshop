@@ -91,5 +91,6 @@ import { CafcController } from './facturas/cafc.controller';
     EventosSignificativosService,
     PuntosVentaService,
   ],
+  exports: [FacturacionService],
 })
 export class SiatModule {}
