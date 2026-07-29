@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto } from '../common/dto/settings.dto';
 import { CierrePuntoVentaDto, RegistroPuntoVentaDto } from './dto';
 
 import { ResponsePuntoVenta } from './interfaces/response-punto-venta.interface';
@@ -27,7 +27,7 @@ export class PuntosVentaService {
   //?                                      Registro                                                  */
   //? ============================================================================================== */
 
-  async registroPuntoVenta(dto: RegistroPuntoVentaDto, query: QueryDto) {
+  async registroPuntoVenta(dto: RegistroPuntoVentaDto, query: SettingsDto) {
     const { cufd } = await this.getCodigos({
       codigoPuntoVenta: query.codigoPuntoVenta,
       codigoSucursal: query.codigoSucursal,
@@ -84,7 +84,7 @@ export class PuntosVentaService {
   //?                                      Consulta                                                  */
   //? ============================================================================================== */
 
-  async consultaPuntoVenta(query: QueryDto) {
+  async consultaPuntoVenta(query: SettingsDto) {
     const { cufd } = await this.getCodigos({
       codigoPuntoVenta: query.codigoPuntoVenta,
       codigoSucursal: query.codigoSucursal,
@@ -103,7 +103,7 @@ export class PuntosVentaService {
   //?                                        Cierre                                                  */
   //? ============================================================================================== */
 
-  async cierrePuntoVenta(dto: CierrePuntoVentaDto, query: QueryDto) {
+  async cierrePuntoVenta(dto: CierrePuntoVentaDto, query: SettingsDto) {
     const { cufd } = await this.getCodigos({
       codigoPuntoVenta: query.codigoPuntoVenta,
       codigoSucursal: query.codigoSucursal,

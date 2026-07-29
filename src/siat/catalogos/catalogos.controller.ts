@@ -1,15 +1,20 @@
 import { Body, Controller, Post, Query } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
 
 import { ListasDto } from './dto/listas.dto';
 import { ParametricasDto } from './dto/parametricas.dto';
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto } from '../common/dto/settings.dto';
 
 import { ListasService } from './Listas.service';
 import { FechaHoraService } from './fecha-hora.service';
 import { ParametricasService } from './parametricas.service';
 import { SincronizacionService } from './services/sincronizacion.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('SIAT: Catalogos')
 @Controller('catalogos')
 export class CatalogosController {
@@ -27,7 +32,7 @@ export class CatalogosController {
   @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('sincronizacion')
-  sincronizacion(@Query() sincronizacionDto: QueryDto) {
+  sincronizacion(@Query() sincronizacionDto: SettingsDto) {
     return this.sincronizacionService.sincronizacion(sincronizacionDto);
   }
 
@@ -39,7 +44,7 @@ export class CatalogosController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('parametricas')
   getParametricas(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() parametricasDto: ParametricasDto,
   ) {
     return this.parametricasService.getParametrica(parametricasDto, query);
@@ -52,7 +57,7 @@ export class CatalogosController {
   @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('listas')
-  getListas(@Query() query: QueryDto, @Body() listasDto: ListasDto) {
+  getListas(@Query() query: SettingsDto, @Body() listasDto: ListasDto) {
     return this.listasService.getLista(listasDto, query);
   }
 
@@ -63,7 +68,7 @@ export class CatalogosController {
   @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('fecha-hora')
-  getFechaHora(@Query() query: QueryDto) {
+  getFechaHora(@Query() query: SettingsDto) {
     return this.fechaHoraService.getFechaHora(query);
   }
 }

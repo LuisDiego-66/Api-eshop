@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+
+import { Cufd } from '../../codigos/entities/cufd.entity';
 
 @Entity('eventos_significativos')
 export class EventoSignificativo {
@@ -22,6 +24,10 @@ export class EventoSignificativo {
 
   @Column({ type: 'text' })
   codigoCufd: string;
+
+  //* CUFD (puede ser de días anteriores) que estaba vigente durante el evento
+  @ManyToOne(() => Cufd)
+  cufd: Cufd;
 
   @Column({ type: 'text' })
   cufdEvento: string;

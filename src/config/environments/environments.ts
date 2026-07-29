@@ -37,9 +37,6 @@ interface IEnvironmentVariables {
 
   //SIAT
   SIAT_QR_URL: string;
-  SIAT_RAZON_SOCIAL_EMISOR: string;
-  SIAT_MUNICIPIO: string;
-  SIAT_TELEFONO: string;
 }
 
 const environmentsSchema = joi
@@ -91,7 +88,4 @@ export const envs = {
 
   //SIAT
   SIAT_QR_URL: envVariables.SIAT_QR_URL,
-  SIAT_RAZON_SOCIAL_EMISOR: envVariables.SIAT_RAZON_SOCIAL_EMISOR,
-  SIAT_MUNICIPIO: envVariables.SIAT_MUNICIPIO,
-  SIAT_TELEFONO: envVariables.SIAT_TELEFONO,
 };

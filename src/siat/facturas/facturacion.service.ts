@@ -1,20 +1,27 @@
-import {
+﻿import {
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import {
+  DataSource,
+  IsNull,
+  LessThanOrEqual,
+  MoreThan,
+  Repository,
+} from 'typeorm';
 
 import * as zlib from 'zlib';
 
 import { algoritmoHash } from '../helpers/functions';
 import { generarCUF } from '../helpers/cuf.generator';
-import { formatDateForCUF } from '../helpers/date.util';
+import { formatDateForCUF, parseBoliviaDateTime } from '../helpers/date.util';
 
 import { ListasEnum } from '../catalogos/enums/listas.enum';
 import { CodigoEmisionEnum } from './enums/codigo-emision.enum';
 import { FacturaStatusEnum } from './enums/factura-status.enum';
+import { TipoEmisionEnum } from './enums/tipo-emision.enum';
 
 import {
   CreateFacturaDto,
@@ -22,8 +29,10 @@ import {
   VerificacionEstadoFacturaDto,
   ReversionAnulacionFacturaDto,
 } from './dto';
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto, SettingsPaginationDto } from '../common/dto/settings.dto';
 import { CreateFacturaContingenciaDto } from './dto/create-factura-contingencia.dto';
+
+import { paginate } from 'src/common/pagination/paginate';
 
 import {
   ResponseRecepcionFactura,
@@ -45,6 +54,7 @@ import { Detalle } from './entities/detalle.entity';
 import { Cufd } from '../codigos/entities/cufd.entity';
 import { Order } from 'src/modules/orders/entities/order.entity';
 import { FacturaCounter } from './entities/factura-counter.entity';
+import { EventoSignificativo } from '../operaciones/entities/evento-significativo.entity';
 
 @Injectable()
 export class FacturacionService {
@@ -62,6 +72,9 @@ export class FacturacionService {
 
     @InjectRepository(Cufd)
     private readonly cufdRepository: Repository<Cufd>,
+
+    @InjectRepository(EventoSignificativo)
+    private readonly eventoSignificativoRepository: Repository<EventoSignificativo>,
 
     private readonly codigosService: CodigosService,
 
@@ -84,7 +97,7 @@ export class FacturacionService {
 
   async facturacionOnline(
     dto: CreateFacturaDto,
-    query: QueryDto,
+    query: SettingsDto,
     order?: Order,
   ) {
     // --------------------------------------------------
@@ -95,7 +108,19 @@ export class FacturacionService {
       codigoPuntoVenta: query.codigoPuntoVenta,
       codigoSucursal: query.codigoSucursal,
     });
-    const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
+
+    // --------------------------------------------------
+    // 1.1 Verificar comunicación con SIAT (determina el tipoEmision real,
+    //     no se confía en lo que mande el caller)
+    // --------------------------------------------------
+
+    const siatDisponible = await this.request.verificarComunicacion();
+
+    const tipoEmision = siatDisponible
+      ? TipoEmisionEnum.EN_LINEA
+      : TipoEmisionEnum.FUERA_DE_LINEA;
+
+    const data = dto;
     const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
     const nombreRazonSocial = this.normalizarNombreRazonSocial(
       data.numeroDocumento,
@@ -137,15 +162,21 @@ export class FacturacionService {
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       codigoControlCUFD: cufd.codigoControl,
 
-      tipoDocumentoSector: tipoDocumentoSector,
+      tipoDocumentoSector: data.codigoDocumentoSector,
       tipoEmision: tipoEmision,
-      tipoFactura: tipoFactura,
+      tipoFactura: data.tipoFacturaDocumento,
       numeroFactura: numeroFactura,
     });
 
     // --------------------------------------------------
     // 5. Validaciones
     // --------------------------------------------------
+
+    if (!data.detalles?.length) {
+      throw new BadRequestException(
+        'La factura debe tener al menos un detalle',
+      );
+    }
 
     //! Calculo de detalles
     const detallesCalculados = data.detalles.map((item) => {
@@ -223,12 +254,6 @@ export class FacturacionService {
     }
 
     // --------------------------------------------------
-    // 5. Verificar comunicación con SIAT
-    // --------------------------------------------------
-
-    const siatDisponible = await this.request.verificarComunicacion();
-
-    // --------------------------------------------------
     // 6. Construcción del XML
     // --------------------------------------------------
 
@@ -298,6 +323,7 @@ export class FacturacionService {
       cuf: cuf,
       cufd: cufd.codigo,
       codigoSucursal: cufd.codigoSucursal,
+      nombreSucursal: data.nombreSucursal ?? null,
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
@@ -347,12 +373,25 @@ export class FacturacionService {
         }),
       ),
 
-      //order: order ?? null,
+      order: order ?? null,
     });
     const factura = await this.facturaRepository.save(newFactura);
 
     if (!siatDisponible) {
-      return factura;
+      //! SIAT caído: la factura se guarda y se envía por correo igual;
+      //! la transmisión real a SIAT queda pendiente para el paquete.
+      if (data.emails?.length) {
+        const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
+        const pdfBuffer = await this.facturaPdfService.generate(factura);
+        await this.mailService.sendFacturaEmail(
+          data.emails,
+          factura.numeroFactura,
+          factura.razonSocialEmisor,
+          xmlBuffer,
+          pdfBuffer,
+        );
+      }
+      return { response: null, factura };
     }
 
     // --------------------------------------------------
@@ -385,13 +424,24 @@ export class FacturacionService {
       await this.facturaRepository.update(factura.id, {
         codigoEmision: CodigoEmisionEnum.OFFLINE,
       });
-      return null;
+      factura.codigoEmision = CodigoEmisionEnum.OFFLINE;
+      return { response: null, factura };
     }
 
     const response = recepcionFacturaResponse.data.RespuestaServicioFacturacion;
 
     if (response) {
       await this.facturaRepository.update(factura.id, {
+        codigoDescripcion: response.codigoDescripcion,
+        codigoEstado: response.codigoEstado,
+        codigoRecepcion: response.codigoRecepcion ?? null,
+        transaccion: response.transaccion,
+        mensajesList: response.mensajesList ?? null,
+        fechaRespuesta: recepcionFacturaResponse.timestamp,
+        estado: response.codigoDescripcion as FacturaStatusEnum,
+      });
+
+      Object.assign(factura, {
         codigoDescripcion: response.codigoDescripcion,
         codigoEstado: response.codigoEstado,
         codigoRecepcion: response.codigoRecepcion ?? null,
@@ -413,13 +463,13 @@ export class FacturacionService {
         );
       }
 
-      return response;
+      return { response, factura };
     } else {
       await this.facturaRepository.update(factura.id, {
         codigoEmision: CodigoEmisionEnum.OFFLINE,
       });
 
-      return response;
+      return { response, factura };
     }
   }
 
@@ -427,22 +477,23 @@ export class FacturacionService {
   //?               Facturacion_Online_Contingencia                                                  */
   //? ============================================================================================== */
 
+  /*
+  //! Versión anterior: recibía cufdId suelto y usaba new Date() ("ahora") como
+  //! fecha de emisión, sin relación con el evento significativo ni con la fecha
+  //! real en que ocurrió la venta durante la contingencia.
   async facturacionOfflineContingencia(
     dto: CreateFacturaContingenciaDto,
-    query: QueryDto,
+    query: SettingsDto,
+    order?: Order,
   ) {
     // --------------------------------------------------
     // 1. Obtener códigos vigentes
     // --------------------------------------------------
 
-    const {
-      tipoDocumentoSector,
-      tipoEmision,
-      tipoFactura,
-      cafc,
-      cufdId,
-      ...data
-    } = dto;
+    const { cafc, cufdId, ...data } = dto;
+
+    //! No se confía en lo que mande el caller, esta vía siempre es contingencia.
+    const tipoEmision = TipoEmisionEnum.FUERA_DE_LINEA;
 
     const cufd = await this.cufdRepository.findOne({
       where: {
@@ -457,6 +508,7 @@ export class FacturacionService {
         'CUFD no encontrado para la sucursal y punto de venta indicados',
       );
     }
+
     const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
     const nombreRazonSocial = this.normalizarNombreRazonSocial(
       data.numeroDocumento,
@@ -503,15 +555,21 @@ export class FacturacionService {
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       codigoControlCUFD: cufd.codigoControl,
 
-      tipoDocumentoSector: tipoDocumentoSector,
+      tipoDocumentoSector: data.codigoDocumentoSector,
       tipoEmision: tipoEmision,
-      tipoFactura: tipoFactura,
+      tipoFactura: data.tipoFacturaDocumento,
       numeroFactura: numeroFactura,
     });
 
     // --------------------------------------------------
     // 5. Validaciones
     // --------------------------------------------------
+
+    if (!data.detalles?.length) {
+      throw new BadRequestException(
+        'La factura debe tener al menos un detalle',
+      );
+    }
 
     //! Calculo de detalles
     const detallesCalculados = data.detalles.map((item) => {
@@ -655,6 +713,7 @@ export class FacturacionService {
       cuf: cuf,
       cufd: cufd.codigo,
       codigoSucursal: cufd.codigoSucursal,
+      nombreSucursal: data.nombreSucursal ?? null,
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
@@ -703,6 +762,317 @@ export class FacturacionService {
           ...detalle,
         }),
       ),
+
+      order: order ?? null,
+    });
+    const factura = await this.facturaRepository.save(newFactura);
+
+    if (data.emails?.length) {
+      const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
+      const pdfBuffer = await this.facturaPdfService.generate(factura);
+      await this.mailService.sendFacturaEmail(
+        data.emails,
+        factura.numeroFactura,
+        factura.razonSocialEmisor,
+        xmlBuffer,
+        pdfBuffer,
+      );
+    }
+
+    return factura;
+  }
+  */
+
+  async facturacionOfflineContingencia(
+    dto: CreateFacturaContingenciaDto,
+    query: SettingsDto,
+    order?: Order,
+  ) {
+    // --------------------------------------------------
+    // 1. Obtener evento significativo y su CUFD asociado
+    // --------------------------------------------------
+
+    const { cafc, eventoSignificativoId, fechaEmision, ...data } = dto;
+
+    //! No se confía en lo que mande el caller, esta vía siempre es contingencia.
+    const tipoEmision = TipoEmisionEnum.FUERA_DE_LINEA;
+
+    const eventoSignificativo = await this.eventoSignificativoRepository.findOne({
+      where: {
+        id: eventoSignificativoId,
+        codigoPuntoVenta: query.codigoPuntoVenta,
+        codigoSucursal: query.codigoSucursal,
+      },
+      relations: { cufd: true },
+    });
+
+    if (!eventoSignificativo) {
+      throw new BadRequestException(
+        'Evento significativo no encontrado para la sucursal y punto de venta indicados',
+      );
+    }
+
+    const cufd = eventoSignificativo.cufd;
+
+    //! parseBoliviaDateTime: solo para esta comparación (instante absoluto correcto).
+    //! El string naive original (fechaEmision) sigue siendo lo que se usa para
+    //! el CUF y para factura.fechaEmision, sin pasar por este parseo.
+    const fechaHoraEmision = parseBoliviaDateTime(fechaEmision);
+
+    if (
+      fechaHoraEmision < eventoSignificativo.fechaHoraInicioEvento ||
+      fechaHoraEmision > eventoSignificativo.fechaHoraFinEvento
+    ) {
+      throw new BadRequestException(
+        'La fecha y hora de emisión debe estar dentro del rango del evento significativo seleccionado',
+      );
+    }
+
+    const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
+    const nombreRazonSocial = this.normalizarNombreRazonSocial(
+      data.numeroDocumento,
+      data.nombreRazonSocial,
+    );
+
+    //! fecha de emisión real, recibida manualmente (no "ahora")
+    const fechaHora = fechaEmision;
+
+    // --------------------------------------------------
+    // 2. Número de factura
+    // --------------------------------------------------
+
+    const cafcEntity = await this.cafcRepository.findOne({
+      where: { codigo: cafc },
+    });
+
+    if (!cafcEntity) {
+      throw new BadRequestException('CAFC no válido');
+    }
+
+    const numeroFactura = await this.getNextNumeroFacturaCafc(cafcEntity.id);
+
+    // --------------------------------------------------
+    // 3. Generar CUF
+    // --------------------------------------------------
+
+    const cuf = generarCUF({
+      nit: cufd.nit,
+      fechaHora: formatDateForCUF(new Date(fechaHora)), // fechaHora.toString(),
+      modalidad: cufd.codigoModalidad,
+      codigoSucursal: cufd.codigoSucursal,
+      codigoPuntoVenta: cufd.codigoPuntoVenta,
+      codigoControlCUFD: cufd.codigoControl,
+
+      tipoDocumentoSector: data.codigoDocumentoSector,
+      tipoEmision: tipoEmision,
+      tipoFactura: data.tipoFacturaDocumento,
+      numeroFactura: numeroFactura,
+    });
+
+    // --------------------------------------------------
+    // 5. Validaciones
+    // --------------------------------------------------
+
+    if (!data.detalles?.length) {
+      throw new BadRequestException(
+        'La factura debe tener al menos un detalle',
+      );
+    }
+
+    //! Calculo de detalles
+    const detallesCalculados = data.detalles.map((item) => {
+      const montoDescuento = item.montoDescuento ?? 0;
+      const subTotal = item.cantidad * item.precioUnitario - montoDescuento;
+      return {
+        ...item,
+        subTotal,
+      };
+    });
+
+    for (const detalle of detallesCalculados) {
+      if (detalle.cantidad <= 0) {
+        throw new BadRequestException(
+          `La cantidad del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+      const precioItem = detalle.cantidad * detalle.precioUnitario;
+      if (precioItem > 0 && (detalle.montoDescuento ?? 0) >= precioItem) {
+        throw new BadRequestException(
+          `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
+        );
+      }
+      if (detalle.subTotal <= 0) {
+        throw new BadRequestException(
+          `El subtotal del producto ${detalle.codigoProducto} debe ser mayor a 0`,
+        );
+      }
+    }
+
+    //! Calculo de montoTolta
+    const sumaSubTotal = detallesCalculados.reduce(
+      (acc, d) => acc + d.subTotal,
+      0,
+    );
+    const descuentoAdicional = data.descuentoAdicional ?? 0;
+
+    if (descuentoAdicional >= sumaSubTotal) {
+      throw new BadRequestException(
+        'El descuento adicional no puede igualar ni superar el monto total de los ítems',
+      );
+    }
+
+    const montoTotal = sumaSubTotal - descuentoAdicional;
+
+    //! Calculo de montoTotalMoneda
+    const montoTotalMoneda = montoTotal / data.tipoCambio;
+
+    //! Calculo de montoTotalSujetoIva
+    let montoTotalSujetoIva = montoTotal;
+
+    //!validar si el pago es con gifcard
+    if (data.montoGiftCard) {
+      if (data.montoGiftCard > montoTotal) {
+        throw new BadRequestException(
+          'El monto Gift Card no puede superar el monto total',
+        );
+      }
+      montoTotalSujetoIva = montoTotal - data.montoGiftCard;
+    }
+
+    //! Leyenda aleatoria
+    let leyendaObject: { codigoActividad: string; descripcionLeyenda: string } =
+      { codigoActividad: '', descripcionLeyenda: '' };
+
+    const listaLeyendas = await this.listasService.getLista(
+      { metodo: ListasEnum.ListaLeyendasFactura },
+      query,
+    );
+    if (listaLeyendas) {
+      const lista =
+        listaLeyendas?.listas[0].payload.RespuestaListaParametricasLeyendas
+          .listaLeyendas;
+      const randomIndex = Math.floor(Math.random() * lista.length);
+      leyendaObject = lista[randomIndex];
+    }
+
+    // --------------------------------------------------
+    // 5. Construcción del XML
+    // --------------------------------------------------
+
+    const xml = this.facturaBuilderService.buildFactura({
+      nitEmisor: cufd.nit,
+      razonSocialEmisor: data.razonSocialEmisor,
+      municipio: data.municipio,
+      telefono: data.telefono,
+
+      numeroFactura: numeroFactura,
+      cuf: cuf,
+      cufd: cufd.codigo,
+      codigoSucursal: cufd.codigoSucursal,
+      direccion: cufd.direccion,
+      codigoPuntoVenta: cufd.codigoPuntoVenta,
+      fechaEmision: fechaHora, // new Date(fechaHora),
+
+      nombreRazonSocial,
+      codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
+      numeroDocumento: data.numeroDocumento,
+      complemento: data.complemento,
+      codigoCliente: data.codigoCliente,
+      codigoMetodoPago: data.codigoMetodoPago,
+      numeroTarjeta: numeroTarjeta,
+
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
+
+      codigoMoneda: data.codigoMoneda,
+      tipoCambio: data.tipoCambio,
+      montoTotalMoneda: montoTotalMoneda,
+
+      montoGiftCard: data.montoGiftCard,
+      descuentoAdicional: data.descuentoAdicional,
+      codigoExcepcion: this.calcularCodigoExcepcion(
+        data.codigoTipoDocumentoIdentidad,
+        data.numeroDocumento,
+        true,
+      ),
+
+      cafc: cafcEntity.codigo, //! CAFC
+
+      leyenda: leyendaObject.descripcionLeyenda,
+      usuario: data.usuario,
+      codigoDocumentoSector: data.codigoDocumentoSector,
+
+      detalles: detallesCalculados,
+    });
+
+    // --------------------------------------------------
+    // 7. Persistir factura ANTES de SIAT
+    // --------------------------------------------------
+
+    const siatSync = await this.sincronizacionService.sincronizacion(query);
+
+    const newFactura = this.facturaRepository.create({
+      nitEmisor: cufd.nit,
+      razonSocialEmisor: data.razonSocialEmisor,
+      municipio: data.municipio,
+      telefono: data.telefono,
+
+      numeroFactura: numeroFactura,
+      cuf: cuf,
+      cufd: cufd.codigo,
+      codigoSucursal: cufd.codigoSucursal,
+      nombreSucursal: data.nombreSucursal ?? null,
+      direccion: cufd.direccion,
+      codigoPuntoVenta: cufd.codigoPuntoVenta,
+      tipoFacturaDocumento: data.tipoFacturaDocumento,
+      fechaEmision: fechaHora,
+
+      nombreRazonSocial,
+      codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
+      numeroDocumento: data.numeroDocumento,
+      complemento: data.complemento,
+      codigoCliente: data.codigoCliente,
+      codigoMetodoPago: data.codigoMetodoPago,
+      numeroTarjeta: numeroTarjeta,
+
+      montoTotal: montoTotal,
+      montoTotalSujetoIva: montoTotalSujetoIva,
+
+      codigoMoneda: data.codigoMoneda,
+      tipoCambio: data.tipoCambio,
+      montoTotalMoneda: montoTotalMoneda,
+
+      montoGiftCard: data.montoGiftCard,
+      descuentoAdicional: data.descuentoAdicional,
+      codigoExcepcion: this.calcularCodigoExcepcion(
+        data.codigoTipoDocumentoIdentidad,
+        data.numeroDocumento,
+        true,
+      ),
+
+      cafc: cafcEntity, //! CAFC
+      eventoSignificativo,
+
+      leyenda: leyendaObject.descripcionLeyenda,
+      usuario: data.usuario,
+      codigoDocumentoSector: data.codigoDocumentoSector,
+
+      emails: data.emails ?? null,
+
+      estado: FacturaStatusEnum.PENDIENTE,
+      codigoEmision: CodigoEmisionEnum.OFFLINE, //! offline
+
+      siatSync: siatSync,
+
+      xml,
+
+      detalles: detallesCalculados.map((detalle) =>
+        this.detalleRepository.create({
+          ...detalle,
+        }),
+      ),
+
+      order: order ?? null,
     });
     const factura = await this.facturaRepository.save(newFactura);
 
@@ -725,7 +1095,7 @@ export class FacturacionService {
   //?                           Facturacion_Offline                                                  */
   //? ============================================================================================== */
 
-  async facturacionOffline(dto: CreateFacturaDto, query: QueryDto) {
+  async facturacionOffline(dto: CreateFacturaDto, query: SettingsDto) {
     // --------------------------------------------------
     // 1. Obtener códigos vigentes
     // --------------------------------------------------
@@ -734,7 +1104,10 @@ export class FacturacionService {
       codigoPuntoVenta: query.codigoPuntoVenta,
       codigoSucursal: query.codigoSucursal,
     });
-    const { tipoDocumentoSector, tipoEmision, tipoFactura, ...data } = dto;
+    const data = dto;
+    //! Este método simula la caída de SIAT: tipoEmision siempre es FUERA DE LINEA.
+    const tipoEmision = TipoEmisionEnum.FUERA_DE_LINEA;
+
     const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
     const nombreRazonSocial = this.normalizarNombreRazonSocial(
       data.numeroDocumento,
@@ -776,15 +1149,21 @@ export class FacturacionService {
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       codigoControlCUFD: cufd.codigoControl,
 
-      tipoDocumentoSector: tipoDocumentoSector,
+      tipoDocumentoSector: data.codigoDocumentoSector,
       tipoEmision: tipoEmision,
-      tipoFactura: tipoFactura,
+      tipoFactura: data.tipoFacturaDocumento,
       numeroFactura: numeroFactura,
     });
 
     // --------------------------------------------------
     // 4. Validaciones
     // --------------------------------------------------
+
+    if (!data.detalles?.length) {
+      throw new BadRequestException(
+        'La factura debe tener al menos un detalle',
+      );
+    }
 
     //! Calculo de detalles
     const detallesCalculados = data.detalles.map((item) => {
@@ -880,7 +1259,7 @@ export class FacturacionService {
       codigoSucursal: cufd.codigoSucursal,
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
-      fechaEmision: fechaHora, // new Date(fechaHora),
+      fechaEmision: fechaHora,
 
       nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -905,8 +1284,6 @@ export class FacturacionService {
         true,
       ),
 
-      //cafc: data.cafc,
-
       leyenda: leyendaObject.descripcionLeyenda,
       usuario: data.usuario,
       codigoDocumentoSector: data.codigoDocumentoSector,
@@ -930,6 +1307,7 @@ export class FacturacionService {
       cuf: cuf,
       cufd: cufd.codigo,
       codigoSucursal: cufd.codigoSucursal,
+      nombreSucursal: data.nombreSucursal ?? null,
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
@@ -1002,7 +1380,7 @@ export class FacturacionService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async facturacionOfflineLote(dto: CreateFacturaDto, query: QueryDto) {
+  async facturacionOfflineLote(dto: CreateFacturaDto, query: SettingsDto) {
     const resultados: any[] = [];
     const total = 44;
 
@@ -1080,7 +1458,7 @@ export class FacturacionService {
   //?                             Anulacion_Factura                                                  */
   //? ============================================================================================== */
 
-  async anulacionFactura(dto: AnulacionFacturaDto /*query: QueryDto */) {
+  async anulacionFactura(dto: AnulacionFacturaDto /*query: SettingsDto */) {
     // --------------------------------------------------
     // 1. Obtener códigos vigentes
     // --------------------------------------------------
@@ -1334,8 +1712,18 @@ export class FacturacionService {
   //? ============================================================================================== */
   //?                                       FindAll                                                  */
   //? ============================================================================================== */
-  async FindAll() {
-    return this.facturaRepository.find({ order: { fechaEmision: 'DESC' } });
+  async FindAll(query: SettingsPaginationDto) {
+    const { codigoSucursal, codigoPuntoVenta } = query;
+
+    return paginate(
+      this.facturaRepository,
+      {
+        where: { codigoSucursal, codigoPuntoVenta },
+        order: { fechaEmision: 'DESC' },
+      },
+      query,
+      ['cuf'],
+    );
   }
 
   //? ============================================================================================== */
@@ -1434,6 +1822,54 @@ export class FacturacionService {
       await manager.save(Cafc, cafc);
       return siguiente;
     });
+  }
+
+  //? ============================================================================================== */
+  //?                       Resolver_CUFD_vigente_en_fecha                                            */
+  //? ============================================================================================== */
+
+  //! SIN USO ACTUALMENTE (revertido por error SIAT 984, ver comentario en
+  //! facturacionOfflineContingencia). Se deja implementado por si se decide
+  //! retomar la facturación de contingencia con fecha retroactiva: resuelve
+  //! el CUFD vigente en una fecha pasada dada, o el más cercano anterior si
+  //! ese día no se llegó a generar ninguno. El SIN nunca emite un CUFD
+  //! retroactivo, por lo que jamás se debe resolver uno cuya obtención
+  //! (createdAt) sea posterior a la fecha del evento.
+  private async findCufdVigenteEnFecha(
+    fecha: Date,
+    query: SettingsDto,
+  ): Promise<Cufd> {
+    const baseWhere = {
+      codigoPuntoVenta: query.codigoPuntoVenta,
+      codigoSucursal: query.codigoSucursal,
+    };
+
+    const cufdVigente = await this.cufdRepository.findOne({
+      where: {
+        ...baseWhere,
+        createdAt: LessThanOrEqual(fecha),
+        fechaVigencia: MoreThan(fecha),
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (cufdVigente) return cufdVigente;
+
+    const cufdMasCercano = await this.cufdRepository.findOne({
+      where: {
+        ...baseWhere,
+        createdAt: LessThanOrEqual(fecha),
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!cufdMasCercano) {
+      throw new BadRequestException(
+        'No existe un CUFD disponible para la fecha indicada en la sucursal y punto de venta señalados',
+      );
+    }
+
+    return cufdMasCercano;
   }
 
   //? ============================================================================================== */

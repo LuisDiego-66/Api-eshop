@@ -7,7 +7,7 @@ import { ListasEnum } from './enums/listas.enum';
 
 import { ResponseFechaHora } from './interfaces/response-fecha-hora.interface';
 
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto } from '../common/dto/settings.dto';
 
 import { CodigosService } from '../codigos/codigos.service';
 
@@ -24,7 +24,7 @@ export class FechaHoraService {
     );
   }
 
-  async getFechaHora(query: QueryDto /* cufd: Cufd */) {
+  async getFechaHora(query: SettingsDto /* cufd: Cufd */) {
     const cufd = await this.codigosService.getCUFD(query);
 
     const response: ResponseFechaHora = await this.client.call(

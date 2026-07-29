@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SoapClient } from '../soap/soap.client';
 
 import { ListasDto } from './dto/listas.dto';
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto } from '../common/dto/settings.dto';
 
 import { SincronizacionService } from './services/sincronizacion.service';
 
@@ -26,7 +26,7 @@ export class ListasService {
   //?                                     Get_Lista                                                  */
   //? ============================================================================================== */
 
-  async getLista(dto: ListasDto, query: QueryDto) {
+  async getLista(dto: ListasDto, query: SettingsDto) {
     const siatSync = await this.sincronizacionService.sincronizacion(query);
 
     const lista = await this.siatSyncRepository.findOne({

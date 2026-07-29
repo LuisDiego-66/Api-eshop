@@ -9,6 +9,9 @@
 structure.json
 tipoPagos.json
 documentoIdentidad.json
+unidadMedida.json
+productoSin.json
+/.claude
 
 /static/uploads/*
 !/static/uploads/.gitkeep

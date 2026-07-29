@@ -34,7 +34,7 @@ import { Customer } from '../customers/entities/customer.entity';
 import { User } from '../users/entities/user.entity';
 import { SearchBillingDto } from './pagination/search-billing-filter.dto';
 
-import { QueryDto } from 'src/siat/common/dto/query.dto';
+import { SettingsDto } from 'src/siat/common/dto/settings.dto';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -100,7 +100,7 @@ export class OrdersController {
   @Post(':id/facturar')
   facturar(
     @Param('id', ParseIntPipe) id: number,
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @GetUser() user: User,
   ) {
     return this.orderFacturaService.generarFacturaDesdeOrden(

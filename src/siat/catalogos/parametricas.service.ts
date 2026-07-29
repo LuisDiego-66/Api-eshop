@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { SoapClient } from '../soap/soap.client';
 
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto } from '../common/dto/settings.dto';
 import { ParametricasDto } from './dto/parametricas.dto';
 
 import { SincronizacionService } from './services/sincronizacion.service';
@@ -26,7 +26,7 @@ export class ParametricasService {
   //?                               Get_Parametrica                                                  */
   //? ============================================================================================== */
 
-  async getParametrica(dto: ParametricasDto, query: QueryDto) {
+  async getParametrica(dto: ParametricasDto, query: SettingsDto) {
     const siatSync = await this.sincronizacionService.sincronizacion(query);
 
     const parametrica = await this.siatSyncRepository.findOne({

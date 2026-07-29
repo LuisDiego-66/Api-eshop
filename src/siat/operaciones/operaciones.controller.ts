@@ -1,5 +1,8 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
 
 import {
   CierrePuntoVentaDto,
@@ -7,11 +10,13 @@ import {
   RegistroEventoSignificativoDto,
   ConsultaEventoSignificativoDto,
 } from './dto';
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto } from '../common/dto/settings.dto';
 
 import { PuntosVentaService } from './puntos-venta.service';
 import { EventosSignificativosService } from './eventos-significativos.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('SIAT: Operaciones')
 @Controller('operaciones')
 export class OperacionesController {
@@ -28,7 +33,7 @@ export class OperacionesController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('evento-significativo')
   async registroEventoSignificativo(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: RegistroEventoSignificativoDto,
   ) {
     return this.eventosSignificativosService.registroEventoSignificativo(
@@ -41,9 +46,11 @@ export class OperacionesController {
   //?                               FindAll_Eventos                                                  */
   //? ============================================================================================== */
 
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Get('evento-significativo')
-  async findAllEventos() {
-    return this.eventosSignificativosService.findAll();
+  async findAllEventos(@Query() query: SettingsDto) {
+    return this.eventosSignificativosService.findAll(query);
   }
 
   //? ============================================================================================== */
@@ -54,7 +61,7 @@ export class OperacionesController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('evento-significativo/consulta')
   async consultaEventosSignificativos(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: ConsultaEventoSignificativoDto,
   ) {
     return this.eventosSignificativosService.consultaEventoSignificativo(
@@ -71,7 +78,7 @@ export class OperacionesController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('punto-venta')
   async registropPuntoVenta(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: RegistroPuntoVentaDto,
   ) {
     return this.puntosVentaService.registroPuntoVenta(dto, query);
@@ -81,7 +88,7 @@ export class OperacionesController {
   //?                           FindAll_PuntosVenta                                                  */
   //? ============================================================================================== */
 
-  @Get('evento-significativo')
+  @Get('punto-venta')
   async findAllPuntosVenta() {
     return this.puntosVentaService.findAll();
   }
@@ -92,7 +99,7 @@ export class OperacionesController {
 
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('punto-venta/consulta')
-  async consultaPuntosVenta(@Query() query: QueryDto) {
+  async consultaPuntosVenta(@Query() query: SettingsDto) {
     return this.puntosVentaService.consultaPuntoVenta(query);
   }
 
@@ -104,7 +111,7 @@ export class OperacionesController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('punto-venta/cierre')
   async cierrePuntosVenta(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() cierrePuntoVentaDto: CierrePuntoVentaDto,
   ) {
     return this.puntosVentaService.cierrePuntoVenta(cierrePuntoVentaDto, query);

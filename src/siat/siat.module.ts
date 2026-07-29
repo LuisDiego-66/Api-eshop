@@ -19,6 +19,7 @@ import { SiatSync } from './catalogos/entities/siat_sync.entity';
 import { SiatParametrica } from './catalogos/entities/parametrica.entity';
 
 import { FacturacionController } from './facturas/facturacion.controller';
+import { PaquetesController } from './facturas/paquetes.controller';
 import { PaquetesService } from './facturas/paquetes.service';
 import { FacturacionService } from './facturas/facturacion.service';
 import { FacturaBuilderService } from './facturas/services/factura-builder.service';
@@ -64,6 +65,7 @@ import { CafcController } from './facturas/cafc.controller';
     CodigosController,
     CatalogosController,
     FacturacionController,
+    PaquetesController,
     OperacionesController,
     CafcController,
   ],

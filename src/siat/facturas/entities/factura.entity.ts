@@ -20,6 +20,7 @@ import { Paquete } from './paquete.entity';
 import { SiatSync } from 'src/siat/catalogos/entities/siat_sync.entity';
 import { Cafc } from './cafc.entity';
 import { Order } from 'src/modules/orders/entities/order.entity';
+import { EventoSignificativo } from 'src/siat/operaciones/entities/evento-significativo.entity';
 
 @Entity('facturas')
 export class Factura {
@@ -56,6 +57,10 @@ export class Factura {
 
   @Column({ type: 'int' })
   codigoSucursal: number;
+
+  //! opcional: si no viene, la representación gráfica usa CASA MATRIZ / SUCURSAL N. X
+  @Column({ type: 'text', nullable: true })
+  nombreSucursal?: string | null;
 
   @Column({ type: 'text' })
   direccion: string;
@@ -204,8 +209,12 @@ export class Factura {
   @ManyToOne(() => Cafc, (cafc) => cafc.facturas, { nullable: true })
   cafc: Cafc | null;
 
-  /* //! nullable: las facturas creadas por el flujo standalone no tienen orden asociada
-  @OneToOne(() => Order, { nullable: true })
+  //! nullable: solo las facturas emitidas por contingencia quedan ligadas a un evento
+  @ManyToOne(() => EventoSignificativo, { nullable: true })
+  eventoSignificativo?: EventoSignificativo | null;
+
+  //! nullable: las facturas creadas por el flujo standalone no tienen orden asociada
+  @OneToOne(() => Order, (order) => order.factura, { nullable: true })
   @JoinColumn()
-  order?: Order | null; */
+  order?: Order | null;
 }

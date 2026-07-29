@@ -9,12 +9,4 @@ export class ConsultaEventoSignificativoDto {
   @IsISO8601()
   @IsNotEmpty()
   fechaEvento: string;
-
-  @ApiProperty({
-    description: 'Código Punto Venta',
-    example: 0,
-  })
-  @IsNumber()
-  @IsNotEmpty()
-  codigoPuntoVenta: number;
 }

@@ -11,6 +11,12 @@ export class FacturaPdfService {
     const qrUrl = `${envs.SIAT_QR_URL}?nit=${factura.nitEmisor}&cuf=${factura.cuf}&numero=${factura.numeroFactura}&t=2`;
     const qrBuffer = await QRCode.toBuffer(qrUrl, { type: 'png', width: 100 });
 
+    const sucursal =
+      factura.nombreSucursal ??
+      (factura.codigoSucursal === 0
+        ? 'CASA MATRIZ'
+        : `SUCURSAL N. ${factura.codigoSucursal}`);
+
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 40, size: 'A4' });
       const buffers: Buffer[] = [];
@@ -19,22 +25,22 @@ export class FacturaPdfService {
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
 
-      this.buildContent(doc, factura, qrBuffer);
+      this.buildContent(doc, factura, qrBuffer, sucursal);
       doc.end();
     });
   }
 
-  private buildContent(doc: PDFKit.PDFDocument, f: Factura, qrBuffer: Buffer): void {
+  private buildContent(
+    doc: PDFKit.PDFDocument,
+    f: Factura,
+    qrBuffer: Buffer,
+    sucursal: string,
+  ): void {
     const LX = 40;
     const PW = 515; // content width (595 - 2*40)
     const RX = LX + PW;
 
     // ── ENCABEZADO IZQUIERDO ─────────────────────────────────────────────
-    const sucursal =
-      f.codigoSucursal === 0
-        ? 'CASA MATRIZ'
-        : `SUCURSAL N. ${f.codigoSucursal}`;
-
     doc
       .fontSize(11)
       .font('Helvetica-Bold')

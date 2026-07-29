@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 
 import { SIAT_CONFIG } from 'src/siat/soap/siat.config';
 
 import { ListasEnum } from '../enums/listas.enum';
 import { ParametricasEnum } from '../enums/parametricas.enum';
 
-import { QueryDto } from '../../common/dto/query.dto';
+import { SettingsDto } from '../../common/dto/settings.dto';
 
 import { CodigosService } from 'src/siat/codigos/codigos.service';
 import { RequestsCatalogosService } from './request-catalogos.service';
@@ -61,25 +61,23 @@ export class SincronizacionService {
   //?                                Sincronizacion                                                  */
   //? ============================================================================================== */
 
-  async sincronizacion(dto: QueryDto) {
+  async sincronizacion(dto: SettingsDto) {
     const cuis = await this.codigosService.getCUIS({
       codigoPuntoVenta: dto.codigoPuntoVenta,
       codigoSucursal: dto.codigoSucursal,
     });
 
-    const startDay = new Date();
-    startDay.setHours(0, 0, 0, 0);
-
-    const endDay = new Date();
-    endDay.setHours(23, 59, 59, 999);
+    const unaSemanaAtras = new Date();
+    unaSemanaAtras.setDate(unaSemanaAtras.getDate() - 7);
 
     const existingSiatSync = await this.siatSyncRepository.findOne({
       where: {
-        createdAt: Between(startDay, endDay),
+        createdAt: MoreThanOrEqual(unaSemanaAtras),
 
         codigoPuntoVenta: dto.codigoPuntoVenta,
         codigoSucursal: dto.codigoSucursal,
       },
+      order: { createdAt: 'DESC' },
     });
 
     if (existingSiatSync) {

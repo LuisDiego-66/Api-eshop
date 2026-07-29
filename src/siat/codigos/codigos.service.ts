@@ -5,7 +5,7 @@ import { MoreThan, Repository } from 'typeorm';
 import { SoapClient } from '../soap/soap.client';
 import { SIAT_CONFIG } from '../soap/siat.config';
 
-import { QueryDto } from '../common/dto/query.dto';
+import { SettingsDto } from '../common/dto/settings.dto';
 import { VerificarNitDto } from './dto/verificar-nit.dto';
 
 import { CUISResponse } from './interfaces/response-cuis.interface';
@@ -38,7 +38,7 @@ export class CodigosService {
   //?                                      Get_CUIS                                                  */
   //? ============================================================================================== */
 
-  async getCUIS(dto: QueryDto) {
+  async getCUIS(dto: SettingsDto) {
     const now = new Date();
 
     const cuis = await this.cuisRepository.findOne({
@@ -97,7 +97,7 @@ export class CodigosService {
   //?                                      Get_CUFD                                                  */
   //? ============================================================================================== */
 
-  async getCUFD(dto: QueryDto): Promise<Cufd> {
+  async getCUFD(dto: SettingsDto): Promise<Cufd> {
     const now = new Date();
     const existing = await this.cufdRepository.findOne({
       where: {
@@ -156,8 +156,19 @@ export class CodigosService {
   //?                                  Get_All_CUFD                                                  */
   //? ============================================================================================== */
 
-  async getAllCUFD(): Promise<Cufd[]> {
-    const CUfd = await this.cufdRepository.find();
+  async getAllCUFD(
+    query: SettingsDto,
+    soloVigentes?: boolean,
+  ): Promise<Cufd[]> {
+    const CUfd = await this.cufdRepository.find({
+      where: {
+        codigoPuntoVenta: query.codigoPuntoVenta,
+        codigoSucursal: query.codigoSucursal,
+        ...(soloVigentes ? { fechaVigencia: MoreThan(new Date()) } : {}),
+      },
+      take: 3,
+      order: { fechaVigencia: 'DESC' },
+    });
     return CUfd;
   }
 
@@ -165,7 +176,7 @@ export class CodigosService {
   //?                                    Verificar_NIT                                                */
   //? ============================================================================================== */
 
-  async verificarNit(dto: VerificarNitDto, query: QueryDto) {
+  async verificarNit(dto: VerificarNitDto, query: SettingsDto) {
     const cuis = await this.getCUIS({
       codigoPuntoVenta: query.codigoPuntoVenta,
       codigoSucursal: query.codigoSucursal,

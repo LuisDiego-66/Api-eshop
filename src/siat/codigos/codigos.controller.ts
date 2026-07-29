@@ -1,10 +1,15 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { CodigosService } from './codigos.service';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { QueryDto } from '../common/dto/query.dto';
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
+import { SettingsDto } from '../common/dto/settings.dto';
 import { VerificarNitDto } from './dto/verificar-nit.dto';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('SIAT: Codigos')
 @Controller('codigos')
 export class CodigosController {
@@ -16,7 +21,7 @@ export class CodigosController {
   @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('cuis')
-  async getCUIS(@Query() getcuis: QueryDto) {
+  async getCUIS(@Query() getcuis: SettingsDto) {
     return this.codigosService.getCUIS(getcuis);
   }
 
@@ -27,7 +32,7 @@ export class CodigosController {
   @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('cufd')
-  async getCUFD(@Query() getcufd: QueryDto) {
+  async getCUFD(@Query() getcufd: SettingsDto) {
     return this.codigosService.getCUFD(getcufd);
   }
 
@@ -39,7 +44,7 @@ export class CodigosController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('verificar-nit')
   async verificarNit(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: VerificarNitDto,
   ) {
     return this.codigosService.verificarNit(dto, query);
@@ -58,8 +63,14 @@ export class CodigosController {
   //?                                      CUFD_ALL                                                  */
   //? ============================================================================================== */
 
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @ApiQuery({ name: 'soloVigentes', required: false, type: Boolean })
   @Get('cufd/all')
-  async getAllCUFD() {
-    return this.codigosService.getAllCUFD();
+  async getAllCUFD(
+    @Query() query: SettingsDto,
+    @Query('soloVigentes') soloVigentes?: string,
+  ) {
+    return this.codigosService.getAllCUFD(query, soloVigentes === 'true');
   }
 }

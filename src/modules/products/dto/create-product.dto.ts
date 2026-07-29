@@ -42,29 +42,19 @@ export class CreateProductDto {
   //*                                        SIAT                                                    */
   //* ---------------------------------------------------------------------------------------------- */
 
-  /* @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Código de producto SIN (catálogo SIAT), requerido para facturar',
     example: 62233,
   })
-  @IsOptional()
   @IsNumber()
-  codigoProductoSin?: number;
+  codigoProductoSin: number;
 
-  @ApiPropertyOptional({
-    description: 'Actividad económica (catálogo SIAT), requerido para facturar',
-    example: '477110',
-  })
-  @IsOptional()
-  @IsString()
-  actividadEconomica?: string;
-
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Unidad de medida (catálogo SIAT), requerido para facturar',
     example: 62,
   })
-  @IsOptional()
   @IsNumber()
-  unidadMedida?: number; */
+  unidadMedida: number;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Relations                                               */

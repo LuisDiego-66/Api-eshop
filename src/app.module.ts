@@ -41,6 +41,7 @@ import { BannersModule } from './modules/banners/banners.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { BillingModule } from './modules/billings/billing.module';
 import { SiatModule } from './siat/siat.module';
+import { BranchesModule } from './modules/branches/branches.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { SiatModule } from './siat/siat.module';
     SchedulerModule,
     BillingModule,
     SiatModule,
+    BranchesModule,
   ],
   controllers: [],
   providers: [],

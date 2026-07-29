@@ -50,32 +50,26 @@ export class CreateFacturaDto {
   @MaxLength(25)
   telefono: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Nombre de la sucursal (solo para mostrar en la representación gráfica)',
+    example: 'Comercial 1',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  nombreSucursal?: string;
+
   //* ============================================================================================== */
   //* Información de la Factura
 
-  @ApiProperty({
-    description: 'Tipo de documento sector (catálogo SIAT)',
-    example: 1,
-  })
-  @IsNumber()
-  @IsPositive()
-  tipoDocumentoSector: number;
-
-  @ApiProperty({
+  /*   @ApiProperty({
     description: 'Tipo de emisión (catálogo SIAT)',
     example: 1,
   })
   @IsNumber()
   @IsPositive()
-  tipoEmision: number;
-
-  @ApiProperty({
-    description: 'Tipo de factura (catálogo SIAT)',
-    example: 1,
-  })
-  @IsNumber()
-  @IsPositive()
-  tipoFactura: number;
+  tipoEmision: number; */
 
   @ApiProperty({
     description: 'Tipo factura Documento(catálogo SIAT)',

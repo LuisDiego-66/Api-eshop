@@ -42,6 +42,7 @@ import { Order } from './entities/order.entity';
 import { DailyCash } from './entities/dailycash.entity';
 import { Customer } from '../customers/entities/customer.entity';
 import { Billing } from '../billings/entities/billing.entity';
+import { FacturaStatusEnum } from 'src/siat/facturas/enums/factura-status.enum';
 
 @Injectable()
 export class OrdersService {
@@ -193,10 +194,17 @@ export class OrdersService {
           shipment: { place: true },
           address: { place: true },
           billing: true,
+          factura: { detalles: true },
         },
       },
       pagination,
     );
+
+    // --------------------------------------------
+    // 2.1 Ordenes editadas: mostrar factura de la orden original
+    // --------------------------------------------
+
+    await this.attachOriginalFactura(orders.data);
 
     // --------------------------------------------
     // 3. Total
@@ -227,17 +235,65 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({
       where,
       relations: {
-        items: { variant: { productColor: true } },
+        items: { variant: { productColor: { product: true } } },
         customer: true,
         shipment: { place: true },
         address: { place: true },
         billing: true,
+        factura: { detalles: true },
       },
     });
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+
+    await this.attachOriginalFactura([order]);
+
     return order;
+  }
+
+  //? ============================================================================================== */
+  //?                        Ordenes_Editadas_Factura_Original                                        */
+  //? ============================================================================================== */
+
+  //! las ordenes "editadas" (con inherited_id) deben mostrar la factura de su orden
+  //! original en vez de la propia, y solo si esa factura sigue VALIDADA
+  private async attachOriginalFactura(orders: Order[]) {
+    const inheritedIds = [
+      ...new Set(
+        orders
+          .map((order) => order.inherited_id)
+          .filter((id): id is number => id !== null && id !== undefined),
+      ),
+    ];
+
+    if (!inheritedIds.length) return;
+
+    const originals = await this.orderRepository.find({
+      where: { id: In(inheritedIds) },
+      relations: { factura: { detalles: true } },
+    });
+
+    const facturaByOriginalId = new Map(
+      originals.map((original) => [original.id, original.factura]),
+    );
+
+    for (const order of orders) {
+      if (order.inherited_id === null || order.inherited_id === undefined) {
+        continue;
+      }
+
+      //! si la orden editada ya tiene su propia factura (se facturó de nuevo
+      //! tras anular), esa prevalece sobre la heredada
+      if (order.factura) continue;
+
+      const originalFactura = facturaByOriginalId.get(order.inherited_id);
+
+      order.factura =
+        originalFactura?.estado === FacturaStatusEnum.VALIDADA
+          ? originalFactura
+          : null;
+    }
   }
 
   //? ============================================================================================== */

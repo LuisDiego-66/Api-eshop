@@ -1,8 +1,15 @@
 import { Body, Get, Post, Param, Patch, Controller } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
+
 import { CafcService } from './cafc.service';
 import { CreateCafcDto } from './dto/create-cafc.dto';
 import { UpdateCafcDto } from './dto/update-cafc.dto';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @Controller('cafc')
 export class CafcController {
   constructor(private readonly cafcService: CafcService) {}

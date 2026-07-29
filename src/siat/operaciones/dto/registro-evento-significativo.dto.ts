@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsInt, IsISO8601 } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  IsISO8601,
+  IsPositive,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegistroEventoSignificativoDto {
@@ -11,12 +17,13 @@ export class RegistroEventoSignificativoDto {
   codigoMotivoEvento: number;
 
   @ApiProperty({
-    description: 'CUFD vigente durante el evento',
-    example: 'FBQT5CSnYxSEE=E0QkM2NjUxNUJFQ3lQeWZJTENhVUMjEzRjRCRkRGRk',
+    description:
+      'Id del CUFD (puede ser de días anteriores) que estaba vigente durante el evento',
+    example: 1,
   })
-  @IsString()
-  @IsNotEmpty()
-  cufdEvento: string;
+  @IsInt()
+  @IsPositive()
+  cufdId: number;
 
   @ApiProperty({
     description: 'Descripción del evento significativo (catálogo SIAT)',

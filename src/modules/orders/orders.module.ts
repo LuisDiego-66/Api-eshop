@@ -25,6 +25,10 @@ import { DailyCashController } from './daily-cash.controller';
 
 import { BillingModule } from '../billings/billing.module';
 import { SiatModule } from 'src/siat/siat.module';
+import { BranchesModule } from '../branches/branches.module';
+
+import { OrderFacturacionController } from './facturacion/order-facturacion.controller';
+import { OrderFacturacionService } from './facturacion/order-facturacion.service';
 
 @Module({
   imports: [
@@ -37,8 +41,9 @@ import { SiatModule } from 'src/siat/siat.module';
     ExelModule,
     BillingModule,
     forwardRef(() => SiatModule),
+    BranchesModule,
   ],
-  controllers: [OrdersController, DailyCashController],
+  controllers: [OrdersController, DailyCashController, OrderFacturacionController],
   providers: [
     OrdersService,
     PricingService,
@@ -48,6 +53,7 @@ import { SiatModule } from 'src/siat/siat.module';
     UpdateService,
     ConfirmService,
     DailyCashService,
+    OrderFacturacionService,
   ],
   exports: [TypeOrmModule, OrdersService],
 })

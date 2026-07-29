@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsNotEmpty,
   IsPositive,
+  IsISO8601,
   ValidateNested,
   ArrayMinSize,
   Matches,
@@ -49,41 +50,44 @@ export class CreateFacturaContingenciaDto {
   @MaxLength(25)
   telefono: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Nombre de la sucursal (solo para mostrar en la representación gráfica)',
+    example: 'Comercial 1',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  nombreSucursal?: string;
+
   //* ============================================================================================== */
   //* Información de la Factura
 
   @ApiProperty({
-    description: 'ID del CUFD vigente al inicio del evento significativo',
+    description:
+      'Id del evento significativo (ya registrado en SIAT) dentro del cual se declara esta factura',
     example: 1,
   })
-  @IsNumber()
   @IsInt()
   @IsPositive()
-  cufdId: number;
+  eventoSignificativoId: number;
 
   @ApiProperty({
-    description: 'Tipo de documento sector (catálogo SIAT)',
-    example: 1,
+    description:
+      'Fecha y hora real de emisión de la venta (debe estar dentro del rango del evento significativo seleccionado)',
+    example: '2026-02-09T10:15:00',
   })
-  @IsNumber()
-  @IsPositive()
-  tipoDocumentoSector: number;
+  @IsISO8601()
+  @IsNotEmpty()
+  fechaEmision: string;
 
-  @ApiProperty({
+  /*   @ApiProperty({
     description: 'Tipo de emisión (catálogo SIAT)',
     example: 1,
   })
   @IsNumber()
   @IsPositive()
-  tipoEmision: number;
-
-  @ApiProperty({
-    description: 'Tipo de factura (catálogo SIAT)',
-    example: 1,
-  })
-  @IsNumber()
-  @IsPositive()
-  tipoFactura: number;
+  tipoEmision: number; */
 
   @ApiProperty({
     description: 'Tipo factura Documento(catálogo SIAT)',

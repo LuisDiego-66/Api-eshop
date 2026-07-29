@@ -1,8 +1,6 @@
-export interface ResponseRecepcionPaqueteFactura {
-  success: boolean;
-  data: Data;
-  timestamp: string;
-}
+export type ResponseRecepcionPaqueteFactura =
+  | { success: true; data: Data; timestamp: string }
+  | { success: false; error: string; timestamp: string };
 
 export interface Data {
   RespuestaServicioFacturacion: RespuestaServicioFacturacion;

@@ -1,29 +1,34 @@
 import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
-import { ApiParam, ApiProduces, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiParam,
+  ApiProduces,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
+
+import { Auth } from 'src/auth/decorators';
+import { Roles } from 'src/auth/enums';
 
 import {
   CreateFacturaDto,
   AnulacionFacturaDto,
-  ValidacionPaqueteFacturaDto,
   VerificacionEstadoFacturaDto,
   ReversionAnulacionFacturaDto,
 } from './dto';
 
-import { QueryDto } from '../common/dto/query.dto';
-import { CreatePaqueteContingenciaDto } from './dto/create-paquete-contingencia.dto';
+import { SettingsDto, SettingsPaginationDto } from '../common/dto/settings.dto';
 import { CreateFacturaContingenciaDto } from './dto/create-factura-contingencia.dto';
 
-import { PaquetesService } from './paquetes.service';
 import { FacturacionService } from './facturacion.service';
 
+@Auth(Roles.ADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('SIAT: Facturacion')
 @Controller('facturacion')
 export class FacturacionController {
-  constructor(
-    private readonly facturacionService: FacturacionService,
-    private readonly paquetesService: PaquetesService,
-  ) {}
+  constructor(private readonly facturacionService: FacturacionService) {}
 
   //? ============================================================================================== */
   //?                            Facturacion_Online                                                  */
@@ -33,7 +38,7 @@ export class FacturacionController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/online')
   async recepcionFacturaOnline(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: CreateFacturaDto,
   ) {
     return this.facturacionService.facturacionOnline(dto, query);
@@ -47,7 +52,7 @@ export class FacturacionController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/contingencia')
   async recepcionFacturaOnlineContingencia(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: CreateFacturaContingenciaDto,
   ) {
     return this.facturacionService.facturacionOfflineContingencia(dto, query);
@@ -61,7 +66,7 @@ export class FacturacionController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/offline')
   async recepcionFacturaOffline(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: CreateFacturaDto,
   ) {
     return this.facturacionService.facturacionOffline(dto, query);
@@ -75,7 +80,7 @@ export class FacturacionController {
   @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
   @Post('facturacion/offline/lote')
   async facturacionOfflineLote(
-    @Query() query: QueryDto,
+    @Query() query: SettingsDto,
     @Body() dto: CreateFacturaDto,
   ) {
     return this.facturacionService.facturacionOfflineLote(dto, query);
@@ -112,9 +117,14 @@ export class FacturacionController {
   //?                              FindAll_Facturas                                                  */
   //? ============================================================================================== */
 
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @Get('facturacion')
-  async FindAllFacturas() {
-    return this.facturacionService.FindAll();
+  async FindAllFacturas(@Query() query: SettingsPaginationDto) {
+    return this.facturacionService.FindAll(query);
   }
 
   //? ============================================================================================== */
@@ -165,46 +175,4 @@ export class FacturacionController {
   async sendReversionEmail(@Body() dto: SendReversionEmailDto) {
     return this.facturacionService.sendReversionEmail(dto);
   } */
-
-  //? ============================================================================================== */
-  //?                           Enviar_Email_Paquete                                                 */
-  //? ============================================================================================== */
-
-  /* @Post('paquetes/send-email')
-  async sendPaqueteEmail(@Body() dto: SendPaqueteEmailDto) {
-    return this.facturacionService.sendPaqueteEmail(dto);
-  } */
-
-  //? ============================================================================================== */
-  //?                                Enviar_Paquete                                                  */
-  //? ============================================================================================== */
-
-  @Post('paquetes')
-  async recepcionPaqueteFacturas() {
-    return this.paquetesService.recepcionPaqueteFactura();
-  }
-
-  //? ============================================================================================== */
-  //?                   Enviar_Paquete_Contingencia                                                  */
-  //? ============================================================================================== */
-
-  @Post('paquetes/contingencia')
-  async recepcionPaqueteFacturasContingencia(
-    @Body() dto: CreatePaqueteContingenciaDto,
-  ) {
-    return this.paquetesService.recepcionPaqueteFacturaContingencia(dto);
-  }
-
-  //? ============================================================================================== */
-  //?                            Validacion_Paquete                                                  */
-  //? ============================================================================================== */
-
-  @Post('paquetes/validacion')
-  async validacionPaqueteFacturas(
-    @Body() validacionPaqueteFacturaDto: ValidacionPaqueteFacturaDto,
-  ) {
-    return this.paquetesService.validacionPaqueteFactura(
-      validacionPaqueteFacturaDto,
-    );
-  }
 }

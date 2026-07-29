@@ -25,6 +25,7 @@ import { Address } from 'src/modules/addresses/entities/address.entity';
 import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Item } from './item.entity';
 import { Billing } from 'src/modules/billings/entities/billing.entity';
+import { Factura } from 'src/siat/facturas/entities/factura.entity';
 
 @Entity('orders')
 export class Order {
@@ -108,6 +109,10 @@ export class Order {
 
   @ManyToOne(() => Billing, (billing) => billing.orders, { nullable: true })
   billing: Billing | null;
+
+  //! nullable: no toda orden tiene una factura generada
+  @OneToOne(() => Factura, (factura) => factura.order, { nullable: true })
+  factura?: Factura | null;
 
   //* ---------------------------------------------------------------------------------------------- */
   //*                                        Functions                                               */

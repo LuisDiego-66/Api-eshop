@@ -1,9 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+} from 'typeorm';
 
 import { CodigoEmisionEnum } from '../enums/codigo-emision.enum';
 import { MensajesList } from '../interfaces/response-recepcion-factura.interface';
 
 import { Factura } from './factura.entity';
+import { EventoSignificativo } from 'src/siat/operaciones/entities/evento-significativo.entity';
 
 export enum paqueteEstatus {
   PENDIENTE = 'PENDIENTE',
@@ -68,6 +75,11 @@ export class Paquete {
 
   @Column({ type: 'int' })
   codigoEvento: number;
+
+  //! nullable: solo los paquetes de contingencia (CAFC) quedan ligados a un evento
+  //! significativo ya registrado; el flujo "SIAT caído" sigue auto-creando el suyo.
+  @ManyToOne(() => EventoSignificativo, { nullable: true })
+  eventoSignificativo?: EventoSignificativo | null;
 
   //* ============================================================================================== */
   //*                                         Response                                               */
