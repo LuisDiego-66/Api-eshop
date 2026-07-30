@@ -166,7 +166,7 @@ export class CodigosService {
         codigoSucursal: query.codigoSucursal,
         ...(soloVigentes ? { fechaVigencia: MoreThan(new Date()) } : {}),
       },
-      take: 3,
+      take: 7,
       order: { fechaVigencia: 'DESC' },
     });
     return CUfd;

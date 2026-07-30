@@ -6,7 +6,7 @@ import { Roles } from 'src/auth/enums';
 
 import { CreatePaqueteContingenciaDto } from './dto/create-paquete-contingencia.dto';
 
-import { SettingsPaginationDto } from '../common/dto/settings.dto';
+import { SettingsDto, SettingsPaginationDto } from '../common/dto/settings.dto';
 
 import { PaquetesService } from './paquetes.service';
 
@@ -38,12 +38,17 @@ export class PaquetesController {
   }
 
   //? ============================================================================================== */
-  //?                        Find_Cufds_Pendientes_Por_Cafc                                          */
+  //?                   Find_Eventos_Significativos_Pendientes_Por_Cafc                              */
   //? ============================================================================================== */
 
-  @Get('contingencia/:cafc/cufds')
-  async findCufdsPendientesPorCafc(@Param('cafc') cafc: string) {
-    return this.paquetesService.findCufdsPendientesPorCafc(cafc);
+  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
+  @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
+  @Get('contingencia/:cafc/eventos')
+  async findEventosPendientesPorCafc(
+    @Param('cafc') cafc: string,
+    @Query() query: SettingsDto,
+  ) {
+    return this.paquetesService.findEventosPendientesPorCafc(cafc, query);
   }
 
   //? ============================================================================================== */

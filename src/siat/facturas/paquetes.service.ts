@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 
 import * as tar from 'tar-stream';
 import * as zlib from 'zlib';
@@ -12,7 +12,7 @@ import { createHash } from 'crypto';
 
 import { paginate } from 'src/common/pagination/paginate';
 
-import { SettingsPaginationDto } from '../common/dto/settings.dto';
+import { SettingsDto, SettingsPaginationDto } from '../common/dto/settings.dto';
 
 import { CodigoEmisionEnum } from './enums/codigo-emision.enum';
 import { FacturaStatusEnum } from './enums/factura-status.enum';
@@ -56,43 +56,47 @@ export class PaquetesService {
   ) {}
 
   //? ============================================================================================== */
-  //?                            Find_Cufds_Pendientes_Por_Cafc                                      */
+  //?                       Find_Eventos_Significativos_Pendientes_Por_Cafc                          */
   //? ============================================================================================== */
 
-  async findCufdsPendientesPorCafc(cafc: string) {
+  async findEventosPendientesPorCafc(
+    cafc: string,
+    { codigoSucursal, codigoPuntoVenta }: SettingsDto,
+  ) {
     const facturas = await this.facturaRepository.find({
       where: {
         estado: FacturaStatusEnum.PENDIENTE,
         codigoEmision: CodigoEmisionEnum.OFFLINE,
         codigoRecepcion: IsNull(),
         cafc: { codigo: cafc },
+        eventoSignificativo: Not(IsNull()),
+        codigoSucursal,
+        codigoPuntoVenta,
       },
-      select: { cufd: true },
+      relations: { eventoSignificativo: true },
+      select: { id: true, eventoSignificativo: { id: true } },
     });
 
-    const cantidadPorCufd = facturas.reduce(
+    const cantidadPorEvento = facturas.reduce(
       (acc, factura) => {
-        acc[factura.cufd] = (acc[factura.cufd] ?? 0) + 1;
+        const eventoId = factura.eventoSignificativo!.id;
+        acc[eventoId] = (acc[eventoId] ?? 0) + 1;
         return acc;
       },
-      {} as Record<string, number>,
+      {} as Record<number, number>,
     );
 
-    const codigosCufd = Object.keys(cantidadPorCufd);
+    const eventosIds = Object.keys(cantidadPorEvento).map(Number);
 
-    //! fechaDesde/fechaHasta son la vigencia real del CUFD (createdAt →
-    //! fechaVigencia), no las fechaEmision de las facturas: estas últimas
-    //! siempre son "ahora" (momento de registro), no dicen nada de a qué
-    //! incidente/día pertenece el CUFD usado.
-    const cufds = await this.cufdRepository.find({
-      where: { codigo: In(codigosCufd) },
+    const eventos = await this.eventoSignificativoRepository.find({
+      where: { id: In(eventosIds) },
     });
 
-    return cufds.map((cufd) => ({
-      cufd: cufd.codigo,
-      cantidadFacturas: cantidadPorCufd[cufd.codigo],
-      fechaDesde: cufd.createdAt,
-      fechaHasta: cufd.fechaVigencia,
+    return eventos.map((evento) => ({
+      eventoSignificativoId: evento.id,
+      cantidadFacturas: cantidadPorEvento[evento.id],
+      fechaDesde: evento.fechaHoraInicioEvento,
+      fechaHasta: evento.fechaHoraFinEvento,
     }));
   }
 
