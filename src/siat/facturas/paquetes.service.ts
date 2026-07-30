@@ -723,6 +723,13 @@ export class PaquetesService {
 
   //? ============================================================================================== */
 
+  //! Recibe factura.fechaEmision (timestamptz, instante absoluto real), por
+  //! eso reproyectar con timeZone: 'America/La_Paz' aquí es correcto. Antes,
+  //! cuando la columna era 'timestamp' naive, esto reproducía el mismo bug
+  //! de doble desfase que tenía el PDF (fechaHoraInicioEvento/FinEvento
+  //! enviados al SIAT quedaban 4h antes de lo real). Si se revierte la
+  //! columna a 'timestamp', esta función vuelve a quedar mal: usar getters
+  //! locales en su lugar.
   private formatFechaSIAT(date: Date): string {
     return new Intl.DateTimeFormat('sv-SE', {
       timeZone: 'America/La_Paz',

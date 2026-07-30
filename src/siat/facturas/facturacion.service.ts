@@ -153,6 +153,7 @@ export class FacturacionService {
     // --------------------------------------------------
     // 3. Generar CUF
     // --------------------------------------------------
+    //! CUF usa fechaHora (string naive en memoria), NO factura.fechaEmision releída de la BD: no lo afecta el cambio de esa columna a timestamptz. No cambiar esta línea si se revierte el paso de la BD.
 
     const cuf = generarCUF({
       nit: cufd.nit,
@@ -327,7 +328,7 @@ export class FacturacionService {
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
-      fechaEmision: fechaHora,
+      fechaEmision: parseBoliviaDateTime(fechaHora), //! timestamptz: instante absoluto real (ver comentario en factura.entity.ts)
 
       nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -816,7 +817,10 @@ export class FacturacionService {
 
     //! parseBoliviaDateTime: solo para esta comparación (instante absoluto correcto).
     //! El string naive original (fechaEmision) sigue siendo lo que se usa para
-    //! el CUF y para factura.fechaEmision, sin pasar por este parseo.
+    //! el CUF, sin pasar por este parseo (ver comentario "CUF usa fechaHora"
+    //! más abajo). factura.fechaEmision (columna timestamptz) SÍ se construye
+    //! con parseBoliviaDateTime(fechaHora) al persistir la entidad más abajo
+    //! (no en esta línea) — ver comentario en factura.entity.ts.
     const fechaHoraEmision = parseBoliviaDateTime(fechaEmision);
 
     if (
@@ -1025,7 +1029,7 @@ export class FacturacionService {
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
-      fechaEmision: fechaHora,
+      fechaEmision: parseBoliviaDateTime(fechaHora), //! timestamptz: instante absoluto real (ver comentario en factura.entity.ts)
 
       nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
@@ -1141,6 +1145,7 @@ export class FacturacionService {
     // 3. Generar CUF
     // --------------------------------------------------
 
+    //! CUF usa fechaHora (string naive en memoria), NO factura.fechaEmision releída de la BD: no lo afecta el cambio de esa columna a timestamptz. No cambiar esta línea si se revierte el paso de la BD.
     const cuf = generarCUF({
       nit: cufd.nit,
       fechaHora: formatDateForCUF(new Date(fechaHora)),
@@ -1311,7 +1316,7 @@ export class FacturacionService {
       direccion: cufd.direccion,
       codigoPuntoVenta: cufd.codigoPuntoVenta,
       tipoFacturaDocumento: data.tipoFacturaDocumento,
-      fechaEmision: fechaHora,
+      fechaEmision: parseBoliviaDateTime(fechaHora), //! timestamptz: instante absoluto real (ver comentario en factura.entity.ts)
 
       nombreRazonSocial,
       codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,

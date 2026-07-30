@@ -103,6 +103,11 @@ export class FacturaPdfService {
     y += 10;
 
     // ── DATOS DEL CLIENTE ────────────────────────────────────────────────
+    //! f.fechaEmision es timestamptz (instante absoluto real), por eso esta
+    //! reproyección con timeZone: 'America/La_Paz' es correcta. Antes, cuando
+    //! la columna era 'timestamp' naive, esto mismo causaba un bug de doble
+    //! desfase (restaba 4h de más). Si se revierte la columna a 'timestamp',
+    //! esta línea vuelve a romperse: usar getters locales en su lugar.
     const fechaStr = new Date(f.fechaEmision).toLocaleString('es-BO', {
       timeZone: 'America/La_Paz',
       day: '2-digit',

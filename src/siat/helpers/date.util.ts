@@ -54,10 +54,11 @@ export function formatDateISO(date: Date): string {
 
 //! Bolivia (America/La_Paz) es UTC-4 fijo, sin horario de verano: alcanza con
 //! anexar el offset para obtener el instante absoluto correcto a partir de un
-//! string naive (sin offset) que representa hora Bolivia. Usar SOLO para
-//! comparar contra otras fechas absolutas (columnas timestamptz); no usar
-//! para CUF ni para columnas timestamp sin tz, que esperan el string naive
-//! intacto (se leen con getters locales, no con el instante absoluto).
+//! string naive (sin offset) que representa hora Bolivia. Se usa tanto para
+//! comparar contra otras fechas absolutas (columnas timestamptz) como para
+//! construir el valor que se persiste en factura.fechaEmision (timestamptz).
+//! NO usar para CUF: el CUF sigue formateando el string naive original
+//! directamente (formatDateForCUF(new Date(fechaHora))), sin pasar por acá.
 export function parseBoliviaDateTime(naiveIso: string): Date {
   return new Date(`${naiveIso}-04:00`);
 }

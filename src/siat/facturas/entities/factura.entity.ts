@@ -71,7 +71,7 @@ export class Factura {
   @Column({ type: 'int' })
   tipoFacturaDocumento: number; //! Catalogos
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz', nullable: true })
   fechaEmision: Date;
 
   //* ============================================================================================== */
