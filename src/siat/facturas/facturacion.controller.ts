@@ -31,6 +31,15 @@ export class FacturacionController {
   constructor(private readonly facturacionService: FacturacionService) {}
 
   //? ============================================================================================== */
+  //?                           Verificar_Comunicacion                                               */
+  //? ============================================================================================== */
+
+  @Get('facturacion/verificar-comunicacion')
+  async verificarComunicacion() {
+    return this.facturacionService.verificarComunicacion();
+  }
+
+  //? ============================================================================================== */
   //?                            Facturacion_Online                                                  */
   //? ============================================================================================== */
 

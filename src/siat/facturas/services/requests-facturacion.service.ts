@@ -17,12 +17,22 @@ export class RequestsFacturacionService {
   //?                           Verificar_Comunicacion                                               */
   //? ============================================================================================== */
 
-  async verificarComunicacion(): Promise<boolean> {
+  async verificarComunicacion(): Promise<any> {
     try {
-      await this.client.call('verificarComunicacion', {});
-      return true;
-    } catch {
-      return false;
+      const response = await this.client.call('verificarComunicacion', {});
+
+      return {
+        success: true,
+        data: response,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        details: error,
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 

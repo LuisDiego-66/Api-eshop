@@ -175,9 +175,6 @@ export class OrdersService {
     } else if (name) {
       where = { ...commonWhere, billing: { name: ILike(`%${name}%`) } };
     } else if (orderId) {
-      //! las ordenes editadas cambian de id real: el id "visible" en el
-      //! frontend es el inherited_id, así que hay que buscar por ambos para
-      //! encontrar la orden vigente de la cadena de ediciones
       where = [
         { ...commonWhere, id: orderId },
         { ...commonWhere, inherited_id: orderId },

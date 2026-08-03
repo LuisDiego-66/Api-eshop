@@ -93,6 +93,14 @@ export class FacturacionService {
   ) {}
 
   //? ============================================================================================== */
+  //?                           Verificar_Comunicacion                                               */
+  //? ============================================================================================== */
+
+  async verificarComunicacion() {
+    return this.request.verificarComunicacion();
+  }
+
+  //? ============================================================================================== */
   //?                            Facturacion_Online                                                  */
   //? ============================================================================================== */
 
@@ -115,7 +123,8 @@ export class FacturacionService {
     //     no se confía en lo que mande el caller)
     // --------------------------------------------------
 
-    const siatDisponible = await this.request.verificarComunicacion();
+    const siatResponse = await this.request.verificarComunicacion();
+    const siatDisponible = siatResponse.success;
 
     const tipoEmision = siatDisponible
       ? TipoEmisionEnum.EN_LINEA
