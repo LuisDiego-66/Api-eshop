@@ -400,6 +400,7 @@ export class FacturacionService {
           factura.razonSocialEmisor,
           xmlBuffer,
           pdfBuffer,
+          factura.cuf,
         );
       }
       return { response: null, factura };
@@ -471,6 +472,7 @@ export class FacturacionService {
           factura.razonSocialEmisor,
           xmlBuffer,
           pdfBuffer,
+          factura.cuf,
         );
       }
 
@@ -794,6 +796,7 @@ export class FacturacionService {
         factura.razonSocialEmisor,
         xmlBuffer,
         pdfBuffer,
+        factura.cuf,
       );
     }
 
@@ -1076,6 +1079,7 @@ export class FacturacionService {
         factura.razonSocialEmisor,
         xmlBuffer,
         pdfBuffer,
+        factura.cuf,
       );
     }
 

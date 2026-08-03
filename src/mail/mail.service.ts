@@ -14,13 +14,14 @@ export class MailService {
     razonSocial: string,
     xmlBuffer: Buffer,
     pdfBuffer: Buffer,
+    cuf: string,
   ) {
     return this.mailerService.sendMail({
       to,
       subject: `Factura N° ${numeroFactura} - ${razonSocial}`,
       html: `
-        <p>Estimado cliente,</p>
-        <p>Se adjunta la <strong>Factura N° ${numeroFactura}</strong>.</p>
+        <p>Estimado(a) cliente,</p>
+        <p>Le notificamos que se EMITIÓ la <strong>Factura N° ${numeroFactura}</strong> con Código de Autorización (CUF) <strong>${cuf}</strong> y fue registrada por el SIN (Sistema de Impuestos Nacionales de Bolivia).</p>
         <p>Los archivos adjuntos son:</p>
         <ul>
           <li><b>factura-${numeroFactura}.pdf</b> — Representación gráfica</li>
