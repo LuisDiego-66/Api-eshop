@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
@@ -42,4 +42,22 @@ export class SettingsPaginationDto extends PaginationDto {
   @IsNotEmpty()
   @Type(() => Number)
   codigoPuntoVenta: number;
+
+  @ApiProperty({
+    description: 'Fecha inicio (filtro por fechaEmision)',
+    example: '2026-01-01',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  fechaInicio?: string;
+
+  @ApiProperty({
+    description: 'Fecha fin (filtro por fechaEmision)',
+    example: '2026-01-31',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  fechaFin?: string;
 }

@@ -73,20 +73,6 @@ export class FacturacionController {
   }
 
   //? ============================================================================================== */
-  //?                      Facturacion_Offline_Lote                                                  */
-  //? ============================================================================================== */
-
-  /* @ApiQuery({ name: 'codigoPuntoVenta', required: true, type: Number })
-  @ApiQuery({ name: 'codigoSucursal', required: true, type: Number })
-  @Post('facturacion/offline/lote')
-  async facturacionOfflineLote(
-    @Query() query: SettingsDto,
-    @Body() dto: CreateFacturaDto,
-  ) {
-    return this.facturacionService.facturacionOfflineLote(dto, query);
-  } */
-
-  //? ============================================================================================== */
   //?                     Verificacion_Estado_Factura                                                */
   //? ============================================================================================== */
 
@@ -122,6 +108,18 @@ export class FacturacionController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({
+    name: 'fechaInicio',
+    required: false,
+    type: String,
+    description: 'Fecha inicio (filtro por fechaEmision). Si se envía sin fechaFin, filtra desde este día hasta la actualidad.',
+  })
+  @ApiQuery({
+    name: 'fechaFin',
+    required: false,
+    type: String,
+    description: 'Fecha fin (filtro por fechaEmision)',
+  })
   @Get('facturacion')
   async FindAllFacturas(@Query() query: SettingsPaginationDto) {
     return this.facturacionService.FindAll(query);
@@ -148,31 +146,4 @@ export class FacturacionController {
     );
     res.send(pdfBuffer);
   }
-
-  //? ============================================================================================== */
-  //?                             Enviar_Email_Factura                                               */
-  //? ============================================================================================== */
-
-  /* @Post('facturacion/send-email')
-  async sendFacturaEmail(@Body() dto: SendFacturaEmailDto) {
-    return this.facturacionService.sendFacturaEmail(dto);
-  } */
-
-  //? ============================================================================================== */
-  //?                          Enviar_Email_Anulacion                                                */
-  //? ============================================================================================== */
-
-  /* @Post('facturacion/send-email/anulacion')
-  async sendAnulacionEmail(@Body() dto: SendAnulacionEmailDto) {
-    return this.facturacionService.sendAnulacionEmail(dto);
-  } */
-
-  //? ============================================================================================== */
-  //?                          Enviar_Email_Reversion                                                */
-  //? ============================================================================================== */
-
-  /* @Post('facturacion/send-email/reversion')
-  async sendReversionEmail(@Body() dto: SendReversionEmailDto) {
-    return this.facturacionService.sendReversionEmail(dto);
-  } */
 }

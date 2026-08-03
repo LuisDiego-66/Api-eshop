@@ -5,6 +5,7 @@
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  Between,
   DataSource,
   IsNull,
   LessThanOrEqual,
@@ -478,312 +479,6 @@ export class FacturacionService {
   //?               Facturacion_Online_Contingencia                                                  */
   //? ============================================================================================== */
 
-  /*
-  //! Versión anterior: recibía cufdId suelto y usaba new Date() ("ahora") como
-  //! fecha de emisión, sin relación con el evento significativo ni con la fecha
-  //! real en que ocurrió la venta durante la contingencia.
-  async facturacionOfflineContingencia(
-    dto: CreateFacturaContingenciaDto,
-    query: SettingsDto,
-    order?: Order,
-  ) {
-    // --------------------------------------------------
-    // 1. Obtener códigos vigentes
-    // --------------------------------------------------
-
-    const { cafc, cufdId, ...data } = dto;
-
-    //! No se confía en lo que mande el caller, esta vía siempre es contingencia.
-    const tipoEmision = TipoEmisionEnum.FUERA_DE_LINEA;
-
-    const cufd = await this.cufdRepository.findOne({
-      where: {
-        id: cufdId,
-        codigoPuntoVenta: query.codigoPuntoVenta,
-        codigoSucursal: query.codigoSucursal,
-      },
-    });
-
-    if (!cufd) {
-      throw new BadRequestException(
-        'CUFD no encontrado para la sucursal y punto de venta indicados',
-      );
-    }
-
-    const numeroTarjeta = this.mascararTarjeta(data.numeroTarjeta);
-    const nombreRazonSocial = this.normalizarNombreRazonSocial(
-      data.numeroDocumento,
-      data.nombreRazonSocial,
-    );
-
-    const now = new Date();
-    const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
-      timeZone: 'America/La_Paz',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).format(now);
-    const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
-    const fechaHora = fechaHoraBolivia.replace(' ', 'T') + '.' + milliseconds;
-
-    // --------------------------------------------------
-    // 2. Número de factura
-    // --------------------------------------------------
-
-    const cafcEntity = await this.cafcRepository.findOne({
-      where: { codigo: cafc },
-    });
-
-    if (!cafcEntity) {
-      throw new BadRequestException('CAFC no válido');
-    }
-
-    const numeroFactura = await this.getNextNumeroFacturaCafc(cafcEntity.id);
-
-    // --------------------------------------------------
-    // 3. Generar CUF
-    // --------------------------------------------------
-
-    const cuf = generarCUF({
-      nit: cufd.nit,
-      fechaHora: formatDateForCUF(new Date(fechaHora)), // fechaHora.toString(),
-      modalidad: cufd.codigoModalidad,
-      codigoSucursal: cufd.codigoSucursal,
-      codigoPuntoVenta: cufd.codigoPuntoVenta,
-      codigoControlCUFD: cufd.codigoControl,
-
-      tipoDocumentoSector: data.codigoDocumentoSector,
-      tipoEmision: tipoEmision,
-      tipoFactura: data.tipoFacturaDocumento,
-      numeroFactura: numeroFactura,
-    });
-
-    // --------------------------------------------------
-    // 5. Validaciones
-    // --------------------------------------------------
-
-    if (!data.detalles?.length) {
-      throw new BadRequestException(
-        'La factura debe tener al menos un detalle',
-      );
-    }
-
-    //! Calculo de detalles
-    const detallesCalculados = data.detalles.map((item) => {
-      const montoDescuento = item.montoDescuento ?? 0;
-      const subTotal = item.cantidad * item.precioUnitario - montoDescuento;
-      return {
-        ...item,
-        subTotal,
-      };
-    });
-
-    for (const detalle of detallesCalculados) {
-      if (detalle.cantidad <= 0) {
-        throw new BadRequestException(
-          `La cantidad del producto ${detalle.codigoProducto} debe ser mayor a 0`,
-        );
-      }
-      const precioItem = detalle.cantidad * detalle.precioUnitario;
-      if (precioItem > 0 && (detalle.montoDescuento ?? 0) >= precioItem) {
-        throw new BadRequestException(
-          `El descuento del producto '${detalle.codigoProducto}' no puede ser del 100% o superior`,
-        );
-      }
-      if (detalle.subTotal <= 0) {
-        throw new BadRequestException(
-          `El subtotal del producto ${detalle.codigoProducto} debe ser mayor a 0`,
-        );
-      }
-    }
-
-    //! Calculo de montoTolta
-    const sumaSubTotal = detallesCalculados.reduce(
-      (acc, d) => acc + d.subTotal,
-      0,
-    );
-    const descuentoAdicional = data.descuentoAdicional ?? 0;
-
-    if (descuentoAdicional >= sumaSubTotal) {
-      throw new BadRequestException(
-        'El descuento adicional no puede igualar ni superar el monto total de los ítems',
-      );
-    }
-
-    const montoTotal = sumaSubTotal - descuentoAdicional;
-
-    //! Calculo de montoTotalMoneda
-    const montoTotalMoneda = montoTotal / data.tipoCambio;
-
-    //! Calculo de montoTotalSujetoIva
-    let montoTotalSujetoIva = montoTotal;
-
-    //!validar si el pago es con gifcard
-    if (data.montoGiftCard) {
-      if (data.montoGiftCard > montoTotal) {
-        throw new BadRequestException(
-          'El monto Gift Card no puede superar el monto total',
-        );
-      }
-      montoTotalSujetoIva = montoTotal - data.montoGiftCard;
-    }
-
-    //! Leyenda aleatoria
-    let leyendaObject: { codigoActividad: string; descripcionLeyenda: string } =
-      { codigoActividad: '', descripcionLeyenda: '' };
-
-    const listaLeyendas = await this.listasService.getLista(
-      { metodo: ListasEnum.ListaLeyendasFactura },
-      query,
-    );
-    if (listaLeyendas) {
-      const lista =
-        listaLeyendas?.listas[0].payload.RespuestaListaParametricasLeyendas
-          .listaLeyendas;
-      const randomIndex = Math.floor(Math.random() * lista.length);
-      leyendaObject = lista[randomIndex];
-    }
-
-    // --------------------------------------------------
-    // 5. Construcción del XML
-    // --------------------------------------------------
-
-    const xml = this.facturaBuilderService.buildFactura({
-      nitEmisor: cufd.nit,
-      razonSocialEmisor: data.razonSocialEmisor,
-      municipio: data.municipio,
-      telefono: data.telefono,
-
-      numeroFactura: numeroFactura,
-      cuf: cuf,
-      cufd: cufd.codigo,
-      codigoSucursal: cufd.codigoSucursal,
-      direccion: cufd.direccion,
-      codigoPuntoVenta: cufd.codigoPuntoVenta,
-      fechaEmision: fechaHora, // new Date(fechaHora),
-
-      nombreRazonSocial,
-      codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
-      numeroDocumento: data.numeroDocumento,
-      complemento: data.complemento,
-      codigoCliente: data.codigoCliente,
-      codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: numeroTarjeta,
-
-      montoTotal: montoTotal,
-      montoTotalSujetoIva: montoTotalSujetoIva,
-
-      codigoMoneda: data.codigoMoneda,
-      tipoCambio: data.tipoCambio,
-      montoTotalMoneda: montoTotalMoneda,
-
-      montoGiftCard: data.montoGiftCard,
-      descuentoAdicional: data.descuentoAdicional,
-      codigoExcepcion: this.calcularCodigoExcepcion(
-        data.codigoTipoDocumentoIdentidad,
-        data.numeroDocumento,
-        true,
-      ),
-
-      cafc: cafcEntity.codigo, //! CAFC
-
-      leyenda: leyendaObject.descripcionLeyenda,
-      usuario: data.usuario,
-      codigoDocumentoSector: data.codigoDocumentoSector,
-
-      detalles: detallesCalculados,
-    });
-
-    // --------------------------------------------------
-    // 7. Persistir factura ANTES de SIAT
-    // --------------------------------------------------
-
-    const siatSync = await this.sincronizacionService.sincronizacion(query);
-
-    const newFactura = this.facturaRepository.create({
-      nitEmisor: cufd.nit,
-      razonSocialEmisor: data.razonSocialEmisor,
-      municipio: data.municipio,
-      telefono: data.telefono,
-
-      numeroFactura: numeroFactura,
-      cuf: cuf,
-      cufd: cufd.codigo,
-      codigoSucursal: cufd.codigoSucursal,
-      nombreSucursal: data.nombreSucursal ?? null,
-      direccion: cufd.direccion,
-      codigoPuntoVenta: cufd.codigoPuntoVenta,
-      tipoFacturaDocumento: data.tipoFacturaDocumento,
-      fechaEmision: fechaHora,
-
-      nombreRazonSocial,
-      codigoTipoDocumentoIdentidad: data.codigoTipoDocumentoIdentidad,
-      numeroDocumento: data.numeroDocumento,
-      complemento: data.complemento,
-      codigoCliente: data.codigoCliente,
-      codigoMetodoPago: data.codigoMetodoPago,
-      numeroTarjeta: numeroTarjeta,
-
-      montoTotal: montoTotal,
-      montoTotalSujetoIva: montoTotalSujetoIva,
-
-      codigoMoneda: data.codigoMoneda,
-      tipoCambio: data.tipoCambio,
-      montoTotalMoneda: montoTotalMoneda,
-
-      montoGiftCard: data.montoGiftCard,
-      descuentoAdicional: data.descuentoAdicional,
-      codigoExcepcion: this.calcularCodigoExcepcion(
-        data.codigoTipoDocumentoIdentidad,
-        data.numeroDocumento,
-        true,
-      ),
-
-      cafc: cafcEntity, //! CAFC
-
-      leyenda: leyendaObject.descripcionLeyenda,
-      usuario: data.usuario,
-      codigoDocumentoSector: data.codigoDocumentoSector,
-
-      emails: data.emails ?? null,
-
-      estado: FacturaStatusEnum.PENDIENTE,
-      codigoEmision: CodigoEmisionEnum.OFFLINE, //! offline
-
-      siatSync: siatSync,
-
-      xml,
-
-      detalles: detallesCalculados.map((detalle) =>
-        this.detalleRepository.create({
-          ...detalle,
-        }),
-      ),
-
-      order: order ?? null,
-    });
-    const factura = await this.facturaRepository.save(newFactura);
-
-    if (data.emails?.length) {
-      const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
-      const pdfBuffer = await this.facturaPdfService.generate(factura);
-      await this.mailService.sendFacturaEmail(
-        data.emails,
-        factura.numeroFactura,
-        factura.razonSocialEmisor,
-        xmlBuffer,
-        pdfBuffer,
-      );
-    }
-
-    return factura;
-  }
-  */
-
   async facturacionOfflineContingencia(
     dto: CreateFacturaContingenciaDto,
     query: SettingsDto,
@@ -798,14 +493,15 @@ export class FacturacionService {
     //! No se confía en lo que mande el caller, esta vía siempre es contingencia.
     const tipoEmision = TipoEmisionEnum.FUERA_DE_LINEA;
 
-    const eventoSignificativo = await this.eventoSignificativoRepository.findOne({
-      where: {
-        id: eventoSignificativoId,
-        codigoPuntoVenta: query.codigoPuntoVenta,
-        codigoSucursal: query.codigoSucursal,
-      },
-      relations: { cufd: true },
-    });
+    const eventoSignificativo =
+      await this.eventoSignificativoRepository.findOne({
+        where: {
+          id: eventoSignificativoId,
+          codigoPuntoVenta: query.codigoPuntoVenta,
+          codigoSucursal: query.codigoSucursal,
+        },
+        relations: { cufd: true },
+      });
 
     if (!eventoSignificativo) {
       throw new BadRequestException(
@@ -1586,159 +1282,58 @@ export class FacturacionService {
   }
 
   //? ============================================================================================== */
-  //?                                  Enviar_Email_Factura                                          */
-  //? ============================================================================================== */
-
-  /*  async sendFacturaEmail(dto: SendFacturaEmailDto) {
-    const factura = await this.facturaRepository.findOne({
-      where: { id: dto.facturaId },
-      relations: ['detalles'],
-    });
-
-    if (!factura) {
-      throw new NotFoundException(
-        `Factura con id ${dto.facturaId} no encontrada`,
-      );
-    }
-
-    if (!factura.xml) {
-      throw new BadRequestException('La factura no tiene XML generado');
-    }
-
-    const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
-    const pdfBuffer = await this.facturaPdfService.generate(factura);
-
-    await this.mailService.sendFacturaEmail(
-      dto.email,
-      factura.numeroFactura,
-      factura.razonSocialEmisor,
-      xmlBuffer,
-      pdfBuffer,
-    );
-
-    return {
-      message: `Factura N° ${factura.numeroFactura} enviada a ${dto.email}`,
-    };
-  } */
-
-  //? ============================================================================================== */
-  //?                              Enviar_Email_Paquete                                              */
-  //? ============================================================================================== */
-
-  /* async sendPaqueteEmail(dto: SendPaqueteEmailDto) {
-    const paquete = await this.paqueteRepository.findOne({
-      where: { id: dto.paqueteId },
-      relations: ['facturas', 'facturas.detalles'],
-    });
-
-    if (!paquete) {
-      throw new NotFoundException(
-        `Paquete con id ${dto.paqueteId} no encontrado`,
-      );
-    }
-
-    if (!paquete.facturas?.length) {
-      throw new BadRequestException('El paquete no tiene facturas asociadas');
-    }
-
-    const attachments = await Promise.all(
-      paquete.facturas.map(async (factura) => {
-        if (!factura.xml) {
-          throw new BadRequestException(
-            `La factura N° ${factura.numeroFactura} no tiene XML generado`,
-          );
-        }
-        const pdfBuffer = await this.facturaPdfService.generate(factura);
-        const xmlBuffer = Buffer.from(factura.xml, 'utf-8');
-        return { numeroFactura: factura.numeroFactura, pdfBuffer, xmlBuffer };
-      }),
-    );
-
-    await this.mailService.sendPaqueteEmail(
-      dto.email,
-      paquete.id,
-      paquete.facturas[0].razonSocialEmisor,
-      attachments,
-    );
-
-    return {
-      message: `Paquete N° ${paquete.id} enviado a ${dto.email} (${attachments.length} facturas)`,
-    };
-  } */
-
-  //? ============================================================================================== */
-  //?                           Enviar_Email_Anulacion                                               */
-  //? ============================================================================================== */
-
-  /*  async sendAnulacionEmail(dto: SendAnulacionEmailDto) {
-    const facturas = await this.facturaRepository.findByIds(dto.facturaIds);
-
-    if (!facturas.length) {
-      throw new NotFoundException(
-        'No se encontraron facturas con los IDs proporcionados',
-      );
-    }
-
-    await Promise.all(
-      facturas.map((f) =>
-        this.mailService.sendAnulacionEmail(dto.email, f.numeroFactura),
-      ),
-    );
-
-    return {
-      message: `Notificación de anulación enviada a ${dto.email} (${facturas.length} facturas)`,
-    };
-  } */
-
-  //? ============================================================================================== */
-  //?                           Enviar_Email_Reversion                                               */
-  //? ============================================================================================== */
-
-  /* async sendReversionEmail(dto: SendReversionEmailDto) {
-    const facturas = await this.facturaRepository.findByIds(dto.facturaIds);
-
-    if (!facturas.length) {
-      throw new NotFoundException(
-        'No se encontraron facturas con los IDs proporcionados',
-      );
-    }
-
-    await Promise.all(
-      facturas.map((f) =>
-        this.mailService.sendReversionEmail(dto.email, f.numeroFactura),
-      ),
-    );
-
-    return {
-      message: `Notificación de reversión enviada a ${dto.email} (${facturas.length} facturas)`,
-    };
-  }
- */
-  //? ============================================================================================== */
   //?                                       FindAll                                                  */
   //? ============================================================================================== */
+
   async FindAll(query: SettingsPaginationDto) {
-    const { codigoSucursal, codigoPuntoVenta } = query;
+    const { codigoSucursal, codigoPuntoVenta, fechaInicio, fechaFin } = query;
 
-    return paginate(
-      this.facturaRepository,
-      {
-        where: { codigoSucursal, codigoPuntoVenta },
-        order: { fechaEmision: 'DESC' },
-      },
-      query,
-      ['cuf'],
-    );
+    const desde = fechaInicio
+      ? new Date(`${fechaInicio}T00:00:00.000`)
+      : undefined;
+    const hasta = fechaFin
+      ? new Date(`${fechaFin}T23:59:59.999`)
+      : desde
+        ? new Date()
+        : undefined;
+
+    const totalQuery = this.facturaRepository
+      .createQueryBuilder('factura')
+      .select('COALESCE(SUM(factura.montoTotal), 0)', 'totalFacturado')
+      .where('factura.codigoSucursal = :codigoSucursal', { codigoSucursal })
+      .andWhere('factura.codigoPuntoVenta = :codigoPuntoVenta', {
+        codigoPuntoVenta,
+      })
+      .andWhere('factura.estado != :anulada', {
+        anulada: FacturaStatusEnum.ANULADA,
+      });
+
+    if (desde && hasta) {
+      totalQuery.andWhere('factura.fechaEmision BETWEEN :desde AND :hasta', {
+        desde,
+        hasta,
+      });
+    }
+
+    const [result, totalRaw] = await Promise.all([
+      paginate(
+        this.facturaRepository,
+        {
+          where: {
+            codigoSucursal,
+            codigoPuntoVenta,
+            ...(desde && hasta && { fechaEmision: Between(desde, hasta) }),
+          },
+          order: { fechaEmision: 'DESC' },
+        },
+        query,
+        ['cuf'],
+      ),
+      totalQuery.getRawOne<{ totalFacturado: string }>(),
+    ]);
+
+    return { ...result, totalFacturado: Number(totalRaw?.totalFacturado ?? 0) };
   }
-
-  //? ============================================================================================== */
-  //?                              Find_Factura_By_Order_Id                                          */
-  //? ============================================================================================== */
-  /* async findFacturaByOrderId(orderId: number) {
-    return this.facturaRepository.findOne({
-      where: { order: { id: orderId } },
-    });
-  } */
 
   //? ============================================================================================== */
   //?                          Representacion_Grafica_Factura (PDF)                                  */
@@ -1763,7 +1358,7 @@ export class FacturacionService {
   }
 
   //? ============================================================================================== */
-  //?                         Numero_Factura_Atomico                                                  */
+  //?                         Numero_Factura_Atomico                                                 */
   //? ============================================================================================== */
 
   private async getNextNumeroFactura(
@@ -1771,9 +1366,6 @@ export class FacturacionService {
     codigoPuntoVenta: number,
   ): Promise<number> {
     return this.dataSource.transaction(async (manager) => {
-      // Garantiza que la fila existe antes de bloquearla.
-      // ON CONFLICT DO NOTHING es atómico: si dos peticiones llegan al mismo
-      // tiempo, exactamente una crea la fila y la otra no hace nada.
       await manager
         .createQueryBuilder()
         .insert()
@@ -1827,54 +1419,6 @@ export class FacturacionService {
       await manager.save(Cafc, cafc);
       return siguiente;
     });
-  }
-
-  //? ============================================================================================== */
-  //?                       Resolver_CUFD_vigente_en_fecha                                            */
-  //? ============================================================================================== */
-
-  //! SIN USO ACTUALMENTE (revertido por error SIAT 984, ver comentario en
-  //! facturacionOfflineContingencia). Se deja implementado por si se decide
-  //! retomar la facturación de contingencia con fecha retroactiva: resuelve
-  //! el CUFD vigente en una fecha pasada dada, o el más cercano anterior si
-  //! ese día no se llegó a generar ninguno. El SIN nunca emite un CUFD
-  //! retroactivo, por lo que jamás se debe resolver uno cuya obtención
-  //! (createdAt) sea posterior a la fecha del evento.
-  private async findCufdVigenteEnFecha(
-    fecha: Date,
-    query: SettingsDto,
-  ): Promise<Cufd> {
-    const baseWhere = {
-      codigoPuntoVenta: query.codigoPuntoVenta,
-      codigoSucursal: query.codigoSucursal,
-    };
-
-    const cufdVigente = await this.cufdRepository.findOne({
-      where: {
-        ...baseWhere,
-        createdAt: LessThanOrEqual(fecha),
-        fechaVigencia: MoreThan(fecha),
-      },
-      order: { createdAt: 'DESC' },
-    });
-
-    if (cufdVigente) return cufdVigente;
-
-    const cufdMasCercano = await this.cufdRepository.findOne({
-      where: {
-        ...baseWhere,
-        createdAt: LessThanOrEqual(fecha),
-      },
-      order: { createdAt: 'DESC' },
-    });
-
-    if (!cufdMasCercano) {
-      throw new BadRequestException(
-        'No existe un CUFD disponible para la fecha indicada en la sucursal y punto de venta señalados',
-      );
-    }
-
-    return cufdMasCercano;
   }
 
   //? ============================================================================================== */
