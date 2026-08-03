@@ -19,8 +19,8 @@ export class MailService {
       to,
       subject: `Factura N° ${numeroFactura} - ${razonSocial}`,
       html: `
-        <p>Estimado equipo,</p>
-        <p>Se adjunta la <strong>Factura N° ${numeroFactura}</strong> para revisión y pruebas con el SIAT.</p>
+        <p>Estimado cliente,</p>
+        <p>Se adjunta la <strong>Factura N° ${numeroFactura}</strong>.</p>
         <p>Los archivos adjuntos son:</p>
         <ul>
           <li><b>factura-${numeroFactura}.pdf</b> — Representación gráfica</li>
