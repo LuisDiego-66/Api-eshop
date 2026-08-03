@@ -21,6 +21,7 @@ import { SiatParametrica } from './catalogos/entities/parametrica.entity';
 import { FacturacionController } from './facturas/facturacion.controller';
 import { PaquetesController } from './facturas/paquetes.controller';
 import { PaquetesService } from './facturas/paquetes.service';
+import { PaquetesCronJob } from './facturas/cronjobs/paquetes.cron';
 import { FacturacionService } from './facturas/facturacion.service';
 import { FacturaBuilderService } from './facturas/services/factura-builder.service';
 import { FacturaPdfService } from './facturas/services/factura-pdf.service';
@@ -87,6 +88,7 @@ import { CafcController } from './facturas/cafc.controller';
     RequestsFacturacionService,
     FacturacionService,
     PaquetesService,
+    PaquetesCronJob,
     CafcService,
 
     RequestsOperacionesService,

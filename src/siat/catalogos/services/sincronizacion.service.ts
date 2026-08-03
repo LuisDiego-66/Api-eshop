@@ -77,10 +77,20 @@ export class SincronizacionService {
         codigoPuntoVenta: dto.codigoPuntoVenta,
         codigoSucursal: dto.codigoSucursal,
       },
+      relations: { parametrica: true, listas: true },
       order: { createdAt: 'DESC' },
     });
 
-    if (existingSiatSync) {
+    //! un siat_sync huérfano (sin todas sus parametricas/listas, ej. por
+    //! un fallo del SIAT a mitad de la sincronización) no sirve como cache:
+    //! se ignora y se vuelve a sincronizar en vez de reusarlo.
+    const esSiatSyncCompleto =
+      existingSiatSync &&
+      existingSiatSync.parametrica.length ===
+        this.arrayParametricasMetodos.length &&
+      existingSiatSync.listas.length === this.arrayListasMetodos.length;
+
+    if (esSiatSyncCompleto) {
       return existingSiatSync;
     }
 

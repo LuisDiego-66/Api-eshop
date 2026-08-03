@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -35,6 +36,8 @@ import { EventoSignificativo } from '../operaciones/entities/evento-significativ
 
 @Injectable()
 export class PaquetesService {
+  private readonly logger = new Logger(PaquetesService.name);
+
   constructor(
     @InjectRepository(Factura)
     private readonly facturaRepository: Repository<Factura>,
@@ -142,7 +145,8 @@ export class PaquetesService {
     });
 
     if (facturasPendientes.length == 0) {
-      throw new BadRequestException('Facturas pendientes no existentes');
+      this.logger.log('No hay facturas pendientes para armar paquetes');
+      return [];
     }
 
     // --------------------------------------------------
@@ -314,6 +318,10 @@ export class PaquetesService {
           mensajesList: response.mensajesList ?? null,
           fechaRespuesta: recepcionPaqueteFacturaResponse.timestamp,
         });
+
+        this.logger.log(
+          `Paquete ${paquete.id} enviado a SIAT con ${facturas.length} factura(s)`,
+        );
       }
 
       resultados.push(response);
@@ -325,219 +333,6 @@ export class PaquetesService {
   //? ============================================================================================== */
   //?                   Enviar_Paquete_Contingencia                                                  */
   //? ============================================================================================== */
-
-  /*
-  //! Versión anterior: recibía cufd/codigoEvento/descripcionEvento sueltos y
-  //! auto-creaba el evento significativo a partir de las fechaEmision de las
-  //! facturas del lote, en vez de reutilizar un evento ya creado y elegido
-  //! por el usuario (con su propio cufd y ventana de fechas).
-  async recepcionPaqueteFacturaContingencia(dto: CreatePaqueteContingenciaDto) {
-    // --------------------------------------------------
-    // 1. Obtener códigos vigentes
-    // --------------------------------------------------
-
-    const now = new Date();
-    const fechaHoraBolivia = new Intl.DateTimeFormat('sv-SE', {
-      timeZone: 'America/La_Paz',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).format(now);
-    const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
-    const fechaHora = fechaHoraBolivia.replace(' ', 'T') + '.' + milliseconds;
-
-    // --------------------------------------------------
-    // 2. Facturas
-    // --------------------------------------------------
-
-    const facturasPendientes = await this.facturaRepository.find({
-      where: {
-        estado: FacturaStatusEnum.PENDIENTE,
-        codigoEmision: CodigoEmisionEnum.OFFLINE,
-
-        codigoRecepcion: IsNull(),
-        //paquete: IsNull(),
-        cafc: { codigo: dto.cafc }, //! con cafc
-        // NUEVO: antes se traían TODAS las facturas pendientes del cafc,
-        // sin importar el día/cufd (podían mezclarse incidentes distintos
-        // bajo el mismo codigoEvento/descripcionEvento del dto). Ahora se
-        // acota al cufd del incidente puntual que se está reportando.
-        // Para revertir: quitar la línea "cufd: dto.cufd," de abajo.
-        cufd: dto.cufd,
-      },
-      relations: { cafc: true, detalles: true },
-      take: 500,
-      order: { fechaEmision: 'ASC' },
-    });
-    if (facturasPendientes.length == 0) {
-      throw new BadRequestException('Facturas pendientes no existentes');
-    }
-
-    // --------------------------------------------------
-    // 2. Agrupar por CUFD, codigoDocumentoSector, tipoFacturaDocumento
-    // --------------------------------------------------
-
-    const grupos = facturasPendientes.reduce(
-      (acc, factura) => {
-        const key = `${factura.cufd}_${factura.codigoDocumentoSector}_${factura.tipoFacturaDocumento}`;
-        if (!acc[key]) {
-          acc[key] = [];
-        }
-        acc[key].push(factura);
-        return acc;
-      },
-      {} as Record<string, Factura[]>,
-    );
-
-    const resultados: any = [];
-
-    for (const [key, facturas] of Object.entries(grupos)) {
-      const primeraFactura = facturas[0];
-      const ultimaFactura = facturas[facturas.length - 1];
-
-      const { cufd } = await this.getCodigos({
-        codigoPuntoVenta: primeraFactura.codigoPuntoVenta,
-        codigoSucursal: primeraFactura.codigoSucursal,
-      });
-
-      const fechaInicioEvento = primeraFactura.fechaEmision;
-      //const fechaFinEvento = ultimaFactura.fechaEmision;
-      const fechaFinEvento =
-        facturas.length === 1
-          ? new Date(primeraFactura.fechaEmision.getTime() + 3000) // +30 segundos
-          : ultimaFactura.fechaEmision;
-
-      const fechaHoraInicioEvento = this.formatFechaSIAT(fechaInicioEvento);
-      const fechaHoraFinEvento = this.formatFechaSIAT(fechaFinEvento);
-
-      let evento;
-
-      try {
-        evento =
-          await this.eventosSignificativosService.registroEventoSignificativo(
-            {
-              codigoMotivoEvento: dto.codigoEvento, //! Catalogos
-              cufdEvento: primeraFactura.cufd,
-              descripcion: dto.descripcionEvento,
-
-              fechaHoraInicioEvento: fechaHoraInicioEvento,
-              fechaHoraFinEvento: fechaHoraFinEvento,
-            },
-            {
-              codigoPuntoVenta: primeraFactura.codigoPuntoVenta, //! el mismo para todas las facturas
-              codigoSucursal: primeraFactura.codigoSucursal, //! el mismo para todas las facturas
-            },
-          );
-      } catch (error) {
-        throw new BadRequestException(error.response || error.message);
-      }
-
-      if (!evento.codigoRecepcionEventoSignificativo) {
-        return evento;
-      }
-
-      // --------------------------------------------------
-      // 3. Generar archivo y hash
-      // --------------------------------------------------
-
-      const { archivo, hashArchivo } = await crearTarGz(facturas);
-
-      // --------------------------------------------------
-      // 4. Persistir factura ANTES de SIAT
-      // --------------------------------------------------
-
-      const newPaquete = this.paqueteRepository.create({
-        codigoAmbiente: cufd.codigoAmbiente,
-        codigoPuntoVenta: cufd.codigoPuntoVenta,
-        codigoSistema: cufd.codigoSistema,
-        codigoSucursal: cufd.codigoSucursal,
-        nit: cufd.nit,
-        codigoDocumentoSector: primeraFactura.codigoDocumentoSector,
-        codigoEmision: CodigoEmisionEnum.OFFLINE,
-        codigoModalidad: cufd.codigoModalidad,
-        codigoCufd: cufd.codigo,
-        codigoCuis: cufd.codigoCuis,
-        tipoFacturaDocumento: primeraFactura.tipoFacturaDocumento,
-        archivo: archivo,
-        fechaEnvio: fechaHora,
-        hashArchivo: hashArchivo,
-        cafc: dto.cafc, //! CAFC
-        cantidadFacturas: facturas.length,
-        codigoEvento: evento.codigoRecepcionEventoSignificativo,
-        facturas,
-      });
-      const paquete = await this.paqueteRepository.save(newPaquete);
-
-      // --------------------------------------------------
-      // 5. Envío a SIAT
-      // --------------------------------------------------
-
-      const recepcionPaqueteFacturaResponse: ResponseRecepcionPaqueteFactura =
-        await this.request.recepcionPaqueteFactura({
-          codigoAmbiente: cufd.codigoAmbiente,
-          codigoDocumentoSector: primeraFactura.codigoDocumentoSector,
-          codigoEmision: CodigoEmisionEnum.OFFLINE,
-          codigoModalidad: cufd.codigoModalidad,
-          codigoPuntoVenta: cufd.codigoPuntoVenta,
-          codigoSistema: cufd.codigoSistema,
-          codigoSucursal: cufd.codigoSucursal,
-          codigoCufd: cufd.codigo,
-          codigoCuis: cufd.codigoCuis,
-          nit: cufd.nit,
-          tipoFacturaDocumento: primeraFactura.tipoFacturaDocumento,
-          archivo: archivo,
-          fechaEnvio: fechaHora,
-          hashArchivo: hashArchivo,
-          cafc: dto.cafc, //! CAFC
-          cantidadFacturas: facturas.length,
-          codigoEvento: evento.codigoRecepcionEventoSignificativo,
-        });
-
-      if (!recepcionPaqueteFacturaResponse.success) {
-        //! Servicio de paquetes de SIAT caído: el paquete y las facturas ya
-        //! quedaron persistidos (offline), la transmisión queda pendiente
-        //! para un reintento posterior.
-        resultados.push({
-          success: false,
-          paqueteId: paquete.id,
-          error: recepcionPaqueteFacturaResponse.error,
-        });
-        continue;
-      }
-
-      const response =
-        recepcionPaqueteFacturaResponse.data.RespuestaServicioFacturacion;
-
-      // --------------------------------------------------
-      // 6. Guardar respuesta SIAT
-      // --------------------------------------------------
-
-      if (response.transaccion && response.codigoRecepcion) {
-        for (const factura of paquete.facturas) {
-          factura.estado = FacturaStatusEnum.ENVIADA;
-        }
-        await this.facturaRepository.save(paquete.facturas);
-
-        await this.paqueteRepository.update(paquete.id, {
-          codigoDescripcion: response.codigoDescripcion,
-          codigoEstado: response.codigoEstado,
-          codigoRecepcion: response.codigoRecepcion ?? null,
-          transaccion: response.transaccion,
-          mensajesList: response.mensajesList ?? null,
-          fechaRespuesta: recepcionPaqueteFacturaResponse.timestamp,
-        });
-      }
-
-      resultados.push(response);
-    }
-
-    return resultados;
-  }
-  */
 
   async recepcionPaqueteFacturaContingencia(dto: CreatePaqueteContingenciaDto) {
     // --------------------------------------------------
