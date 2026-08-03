@@ -1,23 +1,17 @@
-export const SIAT_CONFIG = {
-  nit: 7524709018,
-  codigoSistema: '213F4BFDFFA4BC66515BE',
-  ambiente: 2,
-  modalidad: 2,
+import { envs } from 'src/config/environments/environments';
 
-  TOKEN_SIAT:
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwYWRpbGxhY2FzaDE3QGdtYWlsLmNvbSIsImNvZGlnb1Npc3RlbWEiOiIyMTNGNEJGREZGQTRCQzY2NTE1QkUiLCJuaXQiOiJINHNJQUFBQUFBQUFBRE0zTlRJeE43QTBNTFFBQU9fRGpta0tBQUFBIiwiaWQiOjUxOTg5MzMsImV4cCI6MTc4ODE5Njg0MSwiaWF0IjoxNzgyODU0NDExLCJuaXREZWxlZ2FkbyI6NzUyNDcwOTAxOCwic3Vic2lzdGVtYSI6IlNGRSJ9.lUfyZppUrxeQbngaeaD4zgY5uLZAKCmyjHR4dnQTdDHfQFna_4DNUZipEe_CkoJ2Npn4pKyEGCHKhBVoXjoIwQ',
+export const SIAT_CONFIG = {
+  nit: Number(envs.SIAT_NIT),
+  codigoSistema: envs.SIAT_CODIGO_SISTEMA,
+  ambiente: Number(envs.SIAT_AMBIENTE),
+  modalidad: Number(envs.SIAT_MODALIDAD),
+
+  TOKEN_SIAT: envs.SIAT_TOKEN,
 
   wsdl: {
-    codigos:
-      'https://pilotosiatservicios.impuestos.gob.bo/v2/FacturacionCodigos?wsdl',
-
-    sincronizacion:
-      'https://pilotosiatservicios.impuestos.gob.bo/v2/FacturacionSincronizacion?wsdl',
-
-    facturaCompraVenta:
-      'https://pilotosiatservicios.impuestos.gob.bo/v2/ServicioFacturacionCompraVenta?wsdl',
-
-    operaciones:
-      'https://pilotosiatservicios.impuestos.gob.bo/v2/FacturacionOperaciones?wsdl',
+    codigos: envs.SIAT_WSDL_CODIGOS,
+    sincronizacion: envs.SIAT_WSDL_SINCRONIZACION,
+    facturaCompraVenta: envs.SIAT_WSDL_FACTURA_COMPRA_VENTA,
+    operaciones: envs.SIAT_WSDL_OPERACIONES,
   },
 };

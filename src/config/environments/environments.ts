@@ -37,6 +37,15 @@ interface IEnvironmentVariables {
 
   //SIAT
   SIAT_QR_URL: string;
+  SIAT_NIT: number;
+  SIAT_CODIGO_SISTEMA: string;
+  SIAT_AMBIENTE: number;
+  SIAT_MODALIDAD: number;
+  SIAT_TOKEN: string;
+  SIAT_WSDL_CODIGOS: string;
+  SIAT_WSDL_SINCRONIZACION: string;
+  SIAT_WSDL_FACTURA_COMPRA_VENTA: string;
+  SIAT_WSDL_OPERACIONES: string;
 }
 
 const environmentsSchema = joi
@@ -88,4 +97,13 @@ export const envs = {
 
   //SIAT
   SIAT_QR_URL: envVariables.SIAT_QR_URL,
+  SIAT_NIT: envVariables.SIAT_NIT,
+  SIAT_CODIGO_SISTEMA: envVariables.SIAT_CODIGO_SISTEMA,
+  SIAT_AMBIENTE: envVariables.SIAT_AMBIENTE,
+  SIAT_MODALIDAD: envVariables.SIAT_MODALIDAD,
+  SIAT_TOKEN: envVariables.SIAT_TOKEN,
+  SIAT_WSDL_CODIGOS: envVariables.SIAT_WSDL_CODIGOS,
+  SIAT_WSDL_SINCRONIZACION: envVariables.SIAT_WSDL_SINCRONIZACION,
+  SIAT_WSDL_FACTURA_COMPRA_VENTA: envVariables.SIAT_WSDL_FACTURA_COMPRA_VENTA,
+  SIAT_WSDL_OPERACIONES: envVariables.SIAT_WSDL_OPERACIONES,
 };
