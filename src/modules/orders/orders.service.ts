@@ -9,9 +9,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
   DataSource,
+  ILike,
   In,
   LessThan,
-  Like,
   Not,
   Repository,
 } from 'typeorm';
@@ -131,53 +131,60 @@ export class OrdersService {
   //? ============================================================================================== */
 
   async findAll(pagination: OrderPaginationDto) {
-    const { status, type, paymentType, startDate, endDate } = pagination;
-
-    const options: any = {
-      where: {},
-    };
-
-    const { ci, name, orderId } = pagination;
-
-    if (ci) {
-      options.where.billing = { ci };
-    } else if (name) {
-      options.where.billing = { name: Like(`%${name}%`) };
-    } else if (orderId) {
-      options.where.id = orderId;
-    }
+    const { status, type, paymentType, startDate, endDate, ci, name, orderId } =
+      pagination;
 
     // --------------------------------------------
-    // 1. Filtros
+    // 1. Filtros comunes
     // --------------------------------------------
+
+    const commonWhere: any = {};
 
     //! Estado de la orden
     if (status) {
-      options.where.status = status;
+      commonWhere.status = status;
     } else {
-      options.where.status = Not(
+      commonWhere.status = Not(
         In([OrderStatus.EXPIRED, OrderStatus.COMPLETED_EDITION]),
       );
     }
     //! tipo de orden (inStore, online)
-    if (type) options.where.type = type;
+    if (type) commonWhere.type = type;
 
     //! tipo de pago (qr, cash, card)
-    if (paymentType) options.where.payment_type = paymentType;
+    if (paymentType) commonWhere.payment_type = paymentType;
 
     //! Por dia
     if (startDate && !endDate) {
       const start = new Date(`${startDate}T00:00:00-04:00`);
       const end = new Date(`${startDate}T23:59:59.999-04:00`);
-      options.where.createdAt = Between(start, end);
+      commonWhere.createdAt = Between(start, end);
     }
 
     //! Entre dos fechas
     if (startDate && endDate) {
       const from = new Date(`${startDate}T00:00:00-04:00`);
       const to = new Date(`${endDate}T23:59:59.999-04:00`);
-      options.where.createdAt = Between(from, to);
+      commonWhere.createdAt = Between(from, to);
     }
+
+    let where: any = commonWhere;
+
+    if (ci) {
+      where = { ...commonWhere, billing: { ci } };
+    } else if (name) {
+      where = { ...commonWhere, billing: { name: ILike(`%${name}%`) } };
+    } else if (orderId) {
+      //! las ordenes editadas cambian de id real: el id "visible" en el
+      //! frontend es el inherited_id, así que hay que buscar por ambos para
+      //! encontrar la orden vigente de la cadena de ediciones
+      where = [
+        { ...commonWhere, id: orderId },
+        { ...commonWhere, inherited_id: orderId },
+      ];
+    }
+
+    const options: any = { where };
 
     // --------------------------------------------
     // 2. Paginación y relaciones
