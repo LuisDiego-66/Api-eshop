@@ -1317,8 +1317,8 @@ export class FacturacionService {
       .andWhere('factura.codigoPuntoVenta = :codigoPuntoVenta', {
         codigoPuntoVenta,
       })
-      .andWhere('factura.estado != :anulada', {
-        anulada: FacturaStatusEnum.ANULADA,
+      .andWhere('factura.estado = :validada', {
+        validada: FacturaStatusEnum.VALIDADA,
       });
 
     if (desde && hasta) {
