@@ -1301,11 +1301,15 @@ export class FacturacionService {
   async FindAll(query: SettingsPaginationDto) {
     const { codigoSucursal, codigoPuntoVenta, fechaInicio, fechaFin } = query;
 
+    //! new Date(...) sin offset se interpreta en la zona horaria del
+    //! servidor, no en la de Bolivia: usar parseBoliviaDateTime para que
+    //! el rango coincida con el instante absoluto real guardado en
+    //! fechaEmision (timestamptz).
     const desde = fechaInicio
-      ? new Date(`${fechaInicio}T00:00:00.000`)
+      ? parseBoliviaDateTime(`${fechaInicio}T00:00:00.000`)
       : undefined;
     const hasta = fechaFin
-      ? new Date(`${fechaFin}T23:59:59.999`)
+      ? parseBoliviaDateTime(`${fechaFin}T23:59:59.999`)
       : desde
         ? new Date()
         : undefined;
